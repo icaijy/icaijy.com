@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Blog - Henry's Website{% endblock %}
+
+{% block content %}
+<h1 class="title">Welcome to my Blog</h1>
+<br>
+<div class="container">
+    <div class="row mt-2">
+        {% for post in posts %}
+        <div class="col-4 mb-4">
+            <div class="card h-100">
+                <h5 class="card-header"> {{ post.title }} </h5>
+                <div class="card-body">
+                    <p class="card-text"> {{post.summary}}</p>
+                    <a href="{% url 'post_detail' post.pk %}" class="btn btn-primary">Read <i class="fa-solid fa-book"></i></a>
+                </div>
+            </div>
+        </div>
+
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
