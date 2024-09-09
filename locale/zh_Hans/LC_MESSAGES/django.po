@@ -73,3 +73,6 @@ msgstr "创建于："
 
 msgid "Homepage - Henry's Website"
 msgstr "首页 - 君逸的个人网站"
+
+msgid "Language"
+msgstr "语言"
