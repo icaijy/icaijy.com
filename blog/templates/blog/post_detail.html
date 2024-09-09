@@ -1,9 +1,11 @@
 {% extends 'base.html' %}
 {%load static%}
+
 {% load i18n %}
 {% block title %}{{post.title}} - {% trans "Henry's Website" %}{% endblock %}
 
 {% block content %}
+
 <div class="container">
     <div class="row">
         <h1 class="col-12 mt-4 mb-4 title">{{ post.title }}</h1>
