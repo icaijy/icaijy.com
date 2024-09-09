@@ -1,3 +1,4 @@
 Django
 markdown
 pymdown-extensions
+dotenv

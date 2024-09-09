@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}Homepage{% endblock %}
+{% load i18n %}
+{% block title %}{%trans "Homepage - Henry's Website" %}{% endblock %}
+
 
 {% block content %}
-<h1  class="title">Welcome to My Homepage</h1>
-<p style="text-align:center;">This is the homepage of my website.</p>
+<h1  class="title">{% trans "Welcome to My Homepage" %}</h1>
+<p style="text-align:center;">{% trans "This is the homepage of my website." %}</p>
 <br>
-<p style="text-align:center;">Nothing is here but my <a href="/blog">blog</a> </p>
+<p style="text-align:center;">{% trans "Nothing is here but my " %}<a href="/blog">{% trans "blog" %}</a> </p>
 {% endblock %}

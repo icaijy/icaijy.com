@@ -16,9 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.i18n import i18n_patterns
+from . import  views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('blog/', include('blog.urls')),
-    path('', include('homepage.urls')),
+    path('set_language/', views.set_language, name='set_language'),
+    path('i18n/',include("django.conf.urls.i18n")),
 ]
+
+urlpatterns += i18n_patterns(
+    path('', include('homepage.urls')),
+)

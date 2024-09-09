@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Blog - Henry's Website{% endblock %}
-
+{% load i18n %}
+{% block title %} {%trans "Blog"%} - {% trans "Henry's Website" %} {% endblock %}
 {% block content %}
-<h1 class="title">Welcome to my Blog</h1>
+<h1 class="title">{% trans "Welcome to my Blog" %}</h1>
 <br>
 <div class="container">
     <div class="row mt-2">
@@ -13,7 +13,7 @@
                 <h5 class="card-header"> {{ post.title }} </h5>
                 <div class="card-body">
                     <p class="card-text"> {{post.summary}}</p>
-                    <a href="{% url 'post_detail' post.pk %}" class="btn btn-primary">Read <i class="fa-solid fa-book"></i></a>
+                    <a href="{% url 'post_detail' post.pk %}" class="btn btn-primary">{% trans "Read" %} <i class="fa-solid fa-book"></i></a>
                 </div>
             </div>
         </div>

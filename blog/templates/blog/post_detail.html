@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {%load static%}
-{% block title %}{{post.title}} - Henry's Website{% endblock %}
+{% load i18n %}
+{% block title %}{{post.title}} - {% trans "Henry's Website" %}{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -8,15 +9,14 @@
         <h1 class="col-12 mt-4 mb-4 title">{{ post.title }}</h1>
         <div class="col-12">
             <div class="content">
-                <!-- 使用 safe 过滤器渲染 HTML -->
                 {{ post_content|safe }}
             </div>
             <p>
-                Created on: {{ post.created }}
+                {% trans "Created on:" %} {{ post.created }}
                 <br>
-                Modified on: {{post.modified}}
+                {% trans "Modified on:" %} {{post.modified}}
                 <br>
-                Views: {{post.views}}
+                {% trans "Views:"%} {{post.views}}
             </p>
         </div>
     </div>
