@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import sys
+import os
+import json
+import argparse
+import datetime
+import requests
+from bs4 import BeautifulSoup
+
+AUTO_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'auto_data.json')
+MANUAL_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'manual_data.json')
+
+
+def fetch_leaderboard():
+    """Fetch and parse the ORAC Leaderboards page."""
+    url = 'https://orac2.info/hub/leaderboards/'
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    resp = requests.get(url, headers=headers)
+    if resp.status_code != 200:
+        raise RuntimeError(f'Failed to fetch page (HTTP {resp.status_code})')
+    soup = BeautifulSoup(resp.text, 'html.parser')
+
+    result = {}
+
+    # --- overall ---
+    overall_div = soup.find(id='overall')
+    if overall_div is None:
+        raise RuntimeError('Could not find overall leaderboard section')
+    ov = {}
+    for li in overall_div.select('ul.leaderboard-grid > li'):
+        user = li.select_one('.username-field').get_text(strip=True)
+        cnt = int(li.select_one('.solvecount').get_text(strip=True))
+        ov[user] = cnt
+    result['overall'] = ov
+
+    # --- recent: week / month / year ---
+    recent_div = soup.find(id='recent')
+    if recent_div is None:
+        raise RuntimeError('Could not find recent leaderboard section')
+    rec = {}
+    # h3 tags label each sub‑section
+    for h3 in recent_div.find_all('h3'):
+        title = h3.get_text(strip=True).lower()
+        if 'week' in title:
+            key = 'week'
+        elif 'month' in title:
+            key = 'month'
+        elif 'year' in title:
+            key = 'year'
+        else:
+            continue
+
+        section = {}
+        # iterate siblings until next <h3>
+        for sib in h3.find_next_siblings():
+            if getattr(sib, 'name', None) == 'h3':
+                break
+            if getattr(sib, 'name', None) != 'li':
+                continue
+            user = sib.select_one('.username-field').get_text(strip=True)
+            cnt = int(sib.select_one('.solvecount').get_text(strip=True))
+            section[user] = cnt
+
+        rec[key] = section
+
+    result['recent'] = rec
+    return result
+
+
+def save_auto(payload):
+    """Overwrite auto_data.json with just the raw payload."""
+    with open(AUTO_FILE, 'w', encoding='utf-8') as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    print(f'[AUTO] Wrote {AUTO_FILE}')
+
+
+def save_manual(payload):
+    """Overwrite manual_data.json, wrapping payload with a timestamp."""
+    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    wrapper = {
+        'last_updated': now,
+        'data': payload
+    }
+    with open(MANUAL_FILE, 'w', encoding='utf-8') as f:
+        json.dump(wrapper, f, ensure_ascii=False, indent=2)
+    print(f'[MANUAL] Wrote {MANUAL_FILE} (last_updated: {now})')
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog='orac_scraper',
+        description='Fetch ORAC leaderboards; mode=auto or manual.'
+    )
+    parser.add_argument(
+        'mode',
+        choices=['auto', 'manual'],
+        help='auto: overwrite auto_data.json; manual: overwrite manual_data.json + timestamp'
+    )
+    args = parser.parse_args()
+
+    try:
+        data = fetch_leaderboard()
+    except Exception as e:
+        print(f'ERROR: {e}', file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        if args.mode == 'auto':
+            save_auto(data)
+        else:
+            save_manual(data)
+    except Exception as e:
+        print(f'ERROR writing file: {e}', file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

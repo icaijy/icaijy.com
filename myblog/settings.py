@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'myblog',
     'blog',
     'homepage',
+    'orac_tracker',
 ]
 
 MIDDLEWARE = [

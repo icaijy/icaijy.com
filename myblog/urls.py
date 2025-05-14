@@ -25,4 +25,5 @@ urlpatterns = [
     path('set_language/', views.set_language, name='set_language'),
     path('i18n/',include("django.conf.urls.i18n")),
     path('', include('homepage.urls')),
+    path('', include('orac_tracker.urls')),
 ]
