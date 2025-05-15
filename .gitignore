@@ -5,4 +5,6 @@ __pycache__/
 .env
 .idea/
 .vscode/
+./orac_tracker/auto_data.json
+./orac_tracker/manual_data.json
 db.sqlite3

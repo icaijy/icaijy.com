@@ -11,8 +11,10 @@
     <h1>ORAC Leaderboards</h1>
     <p>
     These tables list the top users of orac ordered by their number of problems solved (i.e. scored 100%).
-        <br>
-        Thanks for AMT's ORAC Leaderboards and CSS.
+    <br>
+    Thanks for AMT's <a href="https://orac2.info/hub/leaderboards/">ORAC Leaderboards</a> and CSS.
+    <br>
+        <s>Thanks for ChatGPT for completing most of the code.</s>
     </p>
     <button id="btn-update" class="btn btn-primary mb-3">Manual Update</button>
     <p>Last updated: <span id="last-updated">{{ last_updated }}</span></p>
@@ -32,7 +34,7 @@
                     <li>
                         <span class="place" title="Rank">{{ forloop.counter }}</span>
                         <span class="username-field">{{ user }}</span>
-                        <span class="solvecount">{{ data.manual }}+{{ data.diff }}</span>
+                        <span class="solvecount {% if data.diff > 0 %}text-success{% elif data.diff < 0 %}text-danger{% else %}text-secondary{% endif %}">{{ data.manual }}+{{ data.diff }}</span>
                     </li>
                 {% endfor %}
             </ul>
@@ -45,7 +47,7 @@
                     <li>
                         <span class="place" title="Rank">{{ forloop.counter }}</span>
                         <span class="username-field">{{ user }}</span>
-                        <span class="solvecount">{{ data.manual }}+{{ data.diff }}</span>
+                        <span class="solvecount {% if data.diff > 0 %}text-success{% elif data.diff < 0 %}text-danger{% else %}text-secondary{% endif %}">{{ data.manual }}{% if data.diff >= 0 %}+{% endif %}{{ data.diff }}</span>
                     </li>
                 {% endfor %}
             </ul>
@@ -58,7 +60,7 @@
                     <li>
                         <span class="place" title="Rank">{{ forloop.counter }}</span>
                         <span class="username-field">{{ user }}</span>
-                        <span class="solvecount">{{ data.manual }}+{{ data.diff }}</span>
+                        <span class="solvecount {% if data.diff > 0 %}text-success{% elif data.diff < 0 %}text-danger{% else %}text-secondary{% endif %}">{{ data.manual }}{% if data.diff >= 0 %}+{% endif %}{{ data.diff }}</span>
                     </li>
                 {% endfor %}
             </ul>
@@ -71,7 +73,7 @@
                     <li>
                         <span class="place" title="Rank">{{ forloop.counter }}</span>
                         <span class="username-field">{{ user }}</span>
-                        <span class="solvecount">{{ data.manual }} + {{ data.diff }}</span>
+                        <span class="solvecount {% if data.diff > 0 %}text-success{% elif data.diff < 0 %}text-danger{% else %}text-secondary{% endif %}">{{ data.manual }}{% if data.diff >= 0 %}+{% endif %}{{ data.diff }}</span>
                     </li>
                 {% endfor %}
             </ul>
