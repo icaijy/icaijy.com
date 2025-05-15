@@ -30,7 +30,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ["localhost", "junyi08.com", "www.junyi08.com", "127.0.0.1", "47.104.247.89"]
+ALLOWED_HOSTS = ["localhost", "junyi08.com", "www.junyi08.com", "127.0.0.1", "47.104.247.89","icaijy.com","www.icaijy.com"]
 
 # Application definition
 
@@ -133,12 +133,8 @@ LOCALE_PATHS = [
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # 项目根目录中的 static 目录
-]
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
