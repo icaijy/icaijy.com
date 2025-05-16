@@ -79,3 +79,93 @@ msgstr "语言"
 
 msgid "and"
 msgstr "还有"
+
+msgid "Double_Slash"
+msgstr "双斜杠"
+
+msgid "Matthewwww"
+msgstr "马修修修修"
+
+msgid "Ghetto"
+msgstr "贫民窟"
+
+msgid "lion"
+msgstr "狮子🦁"
+
+msgid "Lithanium"
+msgstr "锂"
+
+msgid "user"
+msgstr "用户"
+
+msgid "dusky"
+msgstr "昏暗"
+
+msgid "henryho2"
+msgstr "亨利ho2"
+
+msgid "reechee"
+msgstr "里li奇qi"
+
+msgid "WenDidIAsk"
+msgstr "我啥时候问了？"
+
+msgid "jenny"
+msgstr "珍妮"
+
+msgid "Sirhc_47"
+msgstr "斯里克_47"
+
+msgid "justin_g_20"
+msgstr "justin hui meng goh"
+
+msgid "lsjo"
+msgstr "lsjo"
+
+msgid "finehaveanormalusername"
+msgstr "不错有个正常的用户名"
+
+msgid "newai"
+msgstr "新AI"
+
+msgid "anson"
+msgstr "安森"
+
+msgid "quollcucumber"
+msgstr "袋鼬黄瓜"
+
+msgid "steveyxz"
+msgstr "史蒂夫yxz"
+
+msgid "BigD"
+msgstr "大D"
+
+msgid "chchn2507"
+msgstr "chchn2507"
+
+msgid "OoogaDooga"
+msgstr "哦哦噶嘟嘟噶"
+
+msgid "icaijy"
+msgstr "牢菜"
+
+msgid "Philip_cpp"
+msgstr "菲利普c加加"
+
+msgid "amongus_pvp"
+msgstr "我们一起pvp"
+
+msgid "warren_huang"
+msgstr "warren黄"
+
+msgid "PeaceOfCake"
+msgstr "一片蛋糕"
+
+msgid "mrmagic2020"
+msgstr "魔法先生2020"
+
+msgid "ifndef_INDEED_TIS_TRUE_HPP_"
+msgstr "ifndef_INDEED_TIS_TRUE_HPP_"
+
+msgid "Zimo_Yoyo"
+msgstr "子墨-悠悠"
