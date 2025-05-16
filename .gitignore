@@ -8,3 +8,4 @@ venv/
 .vscode/
 orac_tracker/*.json
 db.sqlite3
+staticfiles
