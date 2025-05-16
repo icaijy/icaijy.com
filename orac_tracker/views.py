@@ -9,6 +9,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
+import platform
 
 MANUAL_DATA = os.path.join(settings.BASE_DIR, 'orac_tracker', 'manual_data.json')
 AUTO_DATA = os.path.join(settings.BASE_DIR, 'orac_tracker', 'auto_data.json')
@@ -86,12 +87,10 @@ def index(request):
     })
 
 
-
 def manual_update(request):
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    scraper_path = os.path.join(current_dir, 'scraper.py')
+    from . import scraper
     try:
-        subprocess.run(['python', scraper_path, 'manual'], check=True)
+        scraper.main("manual")
         messages.success(request, "Update successful!")
         return HttpResponse("OK")
     except subprocess.CalledProcessError:

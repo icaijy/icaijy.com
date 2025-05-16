@@ -88,33 +88,24 @@ def save_manual(payload):
     print(f'[MANUAL] Wrote {MANUAL_FILE} (last_updated: {now})')
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        prog='orac_scraper',
-        description='Fetch ORAC leaderboards; mode=auto or manual.'
-    )
-    parser.add_argument(
-        'mode',
-        choices=['auto', 'manual'],
-        help='auto: overwrite auto_data.json; manual: overwrite manual_data.json + timestamp'
-    )
-    args = parser.parse_args()
-
+def main(mode):
     try:
         data = fetch_leaderboard()
     except Exception as e:
-        print(f'ERROR: {e}', file=sys.stderr)
-        sys.exit(1)
-
+        print(f'ERROR fetching leaderboard: {e}', file=sys.stderr)
+        return False
     try:
-        if args.mode == 'auto':
+        if mode == 'auto':
             save_auto(data)
-        else:
+        elif mode == 'manual':
             save_manual(data)
+        else:
+            print(f"ERROR: unknown mode '{mode}'", file=sys.stderr)
+            return False
     except Exception as e:
         print(f'ERROR writing file: {e}', file=sys.stderr)
-        sys.exit(1)
+        return False
+    return True
 
 
-if __name__ == '__main__':
-    main()
+

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'blog',
     'homepage',
     'orac_tracker',
+    'django_apscheduler',
 ]
 
 MIDDLEWARE = [
