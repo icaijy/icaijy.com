@@ -169,3 +169,7 @@ msgstr "ifndef_INDEED_TIS_TRUE_HPP_"
 
 msgid "Zimo_Yoyo"
 msgstr "子墨-悠悠"
+
+
+msgid "RainFox"
+msgstr "雨狐"
