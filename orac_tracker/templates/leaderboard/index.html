@@ -33,7 +33,7 @@
                 {% for user, data in people.overall.items %}
                     <li>
                         <span class="place" title="Rank">{{ forloop.counter }}</span>
-                        <span class="username-field">{{ user }}</span>
+                        <span class="username-field">{% blocktrans with username=user %}{{ username }}{% endblocktrans %}</span>
                         <span class="solvecount {% if data.diff > 0 %}text-success{% elif data.diff < 0 %}text-danger{% else %}text-secondary{% endif %}">{{ data.manual }}+{{ data.diff }}</span>
                     </li>
                 {% endfor %}
@@ -46,7 +46,7 @@
                 {% for user, data in people.recent.week.items %}
                     <li>
                         <span class="place" title="Rank">{{ forloop.counter }}</span>
-                        <span class="username-field">{{ user }}</span>
+                        <span class="username-field">{% blocktrans with username=user %}{{ username }}{% endblocktrans %}</span>
                         <span class="solvecount {% if data.diff > 0 %}text-success{% elif data.diff < 0 %}text-danger{% else %}text-secondary{% endif %}">{{ data.manual }}{% if data.diff >= 0 %}+{% endif %}{{ data.diff }}</span>
                     </li>
                 {% endfor %}
@@ -59,7 +59,7 @@
                 {% for user, data in people.recent.month.items %}
                     <li>
                         <span class="place" title="Rank">{{ forloop.counter }}</span>
-                        <span class="username-field">{{ user }}</span>
+                        <span class="username-field">{% blocktrans with username=user %}{{ username }}{% endblocktrans %}</span>
                         <span class="solvecount {% if data.diff > 0 %}text-success{% elif data.diff < 0 %}text-danger{% else %}text-secondary{% endif %}">{{ data.manual }}{% if data.diff >= 0 %}+{% endif %}{{ data.diff }}</span>
                     </li>
                 {% endfor %}
@@ -72,7 +72,7 @@
                 {% for user, data in people.recent.year.items %}
                     <li>
                         <span class="place" title="Rank">{{ forloop.counter }}</span>
-                        <span class="username-field">{{ user }}</span>
+                        <span class="username-field">{% blocktrans with username=user %}{{ username }}{% endblocktrans %}</span>
                         <span class="solvecount {% if data.diff > 0 %}text-success{% elif data.diff < 0 %}text-danger{% else %}text-secondary{% endif %}">{{ data.manual }}{% if data.diff >= 0 %}+{% endif %}{{ data.diff }}</span>
                     </li>
                 {% endfor %}
