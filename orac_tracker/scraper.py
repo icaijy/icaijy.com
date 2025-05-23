@@ -73,7 +73,7 @@ def save_auto(payload):
     """Overwrite auto_data.json with just the raw payload."""
     with open(AUTO_FILE, 'w', encoding='utf-8') as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
-    print(f'[AUTO] Wrote {AUTO_FILE}')
+    print(f'[AUTO] Wrote {AUTO_FILE} at {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
 
 
 def save_manual(payload):
