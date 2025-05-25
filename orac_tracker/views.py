@@ -13,8 +13,15 @@ import platform
 
 MANUAL_DATA = os.path.join(settings.BASE_DIR, 'orac_tracker', 'manual_data.json')
 AUTO_DATA = os.path.join(settings.BASE_DIR, 'orac_tracker', 'auto_data.json')
-
+def manual_update():
+    from . import scraper
+    try:
+        scraper.main("manual")
+        return
+    except subprocess.CalledProcessError:
+        return
 def index(request):
+    manual_update()
     try:
         with open(MANUAL_DATA, 'r') as f:
             manual_data = json.load(f)
@@ -87,13 +94,5 @@ def index(request):
     })
 
 
-def manual_update(request):
-    from . import scraper
-    try:
-        scraper.main("manual")
-        messages.success(request, "Update successful!")
-        return HttpResponse("OK")
-    except subprocess.CalledProcessError:
-        messages.error(request, "Failed to update!")
-        return HttpResponse("Update failed", status=500)
+
 

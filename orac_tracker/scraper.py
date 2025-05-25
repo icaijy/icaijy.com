@@ -78,6 +78,16 @@ def save_auto(payload):
 
 def save_manual(payload):
     """Overwrite manual_data.json, wrapping payload with a timestamp."""
+    with open(MANUAL_FILE, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    last_updated_str = data.get("last_updated")
+    last_updated = datetime.datetime.strptime(last_updated_str, "%Y-%m-%d %H:%M:%S")
+    now = datetime.datetime.now()
+
+    diff = now - last_updated
+    if diff <= datetime.timedelta(seconds=30):
+        print(f'Did not update. Reason: the most recent update was in 30s.')
+        return
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     wrapper = {
         'last_updated': now,

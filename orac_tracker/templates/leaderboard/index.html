@@ -16,7 +16,6 @@
     <br>
         <s>Thanks for ChatGPT for completing most of the code.</s>
     </p>
-    <button id="btn-update" class="btn btn-primary mb-3">Manual Update</button>
     <p>Last updated: <span id="last-updated">{{ last_updated }}</span></p>
 
     <!-- Tabs -->
@@ -80,22 +79,4 @@
         </div>
     </div>
 </div>
-
-<script>
-document.getElementById('btn-update').addEventListener('click', () => {
-  const btn = document.getElementById('btn-update');
-  btn.disabled = true;
-  btn.textContent = 'Updating...';
-  fetch('{% url "ot_manual_update" %}')
-    .then(() => {
-      location.reload(); // 成功后直接刷新页面
-    })
-    .catch(err => {
-      console.error(err);
-      btn.textContent = 'Error';
-      btn.disabled = false;
-    });
-});
-</script>
-
 {% endblock %}
