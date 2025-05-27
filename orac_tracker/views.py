@@ -10,6 +10,8 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
 import platform
+from django.utils.translation import gettext as _
+
 
 MANUAL_DATA = os.path.join(settings.BASE_DIR, 'orac_tracker', 'manual_data.json')
 AUTO_DATA = os.path.join(settings.BASE_DIR, 'orac_tracker', 'auto_data.json')
@@ -56,7 +58,7 @@ def index(request):
     for user, manual_solved in manual_data['data']['overall'].items():
         auto_solved = auto_data['overall'].get(user, 0)  # 如果自动数据中没有该用户，默认 0
         diff = manual_solved - auto_solved
-        overall_data[user] = {
+        overall_data[_(user)] = {
             'manual': manual_solved,
             'auto': auto_solved,
             'diff': diff
@@ -72,7 +74,7 @@ def index(request):
             for user, manual_solved in manual_period.items():
                 auto_solved = auto_period.get(user, 0)
                 diff = manual_solved - auto_solved
-                merged_recent[period][user] = {
+                merged_recent[period][_(user)] = {
                     'manual': manual_solved,
                     'auto': auto_solved,
                     'diff': diff
