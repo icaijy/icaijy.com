@@ -6,7 +6,7 @@
     <style>.maincontent{font-family:"Droid Serif"}.maincontent h1{font-family:"Arial";font-weight:bold}.maincontent h2{font-family:"Arial";padding-left:.25rem;border-left:.5rem solid #c2c1c1;margin-left:-.25rem}.maincontent h2.no-indent{padding-left:none;border-left:none;margin-left:0}
 </style>
     <title>{% block title %}Henry's Website{% endblock %}</title>
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}?v=1">
     <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/js/all.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/css/fontawesome.min.css"
           rel="stylesheet">
@@ -34,7 +34,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
         <a class="navbar-brand" href="{% url 'home' %}">
-            <img src="{% static 'compass.svg' %}" height="50"> {% trans "Henry - Home" %}
+            <img src="{% static 'compass.svg' %}?v=1" height="50"> {% trans "Henry - Home" %}
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">

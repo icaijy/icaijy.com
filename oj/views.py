@@ -5,14 +5,14 @@ from .forms import SubmissionForm
 from .tasks import judge_submission
 import markdown
 
+
 def problem_list(request):
     problems = Problem.objects.all().order_by('id')
     return render(request, 'oj/problem_list.html', {'problems': problems})
 
+
 def problem_detail(request, problem_id):
     problem = get_object_or_404(Problem, pk=problem_id)
-
-    # Markdown 渲染
     problem_content = markdown.markdown(
         problem.description,
         extensions=[
@@ -57,8 +57,6 @@ def problem_detail(request, problem_id):
 
 def problem_speedrun(request, problem_id):
     problem = get_object_or_404(Problem, pk=problem_id)
-
-    # Markdown 渲染题目描述
     problem_content = markdown.markdown(
         problem.description,
         extensions=[
@@ -90,7 +88,6 @@ def problem_speedrun(request, problem_id):
             return redirect('submission_detail', sub_id=submission.id)
     else:
         form = SubmissionForm()
-
     return render(request, 'oj/problem_speedrun.html', {
         'problem': problem,
         'problem_content': problem_content,

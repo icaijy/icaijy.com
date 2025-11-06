@@ -11,7 +11,7 @@
 
   <div class="card shadow mb-4">
     <div class="card-body">
-      <p class="lead">{{ problem.description|linebreaks }}</p>
+      <p class="lead">{{ problem_content|safe }}</p>
       <p class="text-muted">
         <strong>{% trans "Time Limit:" %}</strong> {{ problem.time_limit }}s
         &nbsp; | &nbsp;
