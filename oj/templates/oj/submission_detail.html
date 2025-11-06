@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Submission {{ submission.id }} - {% trans "OJ" %}{% endblock %}
+
+{% block content %}
+
+<div class="container my-4">
+
+  <!-- 标题 + 返回题目按钮 -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Submission {{ submission.id }}</h2>
+    <a href="{% url 'problem_detail' submission.problem.id %}" class="btn btn-outline-success">
+      {% trans "Return to Problem" %}
+    </a>
+  </div>
+
+  <!-- 基本信息卡片 -->
+  <div class="card shadow mb-4 p-3">
+    <p><strong>{% trans "Language:" %}</strong> {{ submission.language }}</p>
+    <p><strong>{% trans "Submitted at:" %}</strong> {{ submission.submit_time }}</p>
+    {% if submission.elapsed_time != -1 %}
+      <p><strong>{% trans "Elapsed Time:" %}</strong> {{ submission.elapsed_time|floatformat:2 }} s</p>
+    {% endif %}
+    <p>
+      <strong>{% trans "Status:" %}</strong>
+      <span id="submission-status" class="badge 
+      {% if submission.status == 'AC' %}bg-success
+      {% elif submission.status == 'WA' %}bg-danger
+      {% elif submission.status == 'TLE' %}bg-dark
+      {% elif submission.status == 'RE/MLE' %}bg-warning
+      {% elif submission.status == 'CE' %}bg-secondary
+      {% else %}bg-info{% endif %}">{{ submission.status }}</span>
+    </p>
+  </div>
+
+  <!-- 测试点结果 -->
+  <div id="result-area" class="card shadow mb-4 p-3">
+    {% if submission.result %}
+      <h4>Test Case Results:</h4>
+      <table class="table table-striped table-bordered">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Status</th>
+            <th>Time (s)</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for r in submission.result %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>
+              <span class="badge
+              {% if r.status == 'AC' %}bg-success
+              {% elif r.status == 'WA' %}bg-danger
+              {% elif r.status == 'TLE' %}bg-dark
+              {% elif r.status == 'RE/MLE' %}bg-warning
+              {% elif r.status == 'CE' %}bg-secondary
+              {% else %}bg-info{% endif %}">{{ r.status }}</span>
+            </td>
+            <td>{{ r.time }}</td>
+            <td>{{ r.error|default:"-" }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="text-muted">{% trans "Judging..." %}</p>
+    {% endif %}
+  </div>
+
+  <!-- Source code折叠 -->
+  <div class="mb-4">
+    <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#codeCollapse" aria-expanded="false" aria-controls="codeCollapse">
+      {% trans "Source code" %}
+    </button>
+    <div class="collapse mt-2" id="codeCollapse">
+      <div class="card card-body">
+        <pre><code class="language-{{ submission.language|lower }}">{{ submission.code|escape }}</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分享结果区域 -->
+  {% if submission.elapsed_time != -1 %}
+  <div id="share-card" class="card shadow mb-4 p-3" style="max-width:600px;margin:auto; display:none;">
+    <h5 class="mb-3 text-center">🎉 Share your result!</h5>
+    <textarea id="share-text" class="form-control mb-2" rows="4" readonly style="font-family: monospace; font-size: 1rem;"></textarea>
+    <div class="text-center">
+      <button id="copy-share" class="btn btn-primary">Copy to clipboard</button>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+(function() {
+  const subId = {{ submission.id }};
+  const statusEl = document.getElementById('submission-status');
+  const resultArea = document.getElementById('result-area');
+  const shareCard = document.getElementById('share-card');
+  const shareTA = document.getElementById('share-text');
+
+  const problem_name = "{{ submission.problem.title }}";
+  const url = "{{ request.build_absolute_uri }}";
+  const language = "{{ submission.language }}";
+
+  const ltl = {
+    'py': 'Python',
+    'cpp': 'C++',
+  };
+
+  function updateShareText(results, totalTime){
+    const allAC = results.every(r => r.status === "AC");
+    let blocks = results.map(r => r.status === "AC" ? "🟩" : r.status === "WA" ? "🟥" : "🟧").join("");
+    const l = ltl[language] || '';
+    if(results.some(r => r.status === "CE")){
+        return `I CEed ${problem_name} in ${totalTime} s using ${l} 🤡🅲🅴👎\n${blocks}\nCan you do better?\n${url}`;
+    }
+    if(allAC){
+      return `I ACed ${problem_name} in ${totalTime} s using ${l} 👍🚀🎉:orz:\n${blocks}\nCan you do better?\n${url}`;
+    } else {
+      return `I FAILED ${problem_name} in ${totalTime} s using ${l}! 💀😵😭🤡\n${blocks}\nCan you do better?\n${url}`;
+    }
+  }
+
+  function fetchStatus(){
+    fetch(`/oj/submission/${subId}/status/`)
+      .then(res => res.json())
+      .then(data => {
+        let cls='bg-info';
+        if(data.status==='AC') cls='bg-success';
+        else if(data.status==='WA') cls='bg-danger';
+        else if(data.status==='TLE') cls='bg-dark';
+        else if(data.status==='RE/MLE') cls='bg-warning';
+        else if(data.status==='CE') cls='bg-secondary';
+        statusEl.className = 'badge ' + cls;
+        statusEl.textContent = data.status;
+
+        if(data.status !== 'PENDING' && data.result){
+          clearInterval(pollInterval);
+
+          let tableHtml = `<h4>Test Case Results:</h4>
+            <table class="table table-striped table-bordered">
+            <thead><tr><th>#</th><th>Status</th><th>Time (s)</th><th>Error</th></tr></thead><tbody>`;
+          data.result.forEach((r, i) => {
+            let cls='bg-info';
+            if(r.status==='AC') cls='bg-success';
+            else if(r.status==='WA') cls='bg-danger';
+            else if(r.status==='TLE') cls='bg-dark';
+            else if(r.status==='RE/MLE') cls='bg-warning';
+            else if(r.status==='CE') cls='bg-secondary';
+            tableHtml += `<tr>
+              <td>${i+1}</td>
+              <td><span class="badge ${cls}">${r.status}</span></td>
+              <td>${r.time}</td>
+              <td>${r.error||'-'}</td>
+            </tr>`;
+          });
+          tableHtml += `</tbody></table>`;
+          resultArea.innerHTML = tableHtml;
+
+          if(shareTA){
+            const totalTime = "{{ submission.elapsed_time }}";
+            shareTA.value = updateShareText(data.result, totalTime);
+            shareCard.style.display = 'block';
+          }
+        }
+      })
+      .catch(err => console.error(err));
+  }
+
+  const pollInterval = setInterval(fetchStatus, 1000);
+})();
+
+(function(){
+  const copyBtn = document.getElementById('copy-share');
+  if(copyBtn){
+    copyBtn.addEventListener('click', () => {
+      const shareTA = document.getElementById('share-text');
+      shareTA.select();
+      shareTA.setSelectionRange(0, 99999);
+      document.execCommand('copy');
+      copyBtn.textContent = "Copied! 🎉";
+      setTimeout(() => copyBtn.textContent = "Copy to clipboard", 1500);
+    });
+  }
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ problem.title }} - {% trans "OJ" %}{% endblock %}
+
+{% block content %}
+
+<div class="container my-4">
+  <h1 class="display-5 text-center mb-4">{{ problem.title }}</h1>
+
+  <div class="card shadow mb-4">
+    <div class="card-body">
+      <p class="lead">{{ problem.description|linebreaks }}</p>
+      <p class="text-muted">
+        <strong>{% trans "Time Limit:" %}</strong> {{ problem.time_limit }}s
+        &nbsp; | &nbsp;
+        <strong>{% trans "Memory Limit:" %}</strong> {{ problem.memory_limit }} MB
+      </p>
+
+  <!-- 速通入口 -->
+  <div class="mt-3">
+    <a href="{% url 'problem_speedrun' problem.id %}" class="text-success fw-bold fs-5">
+      {% trans "Go to speedrun page!!" %}
+    </a>
+  </div>
+</div>
+
+  </div>
+
+  <!-- Practice Editor -->
+
+  <div class="card shadow mb-4">
+    <div class="card-body">
+      <h5 class="mb-3">{% trans "Practice Mode" %}</h5>
+
+  <form method="post" id="submission-form" novalidate>
+    {% csrf_token %}
+    <div class="mb-2 d-flex">
+      <select name="language" class="form-select me-2" id="lang-select">
+        <option value="cpp">C++</option>
+        <option value="py">Python</option>
+      </select>
+      <button type="submit" class="btn btn-primary flex-shrink-0">{% trans "Submit" %}</button>
+    </div>
+
+    <textarea id="practice-editor" name="code" style="height: 400px;"></textarea>
+
+    <!-- 隐藏 elapsed_time，固定 -1 -->
+    <input type="hidden" name="elapsed_time" value="-1">
+  </form>
+</div>
+
+  </div>
+</div>
+
+<!-- CodeMirror -->
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/python/python.min.js"></script>
+
+<script>
+(function(){
+  const practiceTA = document.getElementById("practice-editor");
+  const langSelect = document.getElementById("lang-select");
+  const form = document.getElementById("submission-form");
+
+  // 初始化 CodeMirror
+  const practiceEditor = CodeMirror.fromTextArea(practiceTA, {
+    lineNumbers: true,
+    mode: "text/x-c++src",
+    indentUnit: 4,
+    tabSize: 4,
+    indentWithTabs: true,
+    autofocus: true
+  });
+
+  // 语言切换
+  langSelect.addEventListener('change', function(){
+    if(this.value === "cpp") practiceEditor.setOption("mode","text/x-c++src");
+    else if(this.value === "py") practiceEditor.setOption("mode","text/x-python");
+  });
+
+  // 提交前同步 CodeMirror 内容到 textarea
+  form.addEventListener('submit', function(){
+    practiceEditor.save();
+  });
+
+  // ---------------- practice 模式允许粘贴 -----------------
+})();
+</script>
+
+{% endblock %}

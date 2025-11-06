@@ -28,4 +28,5 @@ urlpatterns = [
     path('i18n/',include("django.conf.urls.i18n")),
     path('', include('homepage.urls')),
     path('', include('orac_tracker.urls')),
+    path('oj/', include('oj.urls')),
 ]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

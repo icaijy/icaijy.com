@@ -1,12 +1,28 @@
 {% extends 'base.html' %}
 
 {% load i18n %}
-{% block title %}{%trans "Homepage - Henry's Website" %}{% endblock %}
-
+{% block title %}{% trans "Homepage - Henry's Website" %}{% endblock %}
 
 {% block content %}
-<h1  class="title">{% trans "Welcome to My Homepage" %}</h1>
-<p style="text-align:center;">{% trans "This is the homepage of my website." %}</p>
-<br>
-<p style="text-align:center;">{% trans "Nothing is here but my " %}<a href="/blog">{% trans "blog" %}</a> {% trans "and " %}<a href="/orac-leaderboards">ORAC Leaderboards++</a></p>
+<div class="container text-center mt-5">
+    <h1 class="mb-4">{% trans "Welcome to My Homepage" %}</h1>
+    <p class="lead">{% trans "This is the homepage of my website." %}</p>
+
+    <div class="mt-4">
+        <p>
+            {% trans "Check out my" %}
+            <a href="/blog">{% trans "blog" %}</a> 
+            {% trans "or the" %}
+            <a href="/orac-leaderboards">ORAC Leaderboards++</a>,
+            {% trans "or try the" %}
+            <a href="/oj">{% trans "Speed Online Judge" %}</a>!
+        </p>
+    </div>
+
+    <div class="mt-5">
+        <a href="/blog" class="btn btn-primary me-2">{% trans "Henry's Blog" %}</a>
+        <a href="/orac-leaderboards" class="btn btn-success me-2">{% trans "ORAC Leaderboards++" %}</a>
+        <a href="/oj" class="btn btn-warning">{% trans "Speed Online Judge" %}</a>
+    </div>
+</div>
 {% endblock %}
