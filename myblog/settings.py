@@ -144,3 +144,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'         # 消息队列
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'     # 任务结果存储，可选
+CSRF_COOKIE_SECURE = False  # runserver 下不要 True
+SESSION_COOKIE_SECURE = False
