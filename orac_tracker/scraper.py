@@ -4,10 +4,13 @@
 import sys
 import os
 import json
-import argparse
 import datetime
 import requests
 from bs4 import BeautifulSoup
+import urllib3
+
+# 禁止 InsecureRequestWarning 输出
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 AUTO_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'auto_data.json')
 MANUAL_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'manual_data.json')
@@ -17,7 +20,7 @@ def fetch_leaderboard():
     """Fetch and parse the ORAC Leaderboards page."""
     url = 'https://orac2.info/hub/leaderboards/'
     headers = {'User-Agent': 'Mozilla/5.0'}
-    resp = requests.get(url, headers=headers)
+    resp = requests.get(url, headers=headers, verify=False)
     if resp.status_code != 200:
         raise RuntimeError(f'Failed to fetch page (HTTP {resp.status_code})')
     soup = BeautifulSoup(resp.text, 'html.parser')
@@ -40,7 +43,6 @@ def fetch_leaderboard():
     if recent_div is None:
         raise RuntimeError('Could not find recent leaderboard section')
     rec = {}
-    # h3 tags label each sub‑section
     for h3 in recent_div.find_all('h3'):
         title = h3.get_text(strip=True).lower()
         if 'week' in title:
@@ -53,7 +55,6 @@ def fetch_leaderboard():
             continue
 
         section = {}
-        # iterate siblings until next <h3>
         for sib in h3.find_next_siblings():
             if getattr(sib, 'name', None) == 'h3':
                 break
@@ -78,24 +79,14 @@ def save_auto(payload):
 
 def save_manual(payload):
     """Overwrite manual_data.json, wrapping payload with a timestamp."""
-    with open(MANUAL_FILE, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    last_updated_str = data.get("last_updated")
-    last_updated = datetime.datetime.strptime(last_updated_str, "%Y-%m-%d %H:%M:%S")
-    now = datetime.datetime.now()
-
-    diff = now - last_updated
-    if diff <= datetime.timedelta(seconds=30):
-        print(f'Did not update. Reason: the most recent update was in 30s.')
-        return
-    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     wrapper = {
-        'last_updated': now,
+        'last_updated': now_str,
         'data': payload
     }
     with open(MANUAL_FILE, 'w', encoding='utf-8') as f:
         json.dump(wrapper, f, ensure_ascii=False, indent=2)
-    print(f'[MANUAL] Wrote {MANUAL_FILE} (last_updated: {now})')
+    print(f'[MANUAL] Wrote {MANUAL_FILE} (last_updated: {now_str})')
 
 
 def main(mode):
@@ -117,8 +108,6 @@ def main(mode):
         return False
     return True
 
+
 if __name__ == '__main__':
     main('auto')
-
-
-
