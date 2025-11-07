@@ -5,10 +5,11 @@ class Problem(models.Model):
     description = models.TextField()
     time_limit = models.FloatField(default=1.0)       # 秒
     memory_limit = models.IntegerField(default=256)   # MB
-    test_cases_json = models.TextField()              # 存 JSON
+    test_cases_file = models.FileField(upload_to='testcases/', null=True, blank=True)
 
     def __str__(self):
         return self.title
+
 STATUS_CHOICES = [
     ('PENDING','Pending'),
     ('AC','AC'),
@@ -26,5 +27,3 @@ class Submission(models.Model):
     result = models.JSONField(null=True, blank=True)
     submit_time = models.DateTimeField(auto_now_add=True)
     elapsed_time = models.FloatField(default=-1)  # 秒，-1表示练习模式
-
-
