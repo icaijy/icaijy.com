@@ -5,121 +5,114 @@
 {% block title %}{{ problem.title }} - {% trans "Speedrun" %}{% endblock %}
 
 {% block content %}
-
 <div class="container my-4">
 
     <h1 class="display-5 text-center mb-4">{{ problem.title }} - {% trans "Speedrun Mode" %}</h1>
-  <div class="mb-3 text-start">
-    <a href="{% url 'problem_detail' problem.id %}" class="btn btn-outline-success">
-      {% trans "Back to Practice Mode" %}
-    </a>
-  </div>
-  
-  <div class="card shadow mb-4">
-    <div class="card-body">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <h5>{% trans "Speedrun Editor" %}</h5>
-        <div id="timer" class="h5 text-danger m-0">Time: 0.00 s</div>
-      </div>
-  <form method="post" id="speedrun-form" novalidate>
-    {% csrf_token %}
-    <div class="mb-2 d-flex">
-      <select name="language" class="form-select me-2" id="lang-select">
-        <option value="cpp">C++</option>
-        <option value="py">Python</option>
-      </select>
-      <button type="submit" class="btn btn-primary flex-shrink-0">{% trans "Submit" %}</button>
+    <div class="mb-3 text-start">
+        <a href="{% url 'problem_detail' problem.id %}" class="btn btn-outline-success">
+            {% trans "Back to Practice Mode" %}
+        </a>
     </div>
 
-    <textarea id="speedrun-editor" name="code" style="height: 400px;"></textarea>
-    <input type="hidden" name="elapsed_time" id="elapsed-time" value="0">
-  </form>
-</div>
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5>{% trans "Speedrun Editor" %}</h5>
+                <div id="timer" class="h5 text-danger m-0">Time: 0.00 s</div>
+            </div>
 
-  </div>
+            <form method="post" id="speedrun-form" novalidate>
+                {% csrf_token %}
+                <div class="mb-2 d-flex">
+                    <select name="language" class="form-select me-2" id="lang-select">
+                        <option value="cpp">C++</option>
+                        <option value="py">Python</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary flex-shrink-0">{% trans "Submit" %}</button>
+                </div>
 
-  <!-- Problem Description Card -->
-
-  <div class="card shadow">
-    <div class="card-body">
-      <p class="lead">{{ problem_content|safe }}</p>
-      <p class="text-muted">
-        <strong>{% trans "Time Limit:" %}</strong> {{ problem.time_limit }}s
-        &nbsp; | &nbsp;
-        <strong>{% trans "Memory Limit:" %}</strong> {{ problem.memory_limit }} MB
-      </p>
+                <!-- Monaco Editor 容器 -->
+                <div id="speedrun-editor" style="height: 400px; border: 1px solid #ccc;"></div>
+                <textarea id="code-hidden" name="code" hidden></textarea>
+                <input type="hidden" name="elapsed_time" id="elapsed-time" value="0">
+            </form>
+        </div>
     </div>
-  </div>
+
+    <!-- Problem Description Card -->
+    <div class="card shadow">
+        <div class="card-body">
+            <p class="lead">{{ problem_content|safe }}</p>
+            <p class="text-muted">
+                <strong>{% trans "Time Limit:" %}</strong> {{ problem.time_limit }}s
+                &nbsp; | &nbsp;
+                <strong>{% trans "Memory Limit:" %}</strong> {{ problem.memory_limit }} MB
+            </p>
+        </div>
+    </div>
 
 </div>
 
-<!-- CodeMirror -->
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/clike/clike.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/python/python.min.js"></script>
-
+<!-- 引入 Monaco -->
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs/loader.js"></script>
 <script>
 (function(){
-  const editorTA = document.getElementById("speedrun-editor");
-  const langSelect = document.getElementById("lang-select");
-  const form = document.getElementById("speedrun-form");
-  const elapsedInput = document.getElementById("elapsed-time");
-  const timerDisplay = document.getElementById("timer");
+    const langSelect = document.getElementById("lang-select");
+    const form = document.getElementById("speedrun-form");
+    const codeHidden = document.getElementById("code-hidden");
+    const elapsedInput = document.getElementById("elapsed-time");
+    const timerDisplay = document.getElementById("timer");
 
-  let startTime = null;
-  let timerInterval = null;
+    let startTime = null;
+    let timerInterval = null;
 
-  // 初始化 CodeMirror
-  const speedrunEditor = CodeMirror.fromTextArea(editorTA, {
-    lineNumbers: true,
-    mode: "text/x-c++src",
-    indentUnit: 4,
-    tabSize: 4,
-    indentWithTabs: true,
-    autofocus: true
-  });
+    require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs' }});
 
-  // 语言切换
-  langSelect.addEventListener('change', function(){
-    if(this.value === "cpp") speedrunEditor.setOption("mode","text/x-c++src");
-    else if(this.value === "py") speedrunEditor.setOption("mode","text/x-python");
-  });
+    require(['vs/editor/editor.main'], function () {
+        let editor = monaco.editor.create(document.getElementById('speedrun-editor'), {
+            value: '',
+            language: 'cpp',
+            theme: 'vs',
+            automaticLayout: true,
+            fontSize: 14,
+            minimap: { enabled: false }
+        });
 
-  // 禁止复制/粘贴/拖拽
-  const preventDefault = (e) => { e.preventDefault(); e.stopImmediatePropagation(); };
-  speedrunEditor.getWrapperElement().addEventListener('paste', preventDefault);
-  speedrunEditor.getWrapperElement().addEventListener('copy', preventDefault);
-  speedrunEditor.getWrapperElement().addEventListener('cut', preventDefault);
-  speedrunEditor.getWrapperElement().addEventListener('drop', preventDefault);
-  document.addEventListener('keydown', function(e){
-    if ((e.ctrlKey || e.metaKey) && ['c','v','x'].includes(e.key.toLowerCase())) preventDefault(e);
-  });
+        // 禁止复制/粘贴/拖拽
+        const preventDefault = (e) => { e.preventDefault(); e.stopImmediatePropagation(); };
+        editor.onKeyDown(e => {
+            if ((e.ctrlKey || e.metaKey) && ['c','v','x'].includes(e.browserEvent.key.toLowerCase())) preventDefault(e.browserEvent);
+        });
+        editor.onDidPaste(preventDefault);
+        editor.onDidBlurEditorWidget(preventDefault);
 
-  // 计时器：第一次 change 开始
-  speedrunEditor.on('change', function(){
-    if(startTime === null){
-      startTime = Date.now();
-      timerInterval = setInterval(()=>{
-        const elapsed = (Date.now() - startTime) / 1000;
-        timerDisplay.textContent = `Time: ${elapsed.toFixed(2)} s`;
-      }, 100);
-    }
-  });
+        // 切换语言
+        langSelect.addEventListener('change', function(){
+            const newLang = (this.value === 'cpp') ? 'cpp' : 'python';
+            monaco.editor.setModelLanguage(editor.getModel(), newLang);
+        });
 
-  // 提交前同步内容并记录 elapsed_time
-  form.addEventListener('submit', function(){
-    speedrunEditor.save();
-    if(startTime !== null){
-      const elapsed = (Date.now() - startTime) / 1000;
-      elapsedInput.value = elapsed.toFixed(3);
-    } else {
-      elapsedInput.value = 0;
-    }
-    if(timerInterval) clearInterval(timerInterval);
-  });
+        // 计时器：第一次 change 开始
+        editor.onDidChangeModelContent(() => {
+            if(startTime === null){
+                startTime = Date.now();
+                timerInterval = setInterval(()=>{
+                    const elapsed = (Date.now() - startTime)/1000;
+                    timerDisplay.textContent = `Time: ${elapsed.toFixed(2)} s`;
+                }, 100);
+            }
+        });
+
+        // 提交前同步内容和 elapsed_time
+        form.addEventListener('submit', function(){
+            codeHidden.value = editor.getValue();
+            if(startTime !== null){
+                const elapsed = (Date.now() - startTime)/1000;
+                elapsedInput.value = elapsed.toFixed(3);
+            } else elapsedInput.value = 0;
+            if(timerInterval) clearInterval(timerInterval);
+        });
+    });
 })();
 </script>
-
 {% endblock %}

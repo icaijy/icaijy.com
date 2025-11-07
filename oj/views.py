@@ -45,7 +45,6 @@ def problem_detail(request, problem_id):
                 status='PENDING',
                 elapsed_time=elapsed
             )
-            judge_submission.delay(submission.id)
             return redirect('submission_detail', sub_id=submission.id)
     else:
         form = SubmissionForm()
@@ -86,7 +85,6 @@ def problem_speedrun(request, problem_id):
                 status='PENDING',
                 elapsed_time=elapsed
             )
-            judge_submission.delay(submission.id)
             return redirect('submission_detail', sub_id=submission.id)
     else:
         form = SubmissionForm()
