@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Login - Henry's Website" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 400px;">
+  <h2 class="text-center mb-4">{% trans "Login" %}</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-danger text-center">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" class="card p-4 shadow-sm">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="username" class="form-label">{% trans "Username" %}</label>
+      <input type="text" class="form-control" id="username" name="username" required>
+    </div>
+    <div class="mb-3">
+      <label for="password" class="form-label">{% trans "Password" %}</label>
+      <input type="password" class="form-control" id="password" name="password" required>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">{% trans "Login" %}</button>
+  </form>
+
+  <p class="text-center mt-3">
+    {% trans "Don't have an account?" %} <a href="{% url 'register' %}">{% trans "Register" %}</a>
+  </p>
+</div>
+{% endblock %}

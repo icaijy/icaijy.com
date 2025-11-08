@@ -151,3 +151,9 @@ CSRF_TRUSTED_ORIGINS = [
     "https://icaijy.com",
     "https://www.icaijy.com",
 ]
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
+
+

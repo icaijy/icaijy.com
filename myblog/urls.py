@@ -22,11 +22,11 @@ from django.conf.urls.i18n import i18n_patterns
 from . import  views
 
 urlpatterns = [
+    path('', include('homepage.urls')),
     path('admin/', admin.site.urls),
     path('blog/', include('blog.urls')),
     path('set_language/', views.set_language, name='set_language'),
     path('i18n/',include("django.conf.urls.i18n")),
-    path('', include('homepage.urls')),
-    path('', include('orac_tracker.urls')),
+    path('orac-leaderboards/', include('orac_tracker.urls')),
     path('oj/', include('oj.urls')),
 ]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

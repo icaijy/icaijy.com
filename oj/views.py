@@ -40,6 +40,8 @@ def problem_detail(request, problem_id):
 
             submission = Submission.objects.create(
                 problem=problem,
+                user=request.user if request.user.is_authenticated else None,
+                username=request.user.username if request.user.is_authenticated else 'Anonymous',
                 language=form.cleaned_data['language'],
                 code=form.cleaned_data['code'],
                 status='PENDING',
@@ -54,6 +56,7 @@ def problem_detail(request, problem_id):
         'problem_content': problem_content,
         'form': form
     })
+
 
 
 def problem_speedrun(request, problem_id):
@@ -80,6 +83,8 @@ def problem_speedrun(request, problem_id):
 
             submission = Submission.objects.create(
                 problem=problem,
+                user=request.user if request.user.is_authenticated else None,
+                username=request.user.username if request.user.is_authenticated else 'Anonymous',
                 language=form.cleaned_data['language'],
                 code=form.cleaned_data['code'],
                 status='PENDING',
