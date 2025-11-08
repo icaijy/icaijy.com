@@ -15,6 +15,7 @@
           {% trans "View Leaderboard" %}
       </a>
   </div>
+
   <!-- Problem Info Card -->
   <div class="card shadow mb-4">
     <div class="card-body">
@@ -24,8 +25,6 @@
         &nbsp; | &nbsp;
         <strong>{% trans "Memory Limit:" %}</strong> {{ problem.memory_limit }} MB
       </p>
-
-
     </div>
   </div>
 
@@ -33,6 +32,11 @@
   <div class="card shadow mb-4">
     <div class="card-body">
       <h5 class="mb-3">{% trans "Practice Mode" %}</h5>
+
+      <!-- 提示文字 -->
+      <p class="text-muted mb-2" style="font-size: 0.9rem;">
+        💡 {% trans "Tip:" %} {% trans "Press Ctrl + Enter (or ⌘ + Enter on Mac) to submit your code instantly." %}
+      </p>
 
       <form method="post" id="submission-form" novalidate>
         {% csrf_token %}
@@ -82,6 +86,12 @@
 
     form.addEventListener('submit', function(){
       codeHidden.value = editor.getValue();
+    });
+
+    // Ctrl+Enter / Cmd+Enter 快捷键提交
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, function() {
+      codeHidden.value = editor.getValue();
+      form.submit();
     });
   });
 })();

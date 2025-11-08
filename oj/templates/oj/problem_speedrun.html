@@ -25,6 +25,11 @@
                 <div id="timer" class="h5 text-danger m-0">Time: 0.00 s</div>
             </div>
 
+            <!-- 提示快捷键 -->
+            <p class="text-muted mb-2" style="font-size: 0.9rem;">
+                💡 {% trans "Tip:" %} {% trans "Press Ctrl + Enter (or ⌘ + Enter on Mac) to submit your code instantly." %}
+            </p>
+
             <form method="post" id="speedrun-form" novalidate>
                 {% csrf_token %}
                 <div class="mb-2 d-flex gap-2">
@@ -96,7 +101,7 @@
             monaco.editor.setModelLanguage(editor.getModel(), newLang);
         });
 
-        // 计时器：第一次 change 开始
+        // 计时器：第一次修改开始
         editor.onDidChangeModelContent(() => {
             if(startTime === null){
                 startTime = Date.now();
@@ -116,6 +121,18 @@
             } else elapsedInput.value = 0;
             if(timerInterval) clearInterval(timerInterval);
         });
+
+        // ✅ Ctrl/Cmd + Enter 快捷键提交
+        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, function() {
+            codeHidden.value = editor.getValue();
+            if(startTime !== null){
+                const elapsed = (Date.now() - startTime)/1000;
+                elapsedInput.value = elapsed.toFixed(3);
+            } else elapsedInput.value = 0;
+            if(timerInterval) clearInterval(timerInterval);
+            form.submit();
+        });
+
     });
 })();
 </script>
