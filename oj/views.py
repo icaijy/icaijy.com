@@ -107,3 +107,37 @@ def submission_status(request, sub_id):
         'result': submission.result if submission.result else None
     }
     return JsonResponse(data)
+
+from django.shortcuts import render, get_object_or_404
+from .models import Problem, Submission
+
+def problem_leaderboard(request, problem_id):
+    """
+    显示指定题目的前10个 AC 提交，并区分语言，同时排除练习模式提交
+    """
+    problem = get_object_or_404(Problem, pk=problem_id)
+
+    # C++ 前10
+    top10_cpp = Submission.objects.filter(
+        problem=problem,
+        status='AC',
+        language='cpp',
+        elapsed_time__gte=0  # 排除练习模式
+    ).order_by('elapsed_time')[:10]
+
+    # Python 前10
+    top10_python = Submission.objects.filter(
+        problem=problem,
+        status='AC',
+        language='py',
+        elapsed_time__gte=0  # 排除练习模式
+    ).order_by('elapsed_time')[:10]
+
+    return render(request, 'oj/problem_leaderboard.html', {
+        'problem': problem,
+        'top10_cpp': top10_cpp,
+        'top10_python': top10_python
+    })
+
+
+

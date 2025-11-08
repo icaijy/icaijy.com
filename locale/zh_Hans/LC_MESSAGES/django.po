@@ -173,3 +173,50 @@ msgstr "子墨-悠悠"
 
 msgid "RainFox"
 msgstr "雨狐"
+
+msgid "Check out my"
+msgstr "看看我的"
+
+msgid "or the"
+msgstr "或者"
+
+msgid "or try the"
+msgstr "或试试"
+
+msgid "Go to speedrun page!!"
+msgstr "去速通！！"
+
+msgid "Practice Mode"
+msgstr "练习模式"
+
+msgid "Back to Practice Mode"
+msgstr "返回练习模式"
+
+msgid "Speedrun Editor(copy&paste are banned)"
+msgstr "速通编辑器（禁用粘贴）"
+
+msgid "Summit"
+msgstr "提交"
+
+msgid "Submitted at"
+msgstr "提交时间"
+
+msgid "Elapsed Time"
+msgstr "速通用时"
+
+msgid "Status"
+msgstr "状态"
+
+msgid "Return to Problem"
+msgstr "返回题目"
+
+msgid "Share your result!"
+msgstr "分享您的结果！"
+
+msgid "Source code"
+msgstr "源码"
+
+msgid "Test Case Results"
+msgstr "测试结果"
+
+
