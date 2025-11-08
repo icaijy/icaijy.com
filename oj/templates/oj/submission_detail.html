@@ -23,7 +23,12 @@
     <p><strong>{% trans "Submitted at:" %}</strong> {{ submission.submit_time }}</p>
     {% if submission.elapsed_time != -1 %}
       <p><strong>{% trans "Elapsed Time:" %}</strong> {{ submission.elapsed_time|floatformat:2 }} s</p>
-      <p><strong>{% trans "Keys per Minute (KPM):" %}</strong> <span id="kpm-display">{{ submission.kpm|default:"0" }}</span></p>
+      <p>
+        <strong>{% trans "Keys per Minute (KPM):" %}</strong> 
+        <span id="kpm-display">
+          {% if submission.kpm == -1 %}Unknown{% else %}{{ submission.kpm }}{% endif %}
+        </span>
+      </p>
     {% endif %}
     <p>
       <strong>{% trans "Status:" %}</strong>
@@ -112,7 +117,7 @@
   const url = "{{ request.build_absolute_uri }}";
   const language = "{{ submission.language }}";
   const elapsedTime = parseFloat("{{ submission.elapsed_time }}");
-  const kpm = parseFloat("{{ submission.kpm|default:0 }}");
+  const kpm = parseFloat("{{ submission.kpm|default:-1 }}");
 
   const ltl = {
     'py': 'Python',
@@ -123,14 +128,15 @@
     const allAC = results.every(r => r.status === "AC");
     let blocks = results.map(r => r.status === "AC" ? "🟩" : r.status === "WA" ? "🟥" : "🟧").join("");
     const l = ltl[language] || '';
+    const kpmText = kpm < 0 ? "Unknown" : kpm;
 
     if(results.some(r => r.status === "CE")){
-        return `I CEed ${problem_name} in ${totalTime} s using ${l} 🤡🅲🅴👎\nTyping Speed: ${kpm} KPM\n${blocks}\nCan you do better?\n${url}`;
+        return `I CEed ${problem_name} in ${totalTime} s using ${l} 🤡🅲🅴👎\nTyping Speed: ${kpmText} KPM\n${blocks}\nCan you do better?\n${url}`;
     }
     if(allAC){
-      return `I ACed ${problem_name} in ${totalTime} s using ${l} 👍🚀🎉:orz:\nTyping Speed: ${kpm} KPM\n${blocks}\nCan you do better?\n${url}`;
+      return `I ACed ${problem_name} in ${totalTime} s using ${l} 👍🚀🎉:orz:\nTyping Speed: ${kpmText} KPM\n${blocks}\nCan you do better?\n${url}`;
     } else {
-      return `I FAILED ${problem_name} in ${totalTime} s using ${l}! 💀😵😭🤡\nTyping Speed: ${kpm} KPM\n${blocks}\nCan you do better?\n${url}`;
+      return `I FAILED ${problem_name} in ${totalTime} s using ${l}! 💀😵😭🤡\nTyping Speed: ${kpmText} KPM\n${blocks}\nCan you do better?\n${url}`;
     }
   }
 

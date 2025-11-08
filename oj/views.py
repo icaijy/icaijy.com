@@ -138,7 +138,7 @@ def problem_leaderboard(request, problem_id):
         status='AC',
         language='cpp',
         elapsed_time__gte=0  # 排除练习模式
-    ).order_by('elapsed_time')[:10]
+    ).order_by('elapsed_time')[:15]
 
     # Python 前10
     top10_python = Submission.objects.filter(
