@@ -23,7 +23,7 @@
     <p><strong>{% trans "Submitted at:" %}</strong> {{ submission.submit_time }}</p>
     {% if submission.elapsed_time != -1 %}
       <p><strong>{% trans "Elapsed Time:" %}</strong> {{ submission.elapsed_time|floatformat:2 }} s</p>
-      <p><strong>{% trans "Characters per Minute:" %}</strong> <span id="cpm-display">Calculating...</span></p>
+      <p><strong>{% trans "Keys per Minute (KPM):" %}</strong> <span id="kpm-display">{{ submission.kpm|default:"0" }}</span></p>
     {% endif %}
     <p>
       <strong>{% trans "Status:" %}</strong>
@@ -111,27 +111,26 @@
   const problem_name = "{{ submission.problem.title }}";
   const url = "{{ request.build_absolute_uri }}";
   const language = "{{ submission.language }}";
-  const codeLength = {{ submission.code|length }};
   const elapsedTime = parseFloat("{{ submission.elapsed_time }}");
+  const kpm = parseFloat("{{ submission.kpm|default:0 }}");
 
   const ltl = {
     'py': 'Python',
     'cpp': 'C++',
   };
 
-  function updateShareText(results, totalTime){
+  function updateShareText(results, totalTime, kpm){
     const allAC = results.every(r => r.status === "AC");
     let blocks = results.map(r => r.status === "AC" ? "🟩" : r.status === "WA" ? "🟥" : "🟧").join("");
     const l = ltl[language] || '';
-    const kpm = totalTime > 0 ? (codeLength / totalTime * 60).toFixed(2) : 0;
 
     if(results.some(r => r.status === "CE")){
-        return `I CEed ${problem_name} in ${totalTime} s using ${l} 🤡🅲🅴👎\nTyping Speed: ${kpm} CPM\n${blocks}\nCan you do better?\n${url}`;
+        return `I CEed ${problem_name} in ${totalTime} s using ${l} 🤡🅲🅴👎\nTyping Speed: ${kpm} KPM\n${blocks}\nCan you do better?\n${url}`;
     }
     if(allAC){
-      return `I ACed ${problem_name} in ${totalTime} s using ${l} 👍🚀🎉:orz:\nTyping Speed: ${kpm} CPM\n${blocks}\nCan you do better?\n${url}`;
+      return `I ACed ${problem_name} in ${totalTime} s using ${l} 👍🚀🎉:orz:\nTyping Speed: ${kpm} KPM\n${blocks}\nCan you do better?\n${url}`;
     } else {
-      return `I FAILED ${problem_name} in ${totalTime} s using ${l}! 💀😵😭🤡\nTyping Speed: ${kpm} CPM\n${blocks}\nCan you do better?\n${url}`;
+      return `I FAILED ${problem_name} in ${totalTime} s using ${l}! 💀😵😭🤡\nTyping Speed: ${kpm} KPM\n${blocks}\nCan you do better?\n${url}`;
     }
   }
 
@@ -172,7 +171,7 @@
           resultArea.innerHTML = tableHtml;
 
           if(shareTA){
-            shareTA.value = updateShareText(data.result, elapsedTime);
+            shareTA.value = updateShareText(data.result, elapsedTime, kpm);
             shareCard.style.display = 'block';
           }
         }
@@ -212,19 +211,6 @@
     });
   }
 })();
-(function(){
-  const elapsedTime = parseFloat("{{ submission.elapsed_time }}"); // 秒
-  const codeLength = {{ submission.code|length }};
-  const cpmDisplay = document.getElementById('cpm-display');
-
-  if(elapsedTime > 0){
-    const cpm = (codeLength / elapsedTime * 60).toFixed(2);
-    cpmDisplay.textContent = `${cpm} CPM`;
-  } else {
-    cpmDisplay.textContent = '-';
-  }
-})();
-
 </script>
 
 {% endblock %}

@@ -44,6 +44,7 @@
                 <div id="speedrun-editor" style="height: 400px; border: 1px solid #ccc;"></div>
                 <textarea id="code-hidden" name="code" hidden></textarea>
                 <input type="hidden" name="elapsed_time" id="elapsed-time" value="0">
+                <input type="hidden" name="kpm" id="kpm-input" value="0">
             </form>
         </div>
     </div>
@@ -70,10 +71,12 @@
     const form = document.getElementById("speedrun-form");
     const codeHidden = document.getElementById("code-hidden");
     const elapsedInput = document.getElementById("elapsed-time");
+    const kpmInput = document.getElementById("kpm-input");
     const timerDisplay = document.getElementById("timer");
 
     let startTime = null;
     let timerInterval = null;
+    let keystrokeCount = 0;
 
     require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs' }});
 
@@ -91,6 +94,14 @@
         const preventDefault = (e) => { e.preventDefault(); e.stopImmediatePropagation(); };
         editor.onKeyDown(e => {
             if ((e.ctrlKey || e.metaKey) && ['c','v','x'].includes(e.browserEvent.key.toLowerCase())) preventDefault(e.browserEvent);
+
+            // 统计 KPM（忽略功能键）
+            const ignoredKeys = [
+                monaco.KeyCode.Control, monaco.KeyCode.Shift, monaco.KeyCode.Alt,
+                monaco.KeyCode.Meta, monaco.KeyCode.LeftArrow, monaco.KeyCode.RightArrow,
+                monaco.KeyCode.UpArrow, monaco.KeyCode.DownArrow
+            ];
+            if (!ignoredKeys.includes(e.keyCode)) keystrokeCount++;
         });
         editor.onDidPaste(preventDefault);
         editor.onDidBlurEditorWidget(preventDefault);
@@ -107,32 +118,31 @@
                 startTime = Date.now();
                 timerInterval = setInterval(()=>{
                     const elapsed = (Date.now() - startTime)/1000;
-                    timerDisplay.textContent = `Time: ${elapsed.toFixed(2)} s`;
+                    timerDisplay.textContent = `Time: ${elapsed.toFixed(2)} s`; // 只显示时间
+                    elapsedInput.value = elapsed.toFixed(3);
                 }, 100);
             }
         });
 
-        // 提交前同步内容和 elapsed_time
-        form.addEventListener('submit', function(){
+        // 提交前同步内容和 elapsed_time/kpm
+        const submitHandler = function() {
             codeHidden.value = editor.getValue();
             if(startTime !== null){
                 const elapsed = (Date.now() - startTime)/1000;
                 elapsedInput.value = elapsed.toFixed(3);
-            } else elapsedInput.value = 0;
+                const minutes = elapsed / 60;
+                kpmInput.value = minutes > 0 ? (keystrokeCount / minutes).toFixed(0) : 0;
+            } else {
+                elapsedInput.value = 0;
+                kpmInput.value = 0;
+            }
             if(timerInterval) clearInterval(timerInterval);
-        });
+        };
 
-        // ✅ Ctrl/Cmd + Enter 快捷键提交
-        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, function() {
-            codeHidden.value = editor.getValue();
-            if(startTime !== null){
-                const elapsed = (Date.now() - startTime)/1000;
-                elapsedInput.value = elapsed.toFixed(3);
-            } else elapsedInput.value = 0;
-            if(timerInterval) clearInterval(timerInterval);
-            form.submit();
-        });
+        form.addEventListener('submit', submitHandler);
 
+        // Ctrl/Cmd + Enter 快捷键提交
+        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, submitHandler);
     });
 })();
 </script>

@@ -75,11 +75,19 @@ def problem_speedrun(request, problem_id):
     if request.method == 'POST':
         form = SubmissionForm(request.POST)
         if form.is_valid():
+            # 取 elapsed_time
             elapsed = request.POST.get('elapsed_time', 0)
             try:
                 elapsed = float(elapsed)
             except (ValueError, TypeError):
                 elapsed = 0
+
+            # 取 kpm
+            kpm = request.POST.get('kpm', -1)
+            try:
+                kpm = float(kpm)
+            except (ValueError, TypeError):
+                kpm = -1
 
             submission = Submission.objects.create(
                 problem=problem,
@@ -88,7 +96,8 @@ def problem_speedrun(request, problem_id):
                 language=form.cleaned_data['language'],
                 code=form.cleaned_data['code'],
                 status='PENDING',
-                elapsed_time=elapsed
+                elapsed_time=elapsed,
+                kpm=kpm  # 保存 KPM
             )
             return redirect('submission_detail', sub_id=submission.id)
     else:
@@ -98,6 +107,7 @@ def problem_speedrun(request, problem_id):
         'problem_content': problem_content,
         'form': form
     })
+
 
 
 def submission_detail(request, sub_id):
@@ -136,7 +146,7 @@ def problem_leaderboard(request, problem_id):
         status='AC',
         language='py',
         elapsed_time__gte=0  # 排除练习模式
-    ).order_by('elapsed_time')[:10]
+    ).order_by('elapsed_time')[:15]
 
     return render(request, 'oj/problem_leaderboard.html', {
         'problem': problem,

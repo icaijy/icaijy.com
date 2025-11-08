@@ -1,4 +1,6 @@
 from django.db import models
+from math import nan
+
 
 class Problem(models.Model):
     title = models.CharField(max_length=200)
@@ -31,4 +33,6 @@ class Submission(models.Model):
     result = models.JSONField(null=True, blank=True)
     submit_time = models.DateTimeField(auto_now_add=True)
     elapsed_time = models.FloatField(default=-1)  # 秒，-1 表示练习模式
+    kpm = models.FloatField(default=nan)  # 每分钟键击次数，-1 表示未记录
+
 
