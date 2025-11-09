@@ -13,6 +13,10 @@ def register_view(request):
         password = request.POST['password']
         confirm_password = request.POST['confirm_password']
 
+        if len(username) > 20:
+            messages.error(request, 'Username cannot exceed 20 characters')
+            return redirect('register')
+
         if password != confirm_password:
             messages.error(request, 'Passwords do not match')
             return redirect('register')
@@ -26,6 +30,7 @@ def register_view(request):
         return redirect('home')
 
     return render(request, 'homepage/register.html')
+
 
 
 def login_view(request):
