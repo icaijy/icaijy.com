@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}Register - Henry's Website{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 400px;">
+  <h2 class="text-center mb-4">Create Account</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-danger text-center">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" class="card p-4 shadow-sm" id="register-form">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="username" class="form-label">Username</label>
+      <input type="text" class="form-control" id="username" name="username" required>
+    </div>
+    <div class="mb-3">
+      <label for="password" class="form-label">Password</label>
+      <input type="password" class="form-control" id="password" name="password" required>
+    </div>
+    <div class="mb-3">
+      <label for="confirm_password" class="form-label">Confirm Password</label>
+      <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+    </div>
+    <div class="mb-2 text-danger" id="password-error" style="display:none;"></div>
+    <button type="submit" class="btn btn-primary w-100">Register</button>
+  </form>
+
+  <p class="text-center mt-3">
+    Already have an account? <a href="{% url 'login' %}">Login</a>
+  </p>
+</div>
+
+<script>
+document.getElementById('register-form').addEventListener('submit', function(e) {
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm_password').value;
+    const errorDiv = document.getElementById('password-error');
+
+    if (password !== confirm) {
+        e.preventDefault(); // prevent form submission
+        errorDiv.textContent = 'Passwords do not match';
+        errorDiv.style.display = 'block';
+        return false;
+    }
+
+    if (password.length < 6) { // simple strength check
+        e.preventDefault();
+        errorDiv.textContent = 'Password must be at least 6 characters';
+        errorDiv.style.display = 'block';
+        return false;
+    }
+
+    errorDiv.style.display = 'none';
+});
+</script>
+{% endblock %}

@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}ORAC2 Analytics{% endblock %}
+
+{% block content %}
+<style>
+    /* 样式隔离，不干扰 base.html */
+    #orac-analytics-app {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: #334155;
+        padding: 30px 20px;
+        max-width: 950px;
+        margin: 0 auto;
+        background-color: #ffffff; /* 确保背景为白色 */
+        -webkit-font-smoothing: antialiased;
+    }
+
+    #orac-analytics-app h1 { text-align: center; color: #1e293b; margin-bottom: 25px; font-weight: 800; }
+
+    /* 搜索卡片 */
+    #orac-analytics-app .search-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: center;
+    }
+
+    #orac-analytics-app input {
+        padding: 10px 15px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        width: 300px;
+        margin-right: 10px;
+        font-size: 14px;
+    }
+
+    #orac-analytics-app button {
+        background: #0ea5e9;
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    /* 数据统计概览 */
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .stat-card {
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        text-align: center;
+        background: #fff;
+    }
+
+    .stat-card .label { font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600; }
+    .stat-card .value { font-size: 20px; color: #0f172a; font-weight: 700; display: block; margin-top: 5px; }
+
+    /* 选项卡 */
+    #orac-analytics-app .tab-box {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    #orac-analytics-app .tab-nav {
+        display: flex;
+        background: #f1f5f9;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    #orac-analytics-app .tab-btn {
+        padding: 14px 20px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 14px;
+        flex: 1;
+        transition: all 0.2s;
+    }
+
+    #orac-analytics-app .tab-btn.active {
+        background: white;
+        color: #0ea5e9;
+        box-shadow: inset 0 -3px 0 #0ea5e9;
+    }
+
+    #orac-analytics-app .tab-pane { display: none; }
+    #orac-analytics-app .tab-pane.active { display: block; }
+
+    /* 表格样式 */
+    #orac-analytics-app table { width: 100%; border-collapse: collapse; }
+    #orac-analytics-app th { background: #f8fafc; text-align: left; padding: 12px 15px; font-size: 12px; color: #64748b; }
+    #orac-analytics-app td { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+
+    /* 标签颜色 */
+    .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 700; }
+    .tag-common { background: #dcfce7; color: #15803d; }
+    .tag-u1 { background: #e0f2fe; color: #0369a1; }
+    .tag-u2 { background: #fef3c7; color: #92400e; }
+    .tag-val { background: #f1f5f9; color: #475569; font-family: monospace; }
+</style>
+
+<div id="orac-analytics-app">
+    <h1>ORAC2 Analytics</h1>
+
+    <div class="search-card">
+        <form method="get" style="display:flex;">
+            <input name="user" placeholder="User1, User2" value="{{ request.GET.user }}">
+            <button type="submit">Analyze</button>
+        </form>
+    </div>
+
+    {% if has_result %}
+
+    <div class="stats-bar">
+        {% if mode == "single" %}
+            <div class="stat-card">
+                <span class="label">Total Solved</span>
+                <span class="value">{{ solved|length }}</span>
+            </div>
+        {% else %}
+            <div class="stat-card" style="border-left: 4px solid #22c55e;">
+                <span class="label">Commonly Solved</span>
+                <span class="value">{{ both|length }}</span>
+            </div>
+            <div class="stat-card" style="border-left: 4px solid #0ea5e9;">
+                <span class="label">Only {{ u1 }}</span>
+                <span class="value">{{ only1|length }}</span>
+            </div>
+            <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+                <span class="label">Only {{ u2 }}</span>
+                <span class="value">{{ only2|length }}</span>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="tab-box">
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="showTab(event, 'tab-all')">Compare All</button>
+            {% if mode == "dual" %}
+                <button class="tab-btn" onclick="showTab(event, 'tab-u1')">Only {{ u1 }} ({{ only1|length }})</button>
+                <button class="tab-btn" onclick="showTab(event, 'tab-u2')">Only {{ u2 }} ({{ only2|length }})</button>
+            {% endif %}
+        </div>
+
+        <div id="tab-all" class="tab-pane active">
+            <table>
+                <thead>
+                    <tr><th>Problem Name</th><th>AC Count (Value)</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    {% if mode == "single" %}
+                        {% for p in solved|dictsort:1 %}
+                        <tr>
+                            <td><strong>{{ p.0 }}</strong></td>
+                            <td><span class="badge tag-val">{{ p.1 }}</span></td>
+                            <td><span class="badge tag-common">Solved</span></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        {# 双人汇总排序：分值低的在前 #}
+                        {% for p in both|dictsort:1 %}
+                        <tr>
+                            <td><strong>{{ p.0 }}</strong></td>
+                            <td><span class="badge tag-val">{{ p.1 }}</span></td>
+                            <td><span class="badge tag-common">Both Solved</span></td>
+                        </tr>
+                        {% endfor %}
+                        {% for p in only1|dictsort:1 %}
+                        <tr>
+                            <td><strong>{{ p.0 }}</strong></td>
+                            <td><span class="badge tag-val">{{ p.1 }}</span></td>
+                            <td><span class="badge tag-u1">Only {{ u1 }}</span></td>
+                        </tr>
+                        {% endfor %}
+                        {% for p in only2|dictsort:1 %}
+                        <tr>
+                            <td><strong>{{ p.0 }}</strong></td>
+                            <td><span class="badge tag-val">{{ p.1 }}</span></td>
+                            <td><span class="badge tag-u2">Only {{ u2 }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if mode == "dual" %}
+        <div id="tab-u1" class="tab-pane">
+            <table>
+                <thead><tr><th>Problem Name</th><th>AC Count</th></tr></thead>
+                <tbody>
+                    {% for p in only1|dictsort:1 %}
+                    <tr><td><strong>{{ p.0 }}</strong></td><td><span class="badge tag-val">{{ p.1 }}</span></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div id="tab-u2" class="tab-pane">
+            <table>
+                <thead><tr><th>Problem Name</th><th>AC Count</th></tr></thead>
+                <tbody>
+                    {% for p in only2|dictsort:1 %}
+                    <tr><td><strong>{{ p.0 }}</strong></td><td><span class="badge tag-val">{{ p.1 }}</span></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function showTab(evt, tabId) {
+    var i, panes, btns;
+    panes = document.getElementsByClassName("tab-pane");
+    for (i = 0; i < panes.length; i++) panes[i].classList.remove("active");
+    btns = document.getElementsByClassName("tab-btn");
+    for (i = 0; i < btns.length; i++) btns[i].classList.remove("active");
+    document.getElementById(tabId).classList.add("active");
+    evt.currentTarget.classList.add("active");
+}
+</script>
+{% endblock %}

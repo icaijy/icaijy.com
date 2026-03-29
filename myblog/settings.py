@@ -34,7 +34,6 @@ ALLOWED_HOSTS = ["localhost", "junyi08.com", "www.junyi08.com", "127.0.0.1", "47
 
 # Application definition
 
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -46,8 +45,11 @@ INSTALLED_APPS = [
     'blog',
     'homepage',
     'orac_tracker',
+    'django_apscheduler',
+    'oj',
     'oracdata',
 ]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -140,3 +142,18 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'         # 消息队列
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'     # 任务结果存储，可选
+CELERY_TASK_ALWAYS_EAGER = True
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+CSRF_TRUSTED_ORIGINS = [
+    "https://icaijy.com",
+    "https://www.icaijy.com",
+]
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
+

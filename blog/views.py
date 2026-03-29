@@ -12,7 +12,7 @@ def post_list(request):
 def post_detail(request, pk):
 
     post = get_object_or_404(Post, pk=pk)
-    post.views+=1;
+    post.views+=1
     post.save()
     post_content = markdown.markdown(post.content,extensions=['codehilite','pymdownx.tilde','pymdownx.arithmatex','pymdownx.extra','pymdownx.emoji'])
     # https://facelessuser.github.io/pymdown-extensions/extensions/arithmatex/

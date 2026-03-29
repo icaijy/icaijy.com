@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ problem.title }} - {% trans "Speedrun" %}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+    <h1 class="display-5 text-center mb-4">{{ problem.title }} - {% trans "Speedrun Mode" %}</h1>
+
+    <div class="mb-3 d-flex gap-2">
+        <a href="{% url 'problem_detail' problem.id %}" class="btn btn-outline-success">
+            {% trans "Back to Practice Mode" %}
+        </a>
+        <a href="{% url 'problem_leaderboard' problem.id %}" class="btn btn-outline-primary">
+            {% trans "View Leaderboard" %}
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5>{% trans "Speedrun Editor(copy&paste are banned)" %}</h5>
+                <div id="timer" class="h5 text-danger m-0">Time: 0.00 s</div>
+            </div>
+
+            <p class="text-muted mb-2" style="font-size: 0.9rem;">
+                💡 {% trans "Tip:" %} {% trans "Press Ctrl + Enter (or ⌘ + Enter on Mac) to submit your code instantly." %}
+            </p>
+
+            <form method="post" id="speedrun-form" novalidate>
+                {% csrf_token %}
+                <div class="mb-2 d-flex gap-2">
+                    <select name="language" class="form-select w-auto" id="lang-select">
+                        <option value="cpp">C++</option>
+                        <option value="py">Python</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">{% trans "Submit" %}</button>
+                </div>
+
+                <!-- Monaco Editor -->
+                <div id="speedrun-editor" style="height: 400px; border: 1px solid #ccc;"></div>
+                <textarea id="code-hidden" name="code" hidden></textarea>
+                <input type="hidden" name="elapsed_time" id="elapsed-time" value="0">
+                <input type="hidden" name="kpm" id="kpm-hidden" value="0">
+            </form>
+        </div>
+    </div>
+
+    <!-- Problem Description -->
+    <div class="card shadow">
+        <div class="card-body">
+            <p class="lead">{{ problem_content|safe }}</p>
+            <p class="text-muted">
+                <strong>{% trans "Time Limit:" %}</strong> {{ problem.time_limit }}s
+                &nbsp; | &nbsp;
+                <strong>{% trans "Memory Limit:" %}</strong> {{ problem.memory_limit }} MB
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<!-- Monaco Editor -->
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs/loader.js"></script>
+<script>
+(function(){
+    const langSelect = document.getElementById("lang-select");
+    const form = document.getElementById("speedrun-form");
+    const codeHidden = document.getElementById("code-hidden");
+    const elapsedInput = document.getElementById("elapsed-time");
+    const kpmInput = document.getElementById("kpm-hidden");
+    const timerDisplay = document.getElementById("timer");
+
+    let startTime = null;
+    let timerInterval = null;
+    let keyCount = 0;
+
+    require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs' }});
+
+    require(['vs/editor/editor.main'], function () {
+        const editor = monaco.editor.create(document.getElementById('speedrun-editor'), {
+            value: '',
+            language: 'cpp',
+            theme: 'vs',
+            automaticLayout: true,
+            fontSize: 14,
+            minimap: { enabled: false }
+        });
+
+        // 禁止复制/粘贴/拖拽
+        const preventDefault = (e) => { e.preventDefault(); e.stopImmediatePropagation(); };
+        editor.onKeyDown(e => {
+            if ((e.ctrlKey || e.metaKey) && ['c','v','x'].includes(e.browserEvent.key.toLowerCase())) preventDefault(e.browserEvent);
+            else keyCount++; // 每次按键计数
+        });
+        editor.onDidPaste(preventDefault);
+        editor.onDidBlurEditorWidget(preventDefault);
+
+        // 切换语言
+        langSelect.addEventListener('change', function(){
+            const newLang = (this.value === 'cpp') ? 'cpp' : 'python';
+            monaco.editor.setModelLanguage(editor.getModel(), newLang);
+        });
+
+        // 计时器：第一次修改开始
+        editor.onDidChangeModelContent(() => {
+            if(startTime === null){
+                startTime = Date.now();
+                timerInterval = setInterval(()=>{
+                    const elapsed = (Date.now() - startTime)/1000;
+                    timerDisplay.textContent = `Time: ${elapsed.toFixed(2)} s`;
+                    const kpm = keyCount / elapsed * 60;
+                    kpmInput.value = kpm.toFixed(2);
+                }, 100);
+            }
+        });
+
+        // 提交前同步内容
+        function syncAndSubmit(){
+            codeHidden.value = editor.getValue();
+            if(startTime !== null){
+                const elapsed = (Date.now() - startTime)/1000;
+                elapsedInput.value = elapsed.toFixed(3);
+                const kpm = keyCount / elapsed * 60;
+                kpmInput.value = kpm.toFixed(2);
+            } else {
+                elapsedInput.value = 0;
+                kpmInput.value = 0;
+            }
+            if(timerInterval) clearInterval(timerInterval);
+            form.submit();
+        }
+
+        // 表单 submit
+        form.addEventListener('submit', (e)=> {
+            syncAndSubmit();
+        });
+
+        // Ctrl/Cmd + Enter 快捷键提交
+        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, function() {
+            syncAndSubmit();
+        });
+    });
+})();
+</script>
+{% endblock %}
