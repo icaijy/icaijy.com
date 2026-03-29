@@ -1,28 +1,137 @@
 {% extends 'base.html' %}
-
 {% load i18n %}
+
 {% block title %}{% trans "Homepage - Henry's Website" %}{% endblock %}
 
 {% block content %}
-<div class="container text-center mt-5">
-    <h1 class="mb-4">{% trans "Welcome to My Homepage" %}</h1>
-    <p class="lead">{% trans "This is the homepage of my website." %}</p>
+<style>
+    /* 样式隔离，确保不污染全局 */
+    #homepage-wrapper {
+        font-family: 'Inter', -apple-system, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        color: #1e293b;
+        padding: 60px 20px;
+        min-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff; /* 纯白背景 */
+    }
 
-    <div class="mt-4">
-        <p>
-            {% trans "Check out my" %}
-            <a href="/blog">{% trans "blog" %}</a> 
-            {% trans "or the" %}
-            <a href="/orac-leaderboards">ORAC Leaderboards++</a>,
-            {% trans "or try the" %}
-            <a href="/oj">{% trans "Speed Online Judge" %}</a>!
-        </p>
+    #homepage-wrapper .hero-section {
+        max-width: 800px;
+        text-align: center;
+        margin-bottom: 50px;
+    }
+
+    #homepage-wrapper h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    #homepage-wrapper .lead {
+        font-size: 1.25rem;
+        color: #64748b;
+        margin-bottom: 30px;
+    }
+
+    /* 快捷链接美化 */
+    #homepage-wrapper .quick-links {
+        font-size: 1.1rem;
+        color: #94a3b8;
+        border-top: 1px solid #f1f5f9;
+        padding-top: 25px;
+    }
+
+    #homepage-wrapper .quick-links a {
+        color: #0ea5e9;
+        text-decoration: none;
+        font-weight: 600;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+    #homepage-wrapper .quick-links a:hover {
+        border-bottom-color: #0ea5e9;
+    }
+
+    /* 按钮组卡片化 */
+    #homepage-wrapper .button-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        width: 100%;
+        max-width: 900px;
+        margin-top: 40px;
+    }
+
+    #homepage-wrapper .nav-card {
+        padding: 24px;
+        border-radius: 16px;
+        text-decoration: none;
+        text-align: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    #homepage-wrapper .nav-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 针对不同按钮的配色优化 */
+    .btn-blog { background: #eff6ff; color: #1d4ed8; border-color: #dbeafe; }
+    .btn-leader { background: #f0fdf4; color: #15803d; border-color: #dcfce7; }
+    .btn-oj { background: #fffbeb; color: #b45309; border-color: #fef3c7; }
+    .btn-analytics { background: #faf5ff; color: #7e22ce; border-color: #f3e8ff; }
+
+    @media (max-width: 600px) {
+        #homepage-wrapper h1 { font-size: 2.5rem; }
+        #homepage-wrapper .button-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div id="homepage-wrapper">
+    <div class="hero-section">
+        <h1>{% trans "Welcome to My Homepage" %}</h1>
+        <p class="lead">{% trans "Explore projects, data, and insights in one place." %}</p>
+
+        <div class="quick-links">
+            <p>
+                {% trans "Check out my" %}
+                <a href="/blog">{% trans "blog" %}</a>,
+                <a href="/orac-leaderboards">ORAC Leaderboards++</a>,
+                {% trans "or" %}
+                <a href="/oj">{% trans "Speed Online Judge" %}</a>.
+            </p>
+        </div>
     </div>
 
-    <div class="mt-5">
-        <a href="/blog" class="btn btn-primary me-2">{% trans "Henry's Blog" %}</a>
-        <a href="/orac-leaderboards" class="btn btn-success me-2">{% trans "ORAC Leaderboards++" %}</a>
-        <a href="/oj" class="btn btn-warning">{% trans "Speed Online Judge" %}</a>
+    <div class="button-grid">
+        <a href="/blog" class="nav-card btn-blog">
+            ✍️ {% trans "Henry's Blog" %}
+        </a>
+        <a href="/orac-leaderboards" class="nav-card btn-leader">
+            🏆 ORAC Leaderboards++
+        </a>
+        <a href="/oj" class="nav-card btn-oj">
+            🚀 {% trans "Speed Online Judge" %}
+        </a>
+        <a href="/oracdata" class="nav-card btn-analytics">
+            📊 {% trans "ORAC2 Analytics" %}
+        </a>
     </div>
 </div>
 {% endblock %}
