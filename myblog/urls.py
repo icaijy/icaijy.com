@@ -26,6 +26,7 @@ urlpatterns = [
     path('blog/', include('blog.urls')),
     path('set_language/', views.set_language, name='set_language'),
     path('i18n/',include("django.conf.urls.i18n")),
+    path('', include('oracdata.urls')),
     path('', include('homepage.urls')),
     path('', include('orac_tracker.urls')),
 ]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

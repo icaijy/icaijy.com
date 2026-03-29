@@ -34,6 +34,7 @@ ALLOWED_HOSTS = ["localhost", "junyi08.com", "www.junyi08.com", "127.0.0.1", "47
 
 # Application definition
 
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -45,9 +46,8 @@ INSTALLED_APPS = [
     'blog',
     'homepage',
     'orac_tracker',
-    'django_apscheduler',
+    'oracdata',
 ]
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
