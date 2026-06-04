@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django_apscheduler',
     'oj',
     'oracdata',
+    'prank',
 ]
 
 MIDDLEWARE = [

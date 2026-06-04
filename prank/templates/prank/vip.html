@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>溏心VLOG - VIP会员中心</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:#0d0d0d;
+    color:white;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+.header{
+    text-align:center;
+    padding:40px 20px;
+}
+
+.logo{
+    font-size:40px;
+    font-weight:bold;
+    color:#ff5c93;
+}
+
+.subtitle{
+    color:#aaa;
+    margin-top:10px;
+}
+
+.stats{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    margin-top:20px;
+    color:#ccc;
+    font-size:14px;
+}
+
+.container{
+    width:min(95%,600px);
+    margin:auto;
+}
+
+.plan{
+    background:#1a1a1a;
+    border-radius:16px;
+    padding:20px;
+    margin-bottom:16px;
+    border:1px solid #333;
+    position:relative;
+}
+
+.plan.hot{
+    border:2px solid gold;
+}
+
+.badge{
+    position:absolute;
+    top:-10px;
+    right:15px;
+    background:gold;
+    color:black;
+    padding:4px 10px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.plan-title{
+    font-size:24px;
+    margin-bottom:10px;
+}
+
+.price{
+    font-size:36px;
+    font-weight:bold;
+    color:#ff5c93;
+}
+
+.features{
+    margin-top:15px;
+    color:#ddd;
+}
+
+.features li{
+    margin:8px 0;
+    list-style:none;
+}
+
+button{
+    width:100%;
+    margin-top:20px;
+    border:none;
+    background:#ff5c93;
+    color:white;
+    font-size:18px;
+    padding:14px;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:0.9;
+}
+
+.footer{
+    text-align:center;
+    color:#777;
+    padding:40px 0;
+}
+
+#loading{
+    display:none;
+    text-align:center;
+    padding:80px 20px;
+}
+
+.spinner{
+    width:60px;
+    height:60px;
+    border:6px solid #333;
+    border-top:6px solid #ff5c93;
+    border-radius:50%;
+    margin:auto;
+    animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+    from{transform:rotate(0deg);}
+    to{transform:rotate(360deg);}
+}
+</style>
+</head>
+
+<body>
+
+<div id="main">
+
+<div class="header">
+    <div class="logo">溏心VLOG</div>
+    <div class="subtitle">
+        记录每一个心动瞬间
+    </div>
+
+    <div class="stats">
+        <span>在线用户 23,841</span>
+        <span>VIP会员 127,593</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="plan">
+        <div class="plan-title">月度会员</div>
+        <div class="price">¥68</div>
+
+        <ul class="features">
+            <li>✓ 高清视频</li>
+            <li>✓ 无限观看</li>
+            <li>✓ 专属内容</li>
+        </ul>
+
+        <button onclick="buy('月度会员')">
+            立即开通
+        </button>
+    </div>
+
+    <div class="plan hot">
+        <div class="badge">最受欢迎</div>
+
+        <div class="plan-title">季度会员</div>
+        <div class="price">¥168</div>
+
+        <ul class="features">
+            <li>✓ 高清视频</li>
+            <li>✓ 无限观看</li>
+            <li>✓ 专属内容</li>
+            <li>✓ 尊贵身份标识</li>
+        </ul>
+
+        <button onclick="buy('季度会员')">
+            立即开通
+        </button>
+    </div>
+
+    <div class="plan">
+        <div class="plan-title">年度会员</div>
+        <div class="price">¥588</div>
+
+        <ul class="features">
+            <li>✓ 全站权益</li>
+            <li>✓ 超前体验</li>
+            <li>✓ VIP专属客服</li>
+        </ul>
+
+        <button onclick="buy('年度会员')">
+            立即开通
+        </button>
+    </div>
+
+    <div class="plan">
+        <div class="plan-title">至尊终身会员</div>
+        <div class="price">¥9999</div>
+
+        <ul class="features">
+            <li>✓ 永久会员</li>
+            <li>✓ 至尊皇冠标识</li>
+            <li>✓ 神秘隐藏功能</li>
+            <li>✓ 老板看了都害怕</li>
+        </ul>
+
+        <button onclick="buy('至尊终身会员')">
+            立即开通
+        </button>
+    </div>
+
+</div>
+
+<div class="footer">
+    © 2026 溏心VLOG
+</div>
+
+</div>
+
+<div id="loading">
+    <div class="spinner"></div>
+
+    <h2 style="margin-top:30px">
+        正在为您开通会员...
+    </h2>
+
+    <p id="status" style="margin-top:15px;color:#aaa">
+        请稍候
+    </p>
+</div>
+
+<script>
+
+function buy(plan){
+
+    if(!confirm(`确认购买${plan}？`))
+        return;
+
+    document.getElementById("main").style.display="none";
+    document.getElementById("loading").style.display="block";
+
+    let msgs=[
+        "验证支付信息...",
+        "同步会员数据...",
+        "激活专属权益...",
+        "准备观看记录..."
+    ];
+
+    let idx=0;
+
+    let timer=setInterval(()=>{
+        if(idx<msgs.length){
+            document.getElementById("status").innerText=msgs[idx++];
+        }
+    },1000);
+
+    setTimeout(()=>{
+
+        document.body.innerHTML=`
+        <div style="
+            text-align:center;
+            padding-top:120px;
+            font-family:sans-serif;
+        ">
+            <h1>✅ 支付成功</h1>
+
+            <h2 style="margin-top:20px">
+                订单金额：¥9999
+            </h2>
+
+            <h3 style="margin-top:20px;color:#ff5c93">
+                正在向监护人发送消费通知...
+            </h3>
+
+            <p style="margin-top:10px">
+                联系人：谭力
+            </p>
+        </div>
+        `;
+
+    },5000);
+
+    setTimeout(()=>{
+
+        document.body.innerHTML=`
+        <div style="
+            text-align:center;
+            padding-top:120px;
+            font-family:sans-serif;
+        ">
+            <div style="font-size:120px">🤣</div>
+
+            <h1>被骗啦！</h1>
+
+            <h2>根本没有扣钱</h2>
+
+            <p style="margin-top:30px;color:gray">
+                溏心VLOG感谢您的智商赞助
+            </p>
+
+            <h3 style="margin-top:40px">
+                当前智商余额：-9999
+            </h3>
+        </div>
+        `;
+
+    },8000);
+}
+</script>
+
+</body>
+</html>

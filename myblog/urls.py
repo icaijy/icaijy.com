@@ -30,4 +30,5 @@ urlpatterns = [
     path('orac-leaderboards/', include('orac_tracker.urls')),
     path('oj/', include('oj.urls')),
     path('', include('oracdata.urls')),
+    path("vip/", include("prank.urls")),
 ]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
