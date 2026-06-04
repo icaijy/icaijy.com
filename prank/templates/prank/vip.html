@@ -242,7 +242,12 @@ button:hover{
 </div>
 
 <script>
+function getParam(key){
+    let url = new URL(window.location.href);
+    return url.searchParams.get(key);
+}
 
+let parentName = getParam("name") || "谭力";
 function buy(plan){
 
     if(!confirm(`确认购买${plan}？`))
@@ -285,7 +290,7 @@ function buy(plan){
             </h3>
 
             <p style="margin-top:10px">
-                联系人：谭力
+                联系人：${parentName}
             </p>
         </div>
         `;
