@@ -10,7 +10,9 @@ if (app) {
   const countdownEl = document.getElementById('countdown');
   const livePill = document.getElementById('live-pill');
   const enableButton = document.getElementById('enable-camera');
-  const startButton = document.getElementById('start-run');
+  // There is intentionally only one primary run button. Before camera access it
+  // enables the camera; afterwards the same control becomes the readiness button.
+  const startButton = enableButton;
   const resetButton = document.getElementById('reset-run');
   const errorEl = document.getElementById('counter-error');
   const resultCard = document.getElementById('counter-result');
@@ -142,6 +144,12 @@ if (app) {
 
   function delay(milliseconds) {
     return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+  }
+
+  function nextPaint() {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
   }
 
   function csrfToken() {
@@ -302,6 +310,7 @@ if (app) {
 
   async function initialiseDetector() {
     enableButton.disabled = true;
+    enableButton.textContent = 'Enabling camera…';
     setStatus('Requesting camera permission…', 'busy');
     showError('');
     try {
@@ -312,14 +321,22 @@ if (app) {
       video.srcObject = stream;
       await video.play();
       placeholder.hidden = true;
-      setStatus(landmarker ? 'Pose model ready' : 'Finishing pose model preload…', 'busy');
+      enableButton.textContent = landmarker ? READY_LABEL : 'Loading pose detector…';
+      setStatus(landmarker ? 'Pose model ready' : 'Camera live — finishing pose model preload…', 'busy');
+
+      // Let the browser paint the live camera before MediaPipe finishes its
+      // heavier WASM/model initialisation. On a cold cache this can take a few
+      // seconds, but the UI no longer looks frozen while it happens.
+      await nextPaint();
       await initialisePoseRuntime();
-      enableButton.hidden = true;
+
       startButton.disabled = false;
       startButton.textContent = READY_LABEL;
+      setStatus('Detector ready — click I\'m ready, then step into frame', 'ready');
       detectorLoop = requestAnimationFrame(detectFrame);
     } catch (error) {
       enableButton.disabled = false;
+      enableButton.textContent = 'Enable camera';
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
         stream = null;
@@ -568,8 +585,22 @@ if (app) {
     copyShareStatus.textContent = '';
     resetButton.hidden = true;
     startButton.disabled = !landmarker;
-    startButton.textContent = landmarker ? READY_LABEL : 'Detector is still loading…';
+    startButton.textContent = landmarker ? READY_LABEL : 'Loading pose detector…';
     showError('');
+  }
+
+  async function responsePayload(response) {
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      return response.json();
+    }
+    const text = await response.text();
+    const summary = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 180);
+    return {
+      error: summary
+        ? `Upload failed (${response.status}). Server response: ${summary}`
+        : `Upload failed (${response.status}). The server returned a non-JSON response.`,
+    };
   }
 
   async function submitRecording() {
@@ -595,10 +626,13 @@ if (app) {
       const response = await fetch(app.dataset.submitUrl, {
         method: 'POST',
         body: form,
-        headers: { 'X-CSRFToken': csrfToken() },
+        headers: {
+          'X-CSRFToken': csrfToken(),
+          'Accept': 'application/json',
+        },
         credentials: 'same-origin',
       });
-      const payload = await response.json();
+      const payload = await responsePayload(response);
       if (!response.ok) throw new Error(payload.error || 'Upload failed.');
       uploadStatus.textContent = payload.message;
       submitButton.hidden = true;
@@ -612,8 +646,10 @@ if (app) {
   }
 
   preloadPoseRuntime();
-  enableButton.addEventListener('click', initialiseDetector);
-  startButton.addEventListener('click', armRun);
+  enableButton.addEventListener('click', () => {
+    if (stream) armRun();
+    else initialiseDetector();
+  });
   resetButton.addEventListener('click', resetRun);
   submitButton?.addEventListener('click', submitRecording);
   discardButton?.addEventListener('click', discardRecording);
