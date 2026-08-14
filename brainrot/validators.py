@@ -37,12 +37,17 @@ def _packet_duration(path, ffprobe):
         values = line.split(',')
         try:
             pts = float(values[0])
-            packet_duration = float(values[1]) if len(values) > 1 and values[1] else 0
-            first_pts = pts if first_pts is None else min(first_pts, pts)
-            packet_end = pts + packet_duration
-            end_time = packet_end if end_time is None else max(end_time, packet_end)
-        except ValueError:
+        except (IndexError, ValueError):
             continue
+        try:
+            packet_duration = float(values[1]) if len(values) > 1 and values[1] else 0
+        except ValueError:
+            # Firefox WebM commonly reports a valid PTS with duration_time=N/A.
+            # The PTS still contributes to the encoded packet span.
+            packet_duration = 0
+        first_pts = pts if first_pts is None else min(first_pts, pts)
+        packet_end = pts + max(0, packet_duration)
+        end_time = packet_end if end_time is None else max(end_time, packet_end)
     if first_pts is None or end_time is None:
         return 0
     # MediaRecorder packets may retain timestamps from the long-lived camera
@@ -115,7 +120,8 @@ def _probe_video(upload, expected_mime):
         duration = packet_duration if packet_duration > 1 else container_duration
         if duration <= 1 or duration > settings.HOF_MAX_VIDEO_SECONDS:
             raise ValidationError(
-                f'Video duration must be between 1 and {settings.HOF_MAX_VIDEO_SECONDS:g} seconds.'
+                f'Video duration was detected as {duration:.2f} seconds; it must be between '
+                f'1 and {settings.HOF_MAX_VIDEO_SECONDS:g} seconds.'
             )
         return duration
     except (json.JSONDecodeError, ValueError, subprocess.TimeoutExpired):
