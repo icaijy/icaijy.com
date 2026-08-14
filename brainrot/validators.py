@@ -103,11 +103,16 @@ def _probe_video(upload, expected_mime):
         if not any(stream.get('codec_name') in allowed_codecs for stream in video_streams):
             raise ValidationError('The video codec is not supported.')
         try:
-            duration = float(payload.get('format', {}).get('duration', 0))
+            container_duration = float(payload.get('format', {}).get('duration', 0))
         except (TypeError, ValueError):
-            duration = 0
-        if duration <= 0:
-            duration = _packet_duration(path, ffprobe)
+            container_duration = 0
+
+        # MediaRecorder may write a non-zero container duration based on the
+        # lifetime of the camera track rather than this recording. Packet PTS
+        # span reflects the actual encoded evidence and is therefore preferred
+        # whenever ffprobe can recover it.
+        packet_duration = _packet_duration(path, ffprobe)
+        duration = packet_duration if packet_duration > 1 else container_duration
         if duration <= 1 or duration > settings.HOF_MAX_VIDEO_SECONDS:
             raise ValidationError(
                 f'Video duration must be between 1 and {settings.HOF_MAX_VIDEO_SECONDS:g} seconds.'
