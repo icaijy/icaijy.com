@@ -24,10 +24,11 @@ class BrainrotPageTests(TestCase):
 
     def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
         response = self.client.get('/67/counter/')
-        self.assertContains(response, 'brainrot.css?v=20260814.3')
-        self.assertContains(response, 'counter.js?v=20260814.7')
+        self.assertContains(response, 'brainrot.css?v=20260814.4')
+        self.assertContains(response, 'counter.js?v=20260814.8')
         self.assertContains(response, 'id="counter-share-text"')
         self.assertContains(response, 'id="copy-counter-share"')
+        self.assertContains(response, 'id="download-recording"')
 
         script_path = finders.find('brainrot/counter.js')
         self.assertIsNotNone(script_path)
@@ -39,6 +40,7 @@ class BrainrotPageTests(TestCase):
         self.assertIn("new URL('/67/counter/', window.location.origin)", script)
         self.assertIn('preloadPoseRuntime();', script)
         self.assertLess(script.index('preloadPoseRuntime();'), script.index("enableButton.addEventListener('click'"))
+        self.assertIn('return [11, 12, 15, 16].every', script)
 
 
 class VideoValidationTests(TestCase):
@@ -111,3 +113,7 @@ class HallOfFameSubmissionTests(TestCase):
         entry.state = HallOfFameEntry.State.APPROVED
         entry.save(update_fields=['state'])
         self.assertEqual(self.client.get(path).status_code, 200)
+
+        download = self.client.get(f'{path}?download=1')
+        self.assertEqual(download.status_code, 200)
+        self.assertTrue(download['Content-Disposition'].startswith('attachment;'))

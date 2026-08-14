@@ -132,7 +132,8 @@ def hall_of_fame_video(request, entry_id):
 
     response = FileResponse(entry.video.open('rb'), content_type=entry.mime_type)
     response['Content-Length'] = entry.video.size
-    response['Content-Disposition'] = f'inline; filename="67-run-{entry.pk}.{entry.video.name.rsplit(".", 1)[-1]}"'
+    disposition = 'attachment' if request.GET.get('download') == '1' else 'inline'
+    response['Content-Disposition'] = f'{disposition}; filename="67-run-{entry.pk}.{entry.video.name.rsplit(".", 1)[-1]}"'
     response['X-Content-Type-Options'] = 'nosniff'
     response['Cache-Control'] = 'private, max-age=300'
     return response

@@ -21,6 +21,7 @@ if (app) {
   const copyShareStatus = document.getElementById('copy-counter-status');
   const recordingReview = document.getElementById('recording-review');
   const recordingPreview = document.getElementById('recording-preview');
+  const recordingDownload = document.getElementById('download-recording');
   const submitButton = document.getElementById('submit-hof');
   const discardButton = document.getElementById('discard-recording');
   const uploadStatus = document.getElementById('upload-status');
@@ -209,7 +210,9 @@ if (app) {
 
   function sufficientlyVisible(landmarks) {
     if (!landmarks) return false;
-    return [11, 12, 13, 14, 15, 16].every((id) => {
+    // Elbows improve the overlay but do not participate in the counter. A
+    // briefly uncertain elbow should not discard an otherwise usable frame.
+    return [11, 12, 15, 16].every((id) => {
       const point = landmarks[id];
       return point && (point.visibility ?? 1) > 0.45 && point.x > 0.02 && point.x < 0.98 && point.y > 0.02 && point.y < 0.98;
     });
@@ -428,6 +431,9 @@ if (app) {
       if (recordingUrl) URL.revokeObjectURL(recordingUrl);
       recordingUrl = URL.createObjectURL(blob);
       recordingPreview.src = recordingUrl;
+      recordingDownload.href = recordingUrl;
+      recordingDownload.download = blob.type === 'video/mp4' ? '67-run.mp4' : '67-run.webm';
+      recordingDownload.hidden = false;
     }
     resetButton.hidden = false;
     resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -439,6 +445,8 @@ if (app) {
     recordingBlob = null;
     recordingPreview.removeAttribute('src');
     recordingPreview.load();
+    recordingDownload.removeAttribute('href');
+    recordingDownload.hidden = true;
     recordingReview.hidden = true;
     if (uploadStatus) uploadStatus.textContent = 'Recording discarded. Nothing was uploaded.';
   }
