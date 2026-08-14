@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ entry.user.username }} — 67 Hall of Fame{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.6">
+<main class="br-page hall-detail-page" id="hof-detail"
+      data-entry-url="{{ request.build_absolute_uri }}"
+      data-username="{{ entry.user.username }}"
+      data-score="{{ entry.score }}">
+  <header class="br-toolbar">
+    <a href="{% url 'brainrot:hall_of_fame' %}">← Hall of Fame</a>
+    <a href="{% url 'brainrot:index' %}">All experiments</a>
+  </header>
+
+  <section class="hall-detail-heading">
+    <span class="br-kicker">ARCHIVED HUMAN PERFORMANCE SPECIMEN #{{ entry.id }}</span>
+    <h1>{{ entry.score }}</h1>
+    <div>
+      <strong>{{ entry.user.username }}</strong>
+      <span>{{ entry.created_at|date:'j M Y · H:i' }} · {{ entry.duration_seconds|floatformat:2 }} seconds</span>
+    </div>
+  </section>
+
+  {% url 'brainrot:hall_of_fame_video' entry.id as evidence_url %}
+  <section class="hall-detail-grid">
+    <div class="hall-evidence-card">
+      <video controls preload="metadata" playsinline src="{{ evidence_url }}"></video>
+      <div class="hall-evidence-actions">
+        <a class="br-secondary br-button-link" href="{{ evidence_url }}?download=1">Download evidence</a>
+        <a class="br-primary br-button-link" href="{% url 'brainrot:challenge' entry.id %}">Challenge this specimen</a>
+      </div>
+    </div>
+
+    <aside class="hall-share-card">
+      <span class="br-kicker">PUBLIC REPLICATION MATERIAL</span>
+      <h2>Share this run</h2>
+      {% if request.user == entry.user %}
+      <p>This is your permanent Hall of Fame link. Deploy it responsibly.</p>
+      {% else %}
+      <p>Distribute this evidence to researchers, rivals and confused relatives.</p>
+      {% endif %}
+      <textarea id="hof-share-text" rows="5" readonly aria-label="Shareable Hall of Fame result"></textarea>
+      <button class="br-primary" id="share-hof" type="button">Share Hall of Fame link</button>
+      <button class="br-secondary" id="copy-hof-link" type="button">Copy link</button>
+      <p class="subtle" id="hof-share-status" role="status" aria-live="polite"></p>
+    </aside>
+  </section>
+</main>
+<script src="{% static 'brainrot/hof_detail.js' %}?v=20260814.1" defer></script>
+{% endblock %}

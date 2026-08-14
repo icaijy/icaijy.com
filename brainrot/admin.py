@@ -11,7 +11,7 @@ class HallOfFameEntryAdmin(admin.ModelAdmin):
     list_filter = ('state', 'created_at')
     search_fields = ('user__username',)
     list_editable = ('score', 'state')
-    readonly_fields = ('user', 'mime_type', 'duration_seconds', 'created_at', 'review_video')
+    readonly_fields = ('user', 'mime_type', 'duration_seconds', 'event_timeline', 'created_at', 'review_video')
     actions = ('approve_entries', 'reject_entries')
 
     @admin.display(description='Recording')

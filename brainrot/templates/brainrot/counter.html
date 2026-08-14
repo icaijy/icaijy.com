@@ -6,24 +6,31 @@
 {% block content %}
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.5">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.6">
 {% if turnstile_enabled %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}
 
 <main class="br-page counter-page" id="counter-app"
       data-submit-url="{% url 'brainrot:submit_hall_of_fame' %}"
       data-hall-url="{% url 'brainrot:hall_of_fame' %}"
-      data-login-url="{% url 'login' %}?next={% url 'brainrot:counter' %}"
+      data-login-url="{% url 'login' %}?next={{ request.path|urlencode }}"
       data-authenticated="{% if request.user.is_authenticated %}true{% else %}false{% endif %}"
-      data-max-upload-mb="{{ max_upload_mb }}">
+      data-max-upload-mb="{{ max_upload_mb }}"
+      {% if rival %}data-rival-name="{{ rival.user.username }}" data-rival-score="{{ rival.score }}"{% endif %}>
   <header class="br-toolbar">
     <a href="{% url 'brainrot:index' %}">← Research division</a>
     <a href="{% url 'brainrot:hall_of_fame' %}">Hall of Fame</a>
   </header>
 
   <section class="counter-intro">
+    {% if rival %}
+    <span class="br-kicker">SYNCHRONISED HUMAN PERFORMANCE TRIAL · 20 SECONDS</span>
+    <h1>YOU vs {{ rival.user.username }}</h1>
+    <p>The archived specimen will run beside you. Out-67 it under controlled laboratory conditions.</p>
+    {% else %}
     <span class="br-kicker">POSE KINETICS LAB · 20 SECOND PROTOCOL</span>
     <h1>SIX SEVEN</h1>
     <p>Alternate your hands up and down. The Institute will count whatever happens next.</p>
+    {% endif %}
   </section>
 
   <section class="privacy-strip" aria-label="Camera privacy information">
@@ -31,7 +38,24 @@
     from the countdown, but nothing uploads unless you press Submit to Hall of Fame. Resetting or closing discards it.
   </section>
 
-  <section class="counter-layout">
+  <section class="counter-layout{% if rival %} challenge-layout{% endif %}">
+    {% if rival %}<div class="duel-grid">{% endif %}
+    {% if rival %}
+    <div class="camera-card rival-card">
+      <div class="camera-stage rival-stage">
+        <video id="rival-video" muted playsinline preload="auto"
+               src="{% url 'brainrot:hall_of_fame_video' rival.id %}"></video>
+        <div class="rival-score-pill">
+          <span>{{ rival.user.username }}</span>
+          <strong id="rival-score">0</strong>
+        </div>
+      </div>
+      <div class="detector-status ready">
+        <span class="status-dot"></span>
+        <span>{% if rival_timeline_exact %}Recorded event timeline ready{% else %}Legacy run · estimated count pace{% endif %}</span>
+      </div>
+    </div>
+    {% endif %}
     <div class="camera-card">
       <div class="camera-stage" id="camera-stage">
         <video id="camera" playsinline muted></video>
@@ -48,6 +72,7 @@
         <span>Preloading pose model — camera remains off</span>
       </div>
     </div>
+    {% if rival %}</div>{% endif %}
 
     <aside class="counter-panel">
       <div class="score-block">
@@ -55,6 +80,13 @@
         <strong id="score">0</strong>
       </div>
       <div class="timer-block"><span>time remaining</span><strong id="counter-time">20.0</strong></div>
+      {% if rival %}
+      <div class="challenge-target">
+        <span>target specimen</span>
+        <strong>{{ rival.score }}</strong>
+        <a href="{% url 'brainrot:hall_of_fame_detail' rival.id %}">View HOF entry</a>
+      </div>
+      {% endif %}
 
       <button class="br-primary" id="enable-camera">Enable camera</button>
       <button class="br-primary" id="start-run" disabled>Detector is still loading…</button>
@@ -79,7 +111,7 @@
         <button class="br-primary" id="submit-hof">Submit to Hall of Fame</button>
         <button class="br-text-button" id="discard-recording">Discard recording</button>
       {% else %}
-        <a class="br-primary br-button-link" href="{% url 'login' %}?next={% url 'brainrot:counter' %}">Log in to submit this run</a>
+        <a class="br-primary br-button-link" href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in to submit this run</a>
         <p class="subtle">Logging in reloads the page, so this local recording will be lost.</p>
       {% endif %}
       <p id="upload-status" role="status"></p>
@@ -93,6 +125,10 @@
   </section>
 </main>
 
+{% if rival %}
+{{ rival_timeline|json_script:'rival-event-timeline' }}
+{% endif %}
+
 {# Keep this version in step with counter.js so browsers cannot retain a broken runtime URL. #}
-<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.10"></script>
+<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.11"></script>
 {% endblock %}

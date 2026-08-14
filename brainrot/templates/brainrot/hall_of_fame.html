@@ -4,7 +4,7 @@
 {% block title %}67 Hall of Fame{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.4">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.6">
 <main class="br-page hall-page">
   <header class="br-toolbar">
     <a href="{% url 'brainrot:counter' %}">← 67 Counter</a>
@@ -25,12 +25,10 @@
         <span>{{ entry.created_at|date:'j M Y' }}</span>
       </div>
       <strong class="hall-score">{{ entry.score }}</strong>
-      <details>
-        {% url 'brainrot:hall_of_fame_video' entry.id as evidence_url %}
-        <summary>Watch the evidence</summary>
-        <video controls preload="none" playsinline src="{{ evidence_url }}"></video>
-        <a class="hall-download" href="{{ evidence_url }}?download=1">Download evidence</a>
-      </details>
+      <div class="hall-actions">
+        <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">View specimen</a>
+        <a href="{% url 'brainrot:challenge' entry.id %}">Challenge</a>
+      </div>
     </article>
     {% empty %}
     <div class="empty-hall">
