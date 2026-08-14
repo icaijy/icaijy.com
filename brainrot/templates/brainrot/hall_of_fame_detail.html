@@ -44,9 +44,9 @@
       {% else %}
       <p>Distribute this evidence to researchers, rivals and confused relatives.</p>
       {% endif %}
-      <textarea id="hof-share-text" rows="5" readonly aria-label="Shareable Hall of Fame result"></textarea>
-      <button class="br-primary" id="share-hof" type="button">Share Hall of Fame link</button>
-      <button class="br-secondary" id="copy-hof-link" type="button">Copy link</button>
+      <textarea id="hof-share-text" rows="6" readonly aria-label="Shareable Hall of Fame result"></textarea>
+      <button class="br-primary" id="share-hof" type="button">Share result!</button>
+      <button class="br-secondary" id="copy-hof-link" type="button">Copy share message</button>
       {% if request.user == entry.user and entry.user_id %}
       <form class="hof-delete-form" method="post" action="{% url 'brainrot:delete_hall_of_fame_entry' entry.id %}"
             onsubmit="return confirm('Delete this Hall of Fame entry and its video permanently?');">
@@ -58,5 +58,5 @@
     </aside>
   </section>
 </main>
-<script src="{% static 'brainrot/hof_detail.js' %}?v=20260814.2" defer></script>
+<script src="{% static 'brainrot/hof_detail.js' %}?v=20260814.3" defer></script>
 {% endblock %}
