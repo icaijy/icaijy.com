@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
@@ -122,7 +123,7 @@ def submit_hall_of_fame(request):
     return JsonResponse({
         'ok': True,
         'message': 'Submitted for human review. Peer review has never been this important.',
-        'hall_of_fame_url': '/brainrot/67/hall-of-fame/',
+        'hall_of_fame_url': reverse('brainrot:hall_of_fame'),
     }, status=201)
 
 
