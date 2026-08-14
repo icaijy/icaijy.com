@@ -28,8 +28,8 @@ class BrainrotPageTests(TestCase):
     @override_settings(DEBUG=True)
     def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
         response = self.client.get('/67/counter/')
-        self.assertContains(response, 'brainrot.css?v=20260814.8')
-        self.assertContains(response, 'counter.js?v=20260814.13')
+        self.assertContains(response, 'brainrot.css?v=20260814.9')
+        self.assertContains(response, 'counter.js?v=20260814.14')
         self.assertContains(response, 'id="counter-share-text"')
         self.assertContains(response, 'id="copy-counter-share"')
         self.assertContains(response, 'id="download-recording"')
@@ -39,7 +39,9 @@ class BrainrotPageTests(TestCase):
         self.assertContains(response, 'id="submit-hof"')
         self.assertContains(response, 'id="hof-display-name"')
         self.assertContains(response, 'id="start-run" disabled hidden')
-        self.assertContains(response, '★ Hall of Fame')
+        self.assertContains(response, 'id="counter-hof-portal"')
+        self.assertContains(response, 'PUBLIC 20-SECOND VIDEO LEADERBOARD')
+        self.assertNotContains(response, 'hof-nav-link')
         self.assertNotContains(response, 'Log in to submit this run')
 
         script_path = finders.find('brainrot/counter.js')
@@ -66,6 +68,7 @@ class BrainrotPageTests(TestCase):
         self.assertNotIn('await response.json()', script)
         self.assertIn("const preferCpu = /Firefox\\//.test(navigator.userAgent);", script)
         self.assertIn("delegate: preferCpu ? 'CPU' : 'GPU'", script)
+        self.assertIn('I made ${score} 6️⃣7️⃣ moves in 20 seconds.', script)
         self.assertLess(script.index('enableButton.hidden = true;'), script.index('await initialisePoseRuntime();', script.index('async function initialiseDetector')))
 
 
@@ -88,11 +91,21 @@ class HallOfFamePageTests(TestCase):
         self.assertContains(response, 'id="hof-share-text"')
         self.assertContains(response, 'Share Hall of Fame link')
         self.assertContains(response, f'/67/challenge/{self.entry.id}/')
-        self.assertContains(response, 'hof_detail.js?v=20260814.1')
+        self.assertContains(response, 'swan-scientist made 3 6️⃣7️⃣ moves in 20 seconds.')
+        self.assertContains(response, 'hof_detail.js?v=20260814.2')
 
         leaderboard = self.client.get('/67/hall-of-fame/')
         self.assertContains(leaderboard, detail_path)
         self.assertContains(leaderboard, f'/67/challenge/{self.entry.id}/')
+        self.assertContains(leaderboard, 'Watch video preview')
+        self.assertContains(leaderboard, 'preload="none"')
+        self.assertContains(leaderboard, f'/67/hall-of-fame/{self.entry.id}/video/?download=1')
+        self.assertContains(leaderboard, 'swan-scientist made 3 6️⃣7️⃣ moves in 20 seconds.')
+
+        script_path = finders.find('brainrot/hof_detail.js')
+        self.assertIsNotNone(script_path)
+        script = Path(script_path).read_text(encoding='utf-8')
+        self.assertIn('made ${detail.dataset.score} 6️⃣7️⃣ moves in 20 seconds.', script)
 
     def test_challenge_embeds_video_and_exact_event_timeline(self):
         response = self.client.get(f'/67/challenge/{self.entry.id}/')

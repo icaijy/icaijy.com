@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/vision_bundle.mjs" crossorigin>
 <link rel="preload" href="https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task" as="fetch" crossorigin>
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.8">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.9">
 {% if turnstile_enabled %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}
 
 <main class="br-page counter-page" id="counter-app"
@@ -18,22 +18,30 @@
       {% if rival %}data-rival-name="{{ rival.public_name }}" data-rival-score="{{ rival.score }}"{% endif %}>
   <header class="br-toolbar">
     <a href="{% url 'brainrot:index' %}">← Research division</a>
-    <div class="br-toolbar-links">
-      {% if request.user.is_authenticated %}<a href="{% url 'brainrot:my_hall_of_fame' %}">My HOF</a>{% endif %}
-      <a class="hof-nav-link" href="{% url 'brainrot:hall_of_fame' %}">★ Hall of Fame</a>
-    </div>
   </header>
 
-  <section class="counter-intro">
-    {% if rival %}
-    <span class="br-kicker">SYNCHRONISED HUMAN PERFORMANCE TRIAL · 20 SECONDS</span>
-    <h1>YOU vs {{ rival.public_name }}</h1>
-    <p>The archived specimen will run beside you. Out-67 it under controlled laboratory conditions.</p>
-    {% else %}
-    <span class="br-kicker">POSE KINETICS LAB · 20 SECOND PROTOCOL</span>
-    <h1>SIX SEVEN</h1>
-    <p>Alternate your hands up and down. The Institute will count whatever happens next.</p>
-    {% endif %}
+  <section class="counter-hero">
+    <div class="counter-intro">
+      {% if rival %}
+      <span class="br-kicker">SYNCHRONISED HUMAN PERFORMANCE TRIAL · 20 SECONDS</span>
+      <h1>YOU vs {{ rival.public_name }}</h1>
+      <p>{{ rival.public_name }} made {{ rival.score }} 6️⃣7️⃣ moves in 20 seconds. Their video will play beside yours.</p>
+      {% else %}
+      <span class="br-kicker">POSE KINETICS LAB · 20 SECOND PROTOCOL</span>
+      <h1>SIX SEVEN</h1>
+      <p>Move your arms up and down in the 6–7 pattern. Make as many counted moves as you can in 20 seconds.</p>
+      {% endif %}
+    </div>
+    <div class="counter-hof-column">
+      <a class="counter-hof-portal" id="counter-hof-portal" href="{% url 'brainrot:hall_of_fame' %}">
+        <span>PUBLIC 20-SECOND VIDEO LEADERBOARD</span>
+        <strong>HALL OF<br>FAME</strong>
+        <small>Watch runs · preview videos · challenge scores →</small>
+      </a>
+      {% if request.user.is_authenticated %}
+      <a class="counter-my-hof" href="{% url 'brainrot:my_hall_of_fame' %}">Manage my submitted runs →</a>
+      {% endif %}
+    </div>
   </section>
 
   <section class="privacy-strip" aria-label="Camera privacy information">
@@ -79,13 +87,13 @@
 
     <aside class="counter-panel">
       <div class="score-block">
-        <span>observed 67 events</span>
+        <span>6️⃣7️⃣ moves counted</span>
         <strong id="score">0</strong>
       </div>
       <div class="timer-block"><span>time remaining</span><strong id="counter-time">20.0</strong></div>
       {% if rival %}
       <div class="challenge-target">
-        <span>target specimen</span>
+        <span>score to beat</span>
         <strong>{{ rival.score }}</strong>
         <a href="{% url 'brainrot:hall_of_fame_detail' rival.id %}">View HOF entry</a>
       </div>
@@ -102,7 +110,7 @@
   <section class="result-card" id="counter-result" hidden>
     <div>
       <span class="br-kicker">PEER-REVIEWED BY YOURSELF</span>
-      <h2><span id="result-score">0</span> confirmed-looking events</h2>
+      <h2><span id="result-score">0</span> 6️⃣7️⃣ moves in 20 seconds</h2>
       <p id="result-copy">A result has occurred.</p>
     </div>
     <div class="recording-review" id="recording-review" hidden>
@@ -147,5 +155,5 @@
 {% endif %}
 
 {# Keep this version in step with counter.js so browsers cannot retain a broken runtime URL. #}
-<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.13"></script>
+<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.14"></script>
 {% endblock %}

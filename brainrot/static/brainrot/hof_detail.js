@@ -5,7 +5,7 @@ if (detail) {
   const copyButton = document.getElementById('copy-hof-link');
   const status = document.getElementById('hof-share-status');
   const url = detail.dataset.entryUrl;
-  const text = `${detail.dataset.username} scored ${detail.dataset.score} in the 67 Hall of Fame.\nThe evidence has survived peer review by vibes.\n${url}`;
+  const text = `${detail.dataset.username} made ${detail.dataset.score} 6️⃣7️⃣ moves in 20 seconds.\nWatch the run and try to beat it:\n${url}`;
   shareText.value = text;
 
   async function copyLink() {
