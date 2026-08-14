@@ -156,15 +156,15 @@ if (app) {
 
   function shareableResult() {
     const headline = rivalName
-      ? `I scored ${score} against ${rivalName}'s ${rivalFinalScore} in a synchronised 67 Challenge. 🧪`
+      ? `I made ${score} 6️⃣7️⃣ moves in 20 seconds against ${rivalName}'s ${rivalFinalScore}.`
       : score === 67
-        ? 'I scored exactly 67 in the 67 Counter. Peer review is complete. 🧪'
-        : `I scored ${score} in the 67 Counter. The data is unfortunately real. 🧪`;
+        ? 'I made exactly 67 6️⃣7️⃣ moves in 20 seconds. Peer review is complete. 🧪'
+        : `I made ${score} 6️⃣7️⃣ moves in 20 seconds.`;
     const blocks = score > 0
       ? `${'🟩'.repeat(Math.min(score, 67))}${score > 67 ? ` +${score - 67}` : ''}`
       : '⬜';
     const url = rivalName ? window.location.href : new URL('/67/counter/', window.location.origin).href;
-    return `${headline}\n20 seconds of arm-based research\n${blocks}\nSIX SEVEN\nCan you do better?\n${url}`;
+    return `${headline}\n${blocks}\nSIX SEVEN\nWatch the run or try to beat it.\n${url}`;
   }
 
   async function copyShareResult() {

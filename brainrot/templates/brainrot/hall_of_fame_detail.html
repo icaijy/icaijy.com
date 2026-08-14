@@ -4,7 +4,7 @@
 {% block title %}{{ entry.public_name }} — 67 Hall of Fame{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.8">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.9">
 <main class="br-page hall-detail-page" id="hof-detail"
       data-entry-url="{{ request.build_absolute_uri }}"
       data-username="{{ entry.public_name }}"
@@ -18,7 +18,7 @@
     <span class="br-kicker">ARCHIVED HUMAN PERFORMANCE SPECIMEN #{{ entry.id }}</span>
     <h1>{{ entry.score }}</h1>
     <div>
-      <strong>{{ entry.public_name }}</strong>
+      <strong>{{ entry.public_name }} made {{ entry.score }} 6️⃣7️⃣ moves in 20 seconds.</strong>
       <span>{{ entry.created_at|date:'j M Y · H:i' }} · {{ entry.duration_seconds|floatformat:2 }} seconds</span>
     </div>
   </section>
@@ -58,5 +58,5 @@
     </aside>
   </section>
 </main>
-<script src="{% static 'brainrot/hof_detail.js' %}?v=20260814.1" defer></script>
+<script src="{% static 'brainrot/hof_detail.js' %}?v=20260814.2" defer></script>
 {% endblock %}
