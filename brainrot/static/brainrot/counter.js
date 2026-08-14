@@ -95,7 +95,7 @@ if (app) {
     const blocks = score > 0
       ? `${'🟩'.repeat(Math.min(score, 67))}${score > 67 ? ` +${score - 67}` : ''}`
       : '⬜';
-    const url = new URL('/67/', window.location.origin).href;
+    const url = new URL('/67/counter/', window.location.origin).href;
     return `${headline}\n20 seconds of arm-based research\n${blocks}\nSIX SEVEN\nCan you do better?\n${url}`;
   }
 
