@@ -24,11 +24,14 @@ class BrainrotPageTests(TestCase):
 
     def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
         response = self.client.get('/67/counter/')
-        self.assertContains(response, 'brainrot.css?v=20260814.4')
-        self.assertContains(response, 'counter.js?v=20260814.8')
+        self.assertContains(response, 'brainrot.css?v=20260814.5')
+        self.assertContains(response, 'counter.js?v=20260814.9')
         self.assertContains(response, 'id="counter-share-text"')
         self.assertContains(response, 'id="copy-counter-share"')
         self.assertContains(response, 'id="download-recording"')
+        self.assertNotContains(response, 'Run classification')
+        self.assertNotContains(response, 'Casual Run')
+        self.assertContains(response, 'nothing uploads unless you press Submit to Hall of Fame')
 
         script_path = finders.find('brainrot/counter.js')
         self.assertIsNotNone(script_path)
@@ -41,6 +44,9 @@ class BrainrotPageTests(TestCase):
         self.assertIn('preloadPoseRuntime();', script)
         self.assertLess(script.index('preloadPoseRuntime();'), script.index("enableButton.addEventListener('click'"))
         self.assertIn('return [11, 12, 15, 16].every', script)
+        self.assertNotIn('currentMode', script)
+        self.assertNotIn('modeInputs', script)
+        self.assertIn('const blob = await stopRecording();', script)
 
 
 class VideoValidationTests(TestCase):
