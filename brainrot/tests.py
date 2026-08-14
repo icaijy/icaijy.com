@@ -9,7 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
 from .models import HallOfFameEntry
-from .validators import ValidatedVideo, _packet_duration
+from .validators import ValidatedVideo, _packet_duration, _probe_video
 
 
 class BrainrotPageTests(TestCase):
@@ -57,6 +57,25 @@ class VideoValidationTests(TestCase):
             stdout='87.000000,0.033333\n109.966667,0.033333\n',
         )
         self.assertAlmostEqual(_packet_duration('/tmp/run.webm', '/usr/bin/ffprobe'), 23.0)
+
+    @override_settings(HOF_MAX_VIDEO_SECONDS=26)
+    @patch('brainrot.validators.shutil.which', return_value='/usr/bin/ffprobe')
+    @patch('brainrot.validators._packet_duration', return_value=23.0)
+    @patch('brainrot.validators.subprocess.run')
+    def test_probe_prefers_packet_span_over_incorrect_container_duration(
+        self,
+        run,
+        packet_duration,
+        which,
+    ):
+        run.return_value = SimpleNamespace(
+            returncode=0,
+            stdout='{"streams":[{"codec_type":"video","codec_name":"vp8"}],"format":{"duration":"110.0"}}',
+        )
+        upload = SimpleUploadedFile('run.webm', b'video bytes', content_type='video/webm')
+
+        self.assertEqual(_probe_video(upload, 'video/webm'), 23.0)
+        packet_duration.assert_called_once()
 
     def test_typing_result_has_share_box_and_url(self):
         response = self.client.get('/67/typing/')
