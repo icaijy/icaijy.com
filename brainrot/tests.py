@@ -89,10 +89,11 @@ class HallOfFamePageTests(TestCase):
         detail_path = f'/67/hall-of-fame/{self.entry.id}/'
         response = self.client.get(detail_path)
         self.assertContains(response, 'id="hof-share-text"')
-        self.assertContains(response, 'Share Hall of Fame link')
+        self.assertContains(response, 'Share result!')
+        self.assertContains(response, 'Copy share message')
         self.assertContains(response, f'/67/challenge/{self.entry.id}/')
         self.assertContains(response, 'swan-scientist made 3 6️⃣7️⃣ moves in 20 seconds.')
-        self.assertContains(response, 'hof_detail.js?v=20260814.2')
+        self.assertContains(response, 'hof_detail.js?v=20260814.3')
 
         leaderboard = self.client.get('/67/hall-of-fame/')
         self.assertContains(leaderboard, detail_path)
@@ -105,7 +106,10 @@ class HallOfFamePageTests(TestCase):
         script_path = finders.find('brainrot/hof_detail.js')
         self.assertIsNotNone(script_path)
         script = Path(script_path).read_text(encoding='utf-8')
-        self.assertIn('made ${detail.dataset.score} 6️⃣7️⃣ moves in 20 seconds.', script)
+        self.assertIn('made ${score} 6️⃣7️⃣ moves in 20 seconds! 🔥', script)
+        self.assertIn("'🟩'.repeat(Math.min(score, 20))", script)
+        self.assertIn('copyShareMessage', script)
+        self.assertNotIn('navigator.clipboard.writeText(url)', script)
 
     def test_challenge_embeds_video_and_exact_event_timeline(self):
         response = self.client.get(f'/67/challenge/{self.entry.id}/')
