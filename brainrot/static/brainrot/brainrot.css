@@ -156,6 +156,7 @@
 .br-button-link:hover { color: white; }
 .br-text-button { display: block; margin: .7rem auto 0; border: 0; background: transparent; color: var(--br-muted); text-decoration: underline; }
 .counter-error { min-height: 1.3rem; margin: .8rem 0 0; color: #b91c1c; font-size: .85rem; }
+.run-consent { margin: .65rem .15rem 0; text-align: center; }
 .result-card { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1.25rem; padding: 1.5rem; }
 .result-card h2 { margin-top: .4rem; font-weight: 900; }
 .recording-review video { width: 100%; max-height: 310px; border-radius: 12px; background: #111827; }

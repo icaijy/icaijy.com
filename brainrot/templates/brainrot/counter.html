@@ -6,7 +6,7 @@
 {% block content %}
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.4">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.5">
 {% if turnstile_enabled %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}
 
 <main class="br-page counter-page" id="counter-app"
@@ -27,8 +27,8 @@
   </section>
 
   <section class="privacy-strip" aria-label="Camera privacy information">
-    <strong>Camera privacy:</strong> pose detection runs in this browser. Casual runs are never recorded or uploaded.
-    Hall of Fame runs are recorded locally and upload only after you press submit.
+    <strong>Camera privacy:</strong> pose detection and recording run in this browser. Every run is recorded locally
+    from the countdown, but nothing uploads unless you press Submit to Hall of Fame. Resetting or closing discards it.
   </section>
 
   <section class="counter-layout">
@@ -56,20 +56,9 @@
       </div>
       <div class="timer-block"><span>time remaining</span><strong id="counter-time">20.0</strong></div>
 
-      <fieldset class="run-mode" id="run-mode">
-        <legend>Run classification</legend>
-        <label class="mode-option active">
-          <input type="radio" name="mode" value="casual" checked>
-          <span><strong>Casual Run</strong><small>No recording. The score lives and dies in this tab.</small></span>
-        </label>
-        <label class="mode-option">
-          <input type="radio" name="mode" value="hof">
-          <span><strong>Hall of Fame Run</strong><small>Record locally now; decide whether to upload after.</small></span>
-        </label>
-      </fieldset>
-
       <button class="br-primary" id="enable-camera">Enable camera</button>
       <button class="br-primary" id="start-run" disabled>Detector is still loading…</button>
+      <p class="subtle run-consent">I'm ready starts a local recording. Submitting remains your decision.</p>
       <button class="br-secondary" id="reset-run" hidden>Run this foolish experiment again</button>
       <p class="counter-error" id="counter-error" role="alert"></p>
     </aside>
@@ -105,5 +94,5 @@
 </main>
 
 {# Keep this version in step with counter.js so browsers cannot retain a broken runtime URL. #}
-<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.8"></script>
+<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.9"></script>
 {% endblock %}

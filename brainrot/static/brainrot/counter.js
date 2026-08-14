@@ -25,11 +25,11 @@ if (app) {
   const submitButton = document.getElementById('submit-hof');
   const discardButton = document.getElementById('discard-recording');
   const uploadStatus = document.getElementById('upload-status');
-  const modeInputs = [...document.querySelectorAll('input[name="mode"]')];
 
   const GAME_SECONDS = 20;
   const COUNTDOWN_STEP_MS = 1000;
   const GO_DISPLAY_MS = 250;
+  const READY_LABEL = "I'm ready — record locally";
   let stream = null;
   let landmarker = null;
   let runtimePromise = null;
@@ -41,7 +41,6 @@ if (app) {
   let running = false;
   let armed = false;
   let countdownActive = false;
-  let currentMode = 'casual';
   let endTime = 0;
   let score = 0;
   let lastZone = 0;
@@ -265,12 +264,12 @@ if (app) {
             }
           } else if (poseReady) {
             startButton.disabled = false;
-            startButton.textContent = "I'm ready";
+            startButton.textContent = READY_LABEL;
             setStatus('Pose detected — click I\'m ready, then take your position', 'ready');
           } else {
             // Readiness is a user decision; a pose is required to start, not to arm the run.
             startButton.disabled = false;
-            startButton.textContent = "I'm ready";
+            startButton.textContent = READY_LABEL;
             setStatus('Detector ready — click I\'m ready, then step into frame', 'ready');
           }
         }
@@ -298,7 +297,7 @@ if (app) {
       await initialisePoseRuntime();
       enableButton.hidden = true;
       startButton.disabled = false;
-      startButton.textContent = "I'm ready";
+      startButton.textContent = READY_LABEL;
       detectorLoop = requestAnimationFrame(detectFrame);
     } catch (error) {
       enableButton.disabled = false;
@@ -359,13 +358,11 @@ if (app) {
 
   function armRun() {
     if (!landmarker || running || countdownActive || armed) return;
-    currentMode = document.querySelector('input[name="mode"]:checked').value;
     showError('');
     resultCard.hidden = true;
     resetButton.hidden = true;
     startButton.disabled = true;
     startButton.textContent = 'Waiting for your pose…';
-    modeInputs.forEach((input) => { input.disabled = true; });
     score = 0;
     lastZone = 0;
     lastCountAt = 0;
@@ -382,17 +379,14 @@ if (app) {
     countdownActive = true;
     setStatus('Pose locked — countdown commencing', 'ready');
 
-    if (currentMode === 'hof') {
-      try {
-        startRecording();
-      } catch (error) {
-        showError(error.message);
-        countdownActive = false;
-        modeInputs.forEach((input) => { input.disabled = false; });
-        startButton.disabled = false;
-        startButton.textContent = "I'm ready";
-        return;
-      }
+    try {
+      startRecording();
+    } catch (error) {
+      showError(error.message);
+      countdownActive = false;
+      startButton.disabled = false;
+      startButton.textContent = READY_LABEL;
+      return;
     }
 
     for (const value of ['3', '2', '1']) {
@@ -415,7 +409,7 @@ if (app) {
     cancelAnimationFrame(gameLoop);
     timeEl.textContent = '0.0';
     setStatus('Run complete — detector remains local', 'ready');
-    const blob = currentMode === 'hof' ? await stopRecording() : null;
+    const blob = await stopRecording();
 
     resultScore.textContent = score;
     resultCopy.textContent = score === 67
@@ -426,7 +420,7 @@ if (app) {
     shareText.value = shareableResult();
     copyShareStatus.textContent = '';
     resultCard.hidden = false;
-    recordingReview.hidden = currentMode !== 'hof';
+    recordingReview.hidden = false;
     if (blob) {
       if (recordingUrl) URL.revokeObjectURL(recordingUrl);
       recordingUrl = URL.createObjectURL(blob);
@@ -462,9 +456,8 @@ if (app) {
     shareText.value = '';
     copyShareStatus.textContent = '';
     resetButton.hidden = true;
-    modeInputs.forEach((input) => { input.disabled = false; });
     startButton.disabled = !landmarker;
-    startButton.textContent = landmarker ? "I'm ready" : 'Detector is still loading…';
+    startButton.textContent = landmarker ? READY_LABEL : 'Detector is still loading…';
     showError('');
   }
 
@@ -505,13 +498,6 @@ if (app) {
     }
   }
 
-  modeInputs.forEach((input) => {
-    input.addEventListener('change', () => {
-      document.querySelectorAll('.mode-option').forEach((label) => {
-        label.classList.toggle('active', label.contains(document.querySelector('input[name="mode"]:checked')));
-      });
-    });
-  });
   preloadPoseRuntime();
   enableButton.addEventListener('click', initialiseDetector);
   startButton.addEventListener('click', armRun);
