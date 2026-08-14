@@ -151,7 +151,7 @@ OJ_ENABLED = os.getenv('OJ_ENABLED', 'False') == 'True'
 PRIVATE_MEDIA_ROOT = Path(os.getenv('PRIVATE_MEDIA_ROOT', BASE_DIR / 'private_media'))
 HOF_MAX_UPLOAD_BYTES = int(os.getenv('HOF_MAX_UPLOAD_BYTES', 25 * 1024 * 1024))
 HOF_MAX_VIDEO_SECONDS = float(os.getenv('HOF_MAX_VIDEO_SECONDS', 26))
-HOF_SUBMISSIONS_PER_HOUR = int(os.getenv('HOF_SUBMISSIONS_PER_HOUR', 3))
+HOF_SUBMISSIONS_PER_MINUTE = int(os.getenv('HOF_SUBMISSIONS_PER_MINUTE', 3))
 
 # Optional but recommended in production.  If both values are present the
 # Hall of Fame upload endpoint requires a server-verified Turnstile token.

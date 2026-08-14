@@ -70,12 +70,12 @@ def _turnstile_is_valid(request):
 @require_POST
 @login_required
 def submit_hall_of_fame(request):
-    recent_cutoff = timezone.now() - timedelta(hours=1)
+    recent_cutoff = timezone.now() - timedelta(minutes=1)
     recent_count = HallOfFameUploadAttempt.objects.filter(
         user=request.user,
         created_at__gte=recent_cutoff,
     ).count()
-    if recent_count >= settings.HOF_SUBMISSIONS_PER_HOUR:
+    if recent_count >= settings.HOF_SUBMISSIONS_PER_MINUTE:
         return JsonResponse({'error': 'Rate limit reached. The Institute requests patience.'}, status=429)
 
     attempt = HallOfFameUploadAttempt.objects.create(user=request.user)

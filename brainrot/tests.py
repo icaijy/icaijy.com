@@ -25,7 +25,7 @@ class BrainrotPageTests(TestCase):
     def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
         response = self.client.get('/67/counter/')
         self.assertContains(response, 'brainrot.css?v=20260814.3')
-        self.assertContains(response, 'counter.js?v=20260814.6')
+        self.assertContains(response, 'counter.js?v=20260814.7')
         self.assertContains(response, 'id="counter-share-text"')
         self.assertContains(response, 'id="copy-counter-share"')
 
@@ -37,6 +37,8 @@ class BrainrotPageTests(TestCase):
         self.assertIn("startButton.disabled = false;", script)
         self.assertIn("if (poseReady) {\n              beginRun();", script)
         self.assertIn("new URL('/67/counter/', window.location.origin)", script)
+        self.assertIn('preloadPoseRuntime();', script)
+        self.assertLess(script.index('preloadPoseRuntime();'), script.index("enableButton.addEventListener('click'"))
 
 
 class VideoValidationTests(TestCase):
@@ -59,7 +61,7 @@ class VideoValidationTests(TestCase):
         self.assertIn("new URL('/67/typing/', window.location.origin)", script)
 
 
-@override_settings(TURNSTILE_ENABLED=False, HOF_SUBMISSIONS_PER_HOUR=1)
+@override_settings(TURNSTILE_ENABLED=False, HOF_SUBMISSIONS_PER_MINUTE=1)
 class HallOfFameSubmissionTests(TestCase):
     def setUp(self):
         self.private_directory = tempfile.TemporaryDirectory()

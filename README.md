@@ -11,7 +11,7 @@
 - Recordings are written to `PRIVATE_MEDIA_ROOT` (default: `private_media/`). Do **not** expose that directory as a public nginx/static alias; videos are served through a permission-checking Django route.
 - Enforce `client_max_body_size 26M;` (or the equivalent at the reverse proxy) in addition to the application-level 25 MiB limit.
 - Hall of Fame uploads require a logged-in account and are limited per account. For production, configure `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` to add Cloudflare Turnstile with mandatory server-side verification.
-- The default Hall of Fame rate limit is 3 attempts per authenticated account in a rolling hour. Failed Turnstile, score, and video-validation attempts count too; override it with `HOF_SUBMISSIONS_PER_HOUR`.
+- The default Hall of Fame rate limit is 3 attempts per authenticated account in a rolling minute. Failed Turnstile, score, and video-validation attempts count too; override it with `HOF_SUBMISSIONS_PER_MINUTE`.
 - Valid Hall of Fame uploads are published immediately. Delete obvious fake or abusive entries in Django admin; deleting an entry also deletes its private recording.
 
 Deploy database/static changes with:

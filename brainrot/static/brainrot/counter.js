@@ -31,6 +31,7 @@ if (app) {
   const GO_DISPLAY_MS = 250;
   let stream = null;
   let landmarker = null;
+  let runtimePromise = null;
   let detectorLoop = null;
   let gameLoop = null;
   let lastVideoTime = -1;
@@ -70,6 +71,48 @@ if (app) {
       }
     }
     throw new Error(`Could not load the pose runtime from either CDN: ${lastError?.message || 'network blocked'}`);
+  }
+
+  function initialisePoseRuntime() {
+    if (landmarker) return Promise.resolve(landmarker);
+    if (!runtimePromise) {
+      runtimePromise = (async () => {
+        const { FilesetResolver, PoseLandmarker, wasmRoot } = await loadMediaPipe();
+        const vision = await FilesetResolver.forVisionTasks(wasmRoot);
+        const options = {
+          baseOptions: {
+            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+            delegate: 'GPU',
+          },
+          runningMode: 'VIDEO',
+          numPoses: 1,
+          minPoseDetectionConfidence: 0.55,
+          minPosePresenceConfidence: 0.55,
+          minTrackingConfidence: 0.55,
+        };
+        try {
+          landmarker = await PoseLandmarker.createFromOptions(vision, options);
+        } catch (gpuError) {
+          options.baseOptions.delegate = 'CPU';
+          landmarker = await PoseLandmarker.createFromOptions(vision, options);
+        }
+        return landmarker;
+      })().catch((error) => {
+        runtimePromise = null;
+        throw error;
+      });
+    }
+    return runtimePromise;
+  }
+
+  function preloadPoseRuntime() {
+    setStatus('Preloading pose model — camera remains off', 'busy');
+    initialisePoseRuntime().then(() => {
+      if (!stream) setStatus('Pose model ready — camera remains off', 'ready');
+    }).catch((error) => {
+      if (!stream) setStatus('Pose model preload paused — camera remains off');
+      console.warn('Pose runtime preload failed; the camera button will retry it.', error);
+    });
   }
 
   function setStatus(message, state = '') {
@@ -248,27 +291,8 @@ if (app) {
       video.srcObject = stream;
       await video.play();
       placeholder.hidden = true;
-      setStatus('Loading the pose model into this browser…', 'busy');
-
-      const { FilesetResolver, PoseLandmarker, wasmRoot } = await loadMediaPipe();
-      const vision = await FilesetResolver.forVisionTasks(wasmRoot);
-      const options = {
-        baseOptions: {
-          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
-          delegate: 'GPU',
-        },
-        runningMode: 'VIDEO',
-        numPoses: 1,
-        minPoseDetectionConfidence: 0.55,
-        minPosePresenceConfidence: 0.55,
-        minTrackingConfidence: 0.55,
-      };
-      try {
-        landmarker = await PoseLandmarker.createFromOptions(vision, options);
-      } catch (gpuError) {
-        options.baseOptions.delegate = 'CPU';
-        landmarker = await PoseLandmarker.createFromOptions(vision, options);
-      }
+      setStatus(landmarker ? 'Pose model ready' : 'Finishing pose model preload…', 'busy');
+      await initialisePoseRuntime();
       enableButton.hidden = true;
       startButton.disabled = false;
       startButton.textContent = "I'm ready";
@@ -480,6 +504,7 @@ if (app) {
       });
     });
   });
+  preloadPoseRuntime();
   enableButton.addEventListener('click', initialiseDetector);
   startButton.addEventListener('click', armRun);
   resetButton.addEventListener('click', resetRun);
