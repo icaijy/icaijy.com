@@ -4,11 +4,15 @@
 {% block title %}67 Hall of Fame{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.6">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.7">
 <main class="br-page hall-page">
   <header class="br-toolbar">
     <a href="{% url 'brainrot:counter' %}">← 67 Counter</a>
+    {% if request.user.is_authenticated %}
+    <a href="{% url 'brainrot:my_hall_of_fame' %}">My HOF</a>
+    {% else %}
     <a href="{% url 'brainrot:index' %}">All experiments</a>
+    {% endif %}
   </header>
   <section class="hall-heading">
     <span class="br-kicker">PUBLIC ARCHIVE OF EXCEPTIONAL ARM ACTIVITY</span>
@@ -21,7 +25,7 @@
     <article class="hall-entry">
       <span class="hall-rank">#{{ forloop.counter }}</span>
       <div class="hall-person">
-        <strong>{{ entry.user.username }}</strong>
+        <strong>{{ entry.public_name }}</strong>
         <span>{{ entry.created_at|date:'j M Y' }}</span>
       </div>
       <strong class="hall-score">{{ entry.score }}</strong>

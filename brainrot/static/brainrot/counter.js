@@ -23,6 +23,7 @@ if (app) {
   const recordingPreview = document.getElementById('recording-preview');
   const recordingDownload = document.getElementById('download-recording');
   const submitButton = document.getElementById('submit-hof');
+  const displayNameInput = document.getElementById('hof-display-name');
   const discardButton = document.getElementById('discard-recording');
   const uploadStatus = document.getElementById('upload-status');
   const rivalVideo = document.getElementById('rival-video');
@@ -585,6 +586,7 @@ if (app) {
     form.append('score', String(score));
     form.append('event_timeline', JSON.stringify(eventTimeline));
     form.append('video', recordingBlob, `67-run.${extension}`);
+    if (displayNameInput) form.append('display_name', displayNameInput.value);
     if (turnstileResponse) form.append('cf-turnstile-response', turnstileResponse);
 
     submitButton.disabled = true;

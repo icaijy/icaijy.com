@@ -6,25 +6,26 @@
 {% block content %}
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.6">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.7">
 {% if turnstile_enabled %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}
 
 <main class="br-page counter-page" id="counter-app"
       data-submit-url="{% url 'brainrot:submit_hall_of_fame' %}"
       data-hall-url="{% url 'brainrot:hall_of_fame' %}"
-      data-login-url="{% url 'login' %}?next={{ request.path|urlencode }}"
-      data-authenticated="{% if request.user.is_authenticated %}true{% else %}false{% endif %}"
       data-max-upload-mb="{{ max_upload_mb }}"
-      {% if rival %}data-rival-name="{{ rival.user.username }}" data-rival-score="{{ rival.score }}"{% endif %}>
+      {% if rival %}data-rival-name="{{ rival.public_name }}" data-rival-score="{{ rival.score }}"{% endif %}>
   <header class="br-toolbar">
     <a href="{% url 'brainrot:index' %}">← Research division</a>
-    <a href="{% url 'brainrot:hall_of_fame' %}">Hall of Fame</a>
+    <div class="br-toolbar-links">
+      {% if request.user.is_authenticated %}<a href="{% url 'brainrot:my_hall_of_fame' %}">My HOF</a>{% endif %}
+      <a href="{% url 'brainrot:hall_of_fame' %}">Hall of Fame</a>
+    </div>
   </header>
 
   <section class="counter-intro">
     {% if rival %}
     <span class="br-kicker">SYNCHRONISED HUMAN PERFORMANCE TRIAL · 20 SECONDS</span>
-    <h1>YOU vs {{ rival.user.username }}</h1>
+    <h1>YOU vs {{ rival.public_name }}</h1>
     <p>The archived specimen will run beside you. Out-67 it under controlled laboratory conditions.</p>
     {% else %}
     <span class="br-kicker">POSE KINETICS LAB · 20 SECOND PROTOCOL</span>
@@ -46,7 +47,7 @@
         <video id="rival-video" muted playsinline preload="auto"
                src="{% url 'brainrot:hall_of_fame_video' rival.id %}"></video>
         <div class="rival-score-pill">
-          <span>{{ rival.user.username }}</span>
+          <span>{{ rival.public_name }}</span>
           <strong id="rival-score">0</strong>
         </div>
       </div>
@@ -106,13 +107,25 @@
       <video id="recording-preview" controls playsinline></video>
       <p>The recording remains local unless you submit it below. Closing or resetting discards it.</p>
       <a class="br-secondary br-button-link recording-download" id="download-recording" hidden>Download this recording</a>
-      {% if request.user.is_authenticated %}
+      {% if not request.user.is_authenticated and anonymous_submission_available %}
+        <label class="anonymous-name-field" for="hof-display-name">
+          <span>Anonymous display name</span>
+          <input id="hof-display-name" maxlength="32" placeholder="Anonymous Swan">
+        </label>
+        <p class="subtle">No account means no ownership recovery or delete button later.
+          <a href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in before another run</a> if you want those controls.</p>
+      {% elif request.user.is_authenticated %}
+        <p class="subtle">Submitting as <strong>{{ request.user.username }}</strong>. This run will appear in My HOF and can be deleted later.</p>
+      {% else %}
+        <p class="subtle">Anonymous submission is temporarily unavailable because the production human-verification gate is not configured.</p>
+      {% endif %}
+      {% if request.user.is_authenticated or anonymous_submission_available %}
         {% if turnstile_enabled %}<div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}"></div>{% endif %}
-        <button class="br-primary" id="submit-hof">Submit to Hall of Fame</button>
-        <button class="br-text-button" id="discard-recording">Discard recording</button>
+      <button class="br-primary" id="submit-hof">Submit to Hall of Fame</button>
+      <button class="br-text-button" id="discard-recording">Discard recording</button>
       {% else %}
         <a class="br-primary br-button-link" href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in to submit this run</a>
-        <p class="subtle">Logging in reloads the page, so this local recording will be lost.</p>
+        <button class="br-text-button" id="discard-recording">Discard recording</button>
       {% endif %}
       <p id="upload-status" role="status"></p>
     </div>
@@ -130,5 +143,5 @@
 {% endif %}
 
 {# Keep this version in step with counter.js so browsers cannot retain a broken runtime URL. #}
-<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.11"></script>
+<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.12"></script>
 {% endblock %}

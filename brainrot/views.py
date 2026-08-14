@@ -1,5 +1,8 @@
 import json
+import hashlib
+import hmac
 import math
+import unicodedata
 from datetime import timedelta
 
 import requests
@@ -8,9 +11,10 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import FileResponse, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.encoding import force_bytes
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
@@ -27,6 +31,7 @@ def _counter_context(rival=None):
         'turnstile_enabled': settings.TURNSTILE_ENABLED,
         'turnstile_site_key': settings.TURNSTILE_SITE_KEY,
         'max_upload_mb': settings.HOF_MAX_UPLOAD_BYTES // (1024 * 1024),
+        'anonymous_submission_available': settings.TURNSTILE_ENABLED or settings.DEBUG,
         'rival': rival,
     }
     if rival is not None:
@@ -55,6 +60,12 @@ def hall_of_fame(request):
         state=HallOfFameEntry.State.APPROVED,
     ).select_related('user')[:67]
     return render(request, 'brainrot/hall_of_fame.html', {'entries': entries})
+
+
+@login_required
+def my_hall_of_fame(request):
+    entries = HallOfFameEntry.objects.filter(user=request.user)[:67]
+    return render(request, 'brainrot/my_hall_of_fame.html', {'entries': entries})
 
 
 def _public_hall_entry(entry_id):
@@ -124,18 +135,50 @@ def _turnstile_is_valid(request):
         return False
 
 
+def _upload_client_key(request):
+    """Pseudonymous network key for anonymous rate limiting; no raw IP is stored."""
+    trusted_header = settings.HOF_TRUSTED_IP_HEADER
+    address = request.META.get(trusted_header, '') if trusted_header else ''
+    if trusted_header and ',' in address:
+        address = address.split(',', 1)[0]
+    address = address.strip() or request.META.get('REMOTE_ADDR', '') or 'unknown'
+    return hmac.new(
+        force_bytes(settings.SECRET_KEY),
+        force_bytes(f'hof-upload:{address}'),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def _anonymous_display_name(raw_name):
+    name = ' '.join((raw_name or '').strip().split())
+    if not name:
+        return 'Anonymous Swan'
+    if len(name) > 32:
+        raise ValidationError('Display name must be 32 characters or fewer.')
+    if any(unicodedata.category(character).startswith('C') for character in name):
+        raise ValidationError('Display name contains an unsupported character.')
+    return name
+
+
 @require_POST
-@login_required
 def submit_hall_of_fame(request):
+    owner = request.user if request.user.is_authenticated else None
+    if owner is None and not (settings.TURNSTILE_ENABLED or settings.DEBUG):
+        return JsonResponse({
+            'error': 'Anonymous submission is unavailable until Turnstile is configured.',
+        }, status=503)
+
+    client_key = _upload_client_key(request)
     recent_cutoff = timezone.now() - timedelta(minutes=1)
+    identity_filter = {'user': request.user} if request.user.is_authenticated else {'client_key': client_key}
     recent_count = HallOfFameUploadAttempt.objects.filter(
-        user=request.user,
         created_at__gte=recent_cutoff,
+        **identity_filter,
     ).count()
     if recent_count >= settings.HOF_SUBMISSIONS_PER_MINUTE:
         return JsonResponse({'error': 'Rate limit reached. The Institute requests patience.'}, status=429)
 
-    attempt = HallOfFameUploadAttempt.objects.create(user=request.user)
+    attempt = HallOfFameUploadAttempt.objects.create(user=owner, client_key=client_key)
 
     if not _turnstile_is_valid(request):
         return JsonResponse({'error': 'Human verification failed. Please try again.'}, status=400)
@@ -146,6 +189,11 @@ def submit_hall_of_fame(request):
         return JsonResponse({'error': 'Invalid score.'}, status=400)
     if score < 0 or score > 500:
         return JsonResponse({'error': 'Score is outside the scientifically plausible range.'}, status=400)
+
+    try:
+        display_name = '' if owner else _anonymous_display_name(request.POST.get('display_name', ''))
+    except ValidationError as exc:
+        return JsonResponse({'error': exc.messages[0]}, status=400)
 
     try:
         event_timeline = _validated_event_timeline(request.POST.get('event_timeline', ''), score)
@@ -162,7 +210,8 @@ def submit_hall_of_fame(request):
 
     with transaction.atomic():
         entry = HallOfFameEntry(
-            user=request.user,
+            user=owner,
+            display_name=display_name,
             score=score,
             mime_type=inspected.mime_type,
             duration_seconds=inspected.duration_seconds,
@@ -179,10 +228,22 @@ def submit_hall_of_fame(request):
     entry_url = reverse('brainrot:hall_of_fame_detail', args=(entry.pk,))
     return JsonResponse({
         'ok': True,
-        'message': 'Published to the Hall of Fame. Peer review has been replaced by vibes.',
+        'message': (
+            'Published to the Hall of Fame. You can manage it from My HOF.'
+            if owner
+            else 'Published anonymously. Save the public link; anonymous runs cannot be managed later.'
+        ),
         'hall_of_fame_url': reverse('brainrot:hall_of_fame'),
         'entry_url': entry_url,
     }, status=201)
+
+
+@require_POST
+@login_required
+def delete_hall_of_fame_entry(request, entry_id):
+    entry = get_object_or_404(HallOfFameEntry, pk=entry_id, user=request.user)
+    entry.delete()
+    return redirect(f"{reverse('brainrot:my_hall_of_fame')}?deleted=1")
 
 
 def hall_of_fame_video(request, entry_id):

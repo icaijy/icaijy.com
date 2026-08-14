@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
-from .models import HallOfFameEntry
+from .models import HallOfFameEntry, HallOfFameUploadAttempt
 from .validators import ValidatedVideo, _packet_duration, _probe_video
 from .views import _validated_event_timeline
 
@@ -25,16 +25,20 @@ class BrainrotPageTests(TestCase):
         self.assertEqual(legacy.status_code, 301)
         self.assertEqual(legacy['Location'], '/67/')
 
+    @override_settings(DEBUG=True)
     def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
         response = self.client.get('/67/counter/')
-        self.assertContains(response, 'brainrot.css?v=20260814.6')
-        self.assertContains(response, 'counter.js?v=20260814.11')
+        self.assertContains(response, 'brainrot.css?v=20260814.7')
+        self.assertContains(response, 'counter.js?v=20260814.12')
         self.assertContains(response, 'id="counter-share-text"')
         self.assertContains(response, 'id="copy-counter-share"')
         self.assertContains(response, 'id="download-recording"')
         self.assertNotContains(response, 'Run classification')
         self.assertNotContains(response, 'Casual Run')
         self.assertContains(response, 'nothing uploads unless you press Submit to Hall of Fame')
+        self.assertContains(response, 'id="submit-hof"')
+        self.assertContains(response, 'id="hof-display-name"')
+        self.assertNotContains(response, 'Log in to submit this run')
 
         script_path = finders.find('brainrot/counter.js')
         self.assertIsNotNone(script_path)
@@ -54,6 +58,7 @@ class BrainrotPageTests(TestCase):
         self.assertIn('recorder = new MediaRecorder(recordingStream', script)
         self.assertNotIn('recorder = new MediaRecorder(stream', script)
         self.assertIn("form.append('event_timeline', JSON.stringify(eventTimeline));", script)
+        self.assertIn("form.append('display_name', displayNameInput.value);", script)
 
 
 class HallOfFamePageTests(TestCase):
@@ -100,6 +105,23 @@ class HallOfFamePageTests(TestCase):
         self.entry.save(update_fields=['state'])
         self.assertEqual(self.client.get(f'/67/hall-of-fame/{self.entry.id}/').status_code, 404)
         self.assertEqual(self.client.get(f'/67/challenge/{self.entry.id}/').status_code, 404)
+
+    def test_anonymous_entry_uses_its_public_display_name(self):
+        anonymous = HallOfFameEntry.objects.create(
+            user=None,
+            display_name='Nameless Researcher',
+            score=67,
+            video='hall_of_fame/anonymous.webm',
+            mime_type='video/webm',
+            duration_seconds=23,
+            state=HallOfFameEntry.State.APPROVED,
+        )
+        detail = self.client.get(f'/67/hall-of-fame/{anonymous.id}/')
+        self.assertContains(detail, 'Nameless Researcher')
+        self.assertNotContains(detail, 'Delete my entry')
+
+        challenge = self.client.get(f'/67/challenge/{anonymous.id}/')
+        self.assertContains(challenge, 'YOU vs Nameless Researcher')
 
 
 class EventTimelineValidationTests(TestCase):
@@ -177,7 +199,7 @@ class VideoValidationTests(TestCase):
         self.assertIn("new URL('/67/typing/', window.location.origin)", script)
 
 
-@override_settings(TURNSTILE_ENABLED=False, HOF_SUBMISSIONS_PER_MINUTE=1)
+@override_settings(DEBUG=True, TURNSTILE_ENABLED=False, HOF_SUBMISSIONS_PER_MINUTE=1)
 class HallOfFameSubmissionTests(TestCase):
     def setUp(self):
         self.private_directory = tempfile.TemporaryDirectory()
@@ -189,10 +211,35 @@ class HallOfFameSubmissionTests(TestCase):
         self.override.disable()
         self.private_directory.cleanup()
 
-    def test_anonymous_upload_is_rejected(self):
+    @override_settings(DEBUG=False, TURNSTILE_ENABLED=False)
+    def test_production_anonymous_upload_requires_turnstile(self):
         response = self.client.post('/67/submit/', {'score': 67})
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(HallOfFameEntry.objects.count(), 0)
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(HallOfFameUploadAttempt.objects.count(), 0)
+
+    @patch('brainrot.views.validate_hall_of_fame_video')
+    def test_anonymous_upload_is_published_and_rate_limited_by_client(self, validate):
+        validate.return_value = ValidatedVideo('video/webm', 'webm', 23.0)
+        video = SimpleUploadedFile('run.webm', b'anonymous evidence', content_type='video/webm')
+        response = self.client.post('/67/submit/', {
+            'score': 3,
+            'display_name': '  Anonymous   Swan  67 ',
+            'event_timeline': json.dumps([1.2, 4.5, 9.67]),
+            'video': video,
+        }, REMOTE_ADDR='203.0.113.67')
+        self.assertEqual(response.status_code, 201)
+        entry = HallOfFameEntry.objects.get()
+        self.assertIsNone(entry.user)
+        self.assertEqual(entry.display_name, 'Anonymous Swan 67')
+        self.assertIn('cannot be managed later', response.json()['message'])
+
+        attempt = HallOfFameUploadAttempt.objects.get()
+        self.assertEqual(len(attempt.client_key), 64)
+        self.assertNotIn('203.0.113.67', attempt.client_key)
+
+        second = SimpleUploadedFile('run.webm', b'more evidence', content_type='video/webm')
+        response = self.client.post('/67/submit/', {'score': 68, 'video': second}, REMOTE_ADDR='203.0.113.67')
+        self.assertEqual(response.status_code, 429)
 
     @patch('brainrot.views.validate_hall_of_fame_video')
     def test_valid_upload_is_published_and_rate_limited(self, validate):
@@ -206,6 +253,8 @@ class HallOfFameSubmissionTests(TestCase):
         })
         self.assertEqual(response.status_code, 201)
         entry = HallOfFameEntry.objects.get()
+        self.assertEqual(entry.user, self.user)
+        self.assertEqual(entry.display_name, '')
         self.assertEqual(entry.state, HallOfFameEntry.State.APPROVED)
         self.assertEqual(entry.event_timeline, [1.2, 4.5, 9.67])
         self.assertEqual(response.json()['entry_url'], f'/67/hall-of-fame/{entry.id}/')
@@ -237,3 +286,73 @@ class HallOfFameSubmissionTests(TestCase):
         download = self.client.get(f'{path}?download=1')
         self.assertEqual(download.status_code, 200)
         self.assertTrue(download['Content-Disposition'].startswith('attachment;'))
+
+
+class HallOfFameOwnershipTests(TestCase):
+    def setUp(self):
+        self.private_directory = tempfile.TemporaryDirectory()
+        self.override = override_settings(PRIVATE_MEDIA_ROOT=self.private_directory.name)
+        self.override.enable()
+        self.owner = get_user_model().objects.create_user('owner', password='owner-password-67')
+        self.other = get_user_model().objects.create_user('other', password='other-password-67')
+        self.entry = HallOfFameEntry.objects.create(
+            user=self.owner,
+            score=67,
+            video=SimpleUploadedFile('owned.webm', b'owned evidence', content_type='video/webm'),
+            mime_type='video/webm',
+            duration_seconds=23,
+            state=HallOfFameEntry.State.APPROVED,
+        )
+        self.anonymous = HallOfFameEntry.objects.create(
+            display_name='No Account',
+            score=61,
+            video=SimpleUploadedFile('anonymous.webm', b'anonymous evidence', content_type='video/webm'),
+            mime_type='video/webm',
+            duration_seconds=23,
+            state=HallOfFameEntry.State.APPROVED,
+        )
+
+    def tearDown(self):
+        self.override.disable()
+        self.private_directory.cleanup()
+
+    def test_my_hof_requires_login_and_lists_only_owned_runs(self):
+        response = self.client.get('/67/hall-of-fame/mine/')
+        self.assertEqual(response.status_code, 302)
+
+        self.client.login(username='owner', password='owner-password-67')
+        response = self.client.get('/67/hall-of-fame/mine/')
+        self.assertContains(response, f'/67/hall-of-fame/{self.entry.id}/')
+        self.assertNotContains(response, 'No Account')
+        self.assertContains(response, f'/67/hall-of-fame/{self.entry.id}/delete/')
+
+        detail = self.client.get(f'/67/hall-of-fame/{self.entry.id}/')
+        self.assertContains(detail, 'Delete my entry &amp; video')
+
+    def test_owner_can_delete_entry_and_video(self):
+        video_name = self.entry.video.name
+        self.assertTrue(self.entry.video.storage.exists(video_name))
+        self.client.login(username='owner', password='owner-password-67')
+
+        response = self.client.post(f'/67/hall-of-fame/{self.entry.id}/delete/')
+        self.assertRedirects(response, '/67/hall-of-fame/mine/?deleted=1')
+        self.assertFalse(HallOfFameEntry.objects.filter(pk=self.entry.id).exists())
+        self.assertFalse(self.entry.video.storage.exists(video_name))
+
+    def test_other_user_and_anonymous_request_cannot_delete(self):
+        delete_url = f'/67/hall-of-fame/{self.entry.id}/delete/'
+        response = self.client.post(delete_url)
+        self.assertEqual(response.status_code, 302)
+
+        self.client.login(username='other', password='other-password-67')
+        self.assertEqual(self.client.post(delete_url).status_code, 404)
+        self.assertTrue(HallOfFameEntry.objects.filter(pk=self.entry.id).exists())
+
+    def test_anonymous_entry_has_no_owner_delete_control(self):
+        self.client.login(username='owner', password='owner-password-67')
+        detail = self.client.get(f'/67/hall-of-fame/{self.anonymous.id}/')
+        self.assertNotContains(detail, 'Delete my entry')
+        self.assertEqual(
+            self.client.post(f'/67/hall-of-fame/{self.anonymous.id}/delete/').status_code,
+            404,
+        )

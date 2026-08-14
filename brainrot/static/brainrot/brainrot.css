@@ -42,6 +42,7 @@
 
 .br-toolbar a { color: var(--br-ink); font-weight: 750; text-decoration: none; }
 .br-toolbar a:hover { color: var(--br-accent-dark); }
+.br-toolbar-links { display: flex; gap: 1rem; }
 
 .br-hero { max-width: 880px; padding: 3rem 0 4rem; }
 .br-hero h1, .counter-intro h1, .typing-heading h1, .hall-heading h1 {
@@ -183,6 +184,10 @@
 .result-card h2 { margin-top: .4rem; font-weight: 900; }
 .recording-review video { width: 100%; max-height: 310px; border-radius: 12px; background: #111827; }
 .recording-review p { color: var(--br-muted); font-size: .85rem; }
+.recording-review .anonymous-name-field { display: flex; flex-direction: column; gap: .35rem; margin: .8rem 0; }
+.anonymous-name-field span { color: var(--br-muted); font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.anonymous-name-field input { width: 100%; padding: .7rem .8rem; border: 1px solid var(--br-line); border-radius: 10px; background: white; color: var(--br-ink); }
+.recording-review .subtle a { color: var(--br-accent-dark); font-weight: 750; }
 .recording-download { margin-bottom: .7rem; }
 .counter-share { grid-column: 1 / -1; padding-top: 1.25rem; border-top: 1px solid var(--br-line); }
 .counter-share h3 { margin: 0 0 .75rem; font-size: 1rem; font-weight: 850; text-align: center; }
@@ -245,6 +250,9 @@
 .hall-score { font-size: 2rem; }
 .hall-actions { display: flex; justify-content: flex-end; gap: .85rem; }
 .hall-actions a { color: var(--br-accent-dark); font-size: .84rem; font-weight: 800; text-decoration: none; }
+.hall-actions form { margin: 0; }
+.hall-delete-link { padding: 0; border: 0; background: transparent; color: #b91c1c; font-size: .84rem; font-weight: 800; }
+.hall-delete-link:hover { text-decoration: underline; }
 .hall-entry summary { cursor: pointer; color: var(--br-accent-dark); font-size: .86rem; font-weight: 800; }
 .hall-entry video { width: min(420px, 75vw); max-height: 300px; margin-top: .7rem; border-radius: 10px; background: #111827; }
 .hall-download { display: block; width: fit-content; margin: .45rem 0 0 auto; color: var(--br-ink); font-size: .8rem; font-weight: 750; }
@@ -266,6 +274,11 @@
 .hall-share-card h2 { margin: .4rem 0; font-size: 1.8rem; font-weight: 900; }
 .hall-share-card > p { color: var(--br-muted); }
 .hall-share-card textarea { width: 100%; padding: .8rem; resize: vertical; border: 1px solid var(--br-line); border-radius: 10px; background: #f8fafc; font: .85rem/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.hof-delete-form { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--br-line); }
+.br-danger { width: 100%; padding: .75rem 1rem; border: 1px solid #fecaca; border-radius: 10px; background: #fff1f2; color: #b91c1c; font-weight: 800; }
+.br-danger:hover { border-color: #ef4444; }
+.hof-delete-notice { padding: .9rem 1rem; border: 1px solid #bbf7d0; border-radius: 12px; background: #f0fdf4; color: #166534; }
+.my-hall-entry { grid-template-columns: 65px 1fr 90px minmax(220px, .8fr); }
 
 @media (max-width: 780px) {
   .br-game-grid, .counter-layout, .result-card, .hall-detail-grid { grid-template-columns: 1fr; }
@@ -274,6 +287,7 @@
   .br-toolbar span { display: none; }
   .result-grid { grid-template-columns: repeat(2, 1fr); }
   .hall-entry { grid-template-columns: 45px 1fr 55px; }
+  .my-hall-entry { grid-template-columns: 45px 1fr 55px; }
   .hall-actions { grid-column: 2 / -1; justify-content: flex-start; }
   .hall-detail-heading { align-items: start; flex-direction: column; gap: .6rem; }
   .hall-detail-heading .br-kicker { position: static; transform: none; }
