@@ -4,7 +4,7 @@
 {% block title %}{{ entry.public_name }} — 67 Hall of Fame{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.7">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.8">
 <main class="br-page hall-detail-page" id="hof-detail"
       data-entry-url="{{ request.build_absolute_uri }}"
       data-username="{{ entry.public_name }}"
@@ -36,8 +36,11 @@
     <aside class="hall-share-card">
       <span class="br-kicker">PUBLIC REPLICATION MATERIAL</span>
       <h2>Share this run</h2>
-      {% if request.user == entry.user %}
+      {% if entry.user_id and request.user == entry.user %}
       <p>This is your permanent Hall of Fame link. Deploy it responsibly.</p>
+      {% elif not entry.user_id %}
+      <p>This is a guest submission and has no self-service delete access. To request removal,
+        <a href="https://github.com/icaijy" rel="noopener">contact the site owner</a> and include this page's URL.</p>
       {% else %}
       <p>Distribute this evidence to researchers, rivals and confused relatives.</p>
       {% endif %}

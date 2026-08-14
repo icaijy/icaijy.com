@@ -7,6 +7,7 @@ from datetime import timedelta
 
 import requests
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -157,6 +158,14 @@ def _anonymous_display_name(raw_name):
         raise ValidationError('Display name must be 32 characters or fewer.')
     if any(unicodedata.category(character).startswith('C') for character in name):
         raise ValidationError('Display name contains an unsupported character.')
+    canonical_name = unicodedata.normalize('NFKC', name).casefold()
+    reserved_names = {'admin', 'administrator', 'moderator', 'staff', 'owner', 'icaijy'}
+    registered_names = {
+        unicodedata.normalize('NFKC', username).casefold()
+        for username in get_user_model().objects.values_list('username', flat=True)
+    }
+    if canonical_name in reserved_names or canonical_name in registered_names:
+        raise ValidationError('That display name belongs to a registered user or reserved site role.')
     return name
 
 
@@ -231,7 +240,7 @@ def submit_hall_of_fame(request):
         'message': (
             'Published to the Hall of Fame. You can manage it from My HOF.'
             if owner
-            else 'Published anonymously. Save the public link; anonymous runs cannot be managed later.'
+            else 'Published as a guest. To remove it later, send the public link to the site owner.'
         ),
         'hall_of_fame_url': reverse('brainrot:hall_of_fame'),
         'entry_url': entry_url,

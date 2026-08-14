@@ -71,6 +71,36 @@
         margin-top: 40px;
     }
 
+    #homepage-wrapper .featured-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-width: 900px;
+        margin-top: 10px;
+    }
+
+    #homepage-wrapper .featured-hof {
+        grid-column: 1 / -1;
+        min-height: 105px;
+        font-size: 1.35rem;
+    }
+
+    #homepage-wrapper .oi-section {
+        width: 100%;
+        max-width: 900px;
+        margin-top: 55px;
+        padding-top: 28px;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    #homepage-wrapper .section-label {
+        color: #64748b;
+        font-size: .75rem;
+        font-weight: 800;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+    }
+
+    #homepage-wrapper .oi-section .button-grid { margin-top: 16px; }
+
     #homepage-wrapper .nav-card {
         padding: 24px;
         border-radius: 16px;
@@ -97,45 +127,57 @@
     .btn-oj { background: #fffbeb; color: #b45309; border-color: #fef3c7; }
     .btn-analytics { background: #faf5ff; color: #7e22ce; border-color: #f3e8ff; }
     .btn-brainrot { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+    .btn-hof { background: #111827; color: #d8ff62; border-color: #111827; }
+    .btn-hof:hover { color: #d8ff62; }
 
     @media (max-width: 600px) {
         #homepage-wrapper h1 { font-size: 2.5rem; }
-        #homepage-wrapper .button-grid { grid-template-columns: 1fr; }
+        #homepage-wrapper .button-grid, #homepage-wrapper .featured-grid { grid-template-columns: 1fr; }
+        #homepage-wrapper .featured-hof { grid-column: auto; }
     }
 </style>
 
 <div id="homepage-wrapper">
     <div class="hero-section">
         <h1>{% trans "Welcome to My Homepage" %}</h1>
-        <p class="lead">{% trans "Explore projects, data, and insights in one place." %}</p>
+        <p class="lead">{% trans "Projects, questionable experiments, and an archive of competitive-programming history." %}</p>
 
         <div class="quick-links">
             <p>
                 {% trans "Check out my" %}
                 <a href="/blog">{% trans "blog" %}</a>,
-                <a href="/orac-leaderboards">ORAC Leaderboards++</a>,
+                <a href="{% url 'brainrot:hall_of_fame' %}">67 Hall of Fame</a>,
                 {% trans "or" %}
                 <a href="{% url 'brainrot:index' %}">61/67 Research Division</a>.
             </p>
         </div>
     </div>
 
-    <div class="button-grid">
-        <a href="/blog" class="nav-card btn-blog">
-            ✍️ {% trans "Henry's Blog" %}
-        </a>
-        <a href="/orac-leaderboards" class="nav-card btn-leader">
-            🏆 ORAC Leaderboards++
-        </a>
-        <a href="/oj" class="nav-card btn-oj">
-            🪦 {% trans "Speed Online Judge" %} (retired)
-        </a>
-        <a href="/oracdata" class="nav-card btn-analytics">
-            📊 {% trans "ORAC2 Analytics" %}
+    <div class="button-grid featured-grid">
+        <a href="{% url 'brainrot:hall_of_fame' %}" class="nav-card btn-hof featured-hof">
+            ★ 67 Hall of Fame — watch, share, challenge
         </a>
         <a href="{% url 'brainrot:index' %}" class="nav-card btn-brainrot">
             🧪 61/67 Research Division
         </a>
+        <a href="/blog" class="nav-card btn-blog">
+            ✍️ {% trans "Henry's Blog" %}
+        </a>
     </div>
+
+    <section class="oi-section">
+      <span class="section-label">OI / competitive programming archive</span>
+      <div class="button-grid">
+        <a href="/orac-leaderboards" class="nav-card btn-leader">
+            🏆 ORAC Leaderboards++
+        </a>
+        <a href="/oracdata" class="nav-card btn-analytics">
+            📊 {% trans "ORAC2 Analytics" %}
+        </a>
+        <a href="/oj" class="nav-card btn-oj">
+            🪦 {% trans "Speed Online Judge" %} (retired)
+        </a>
+      </div>
+    </section>
 </div>
 {% endblock %}

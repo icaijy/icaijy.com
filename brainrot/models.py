@@ -51,7 +51,7 @@ class HallOfFameEntry(models.Model):
     def public_name(self):
         if self.user_id:
             return self.user.username
-        return self.display_name or 'Anonymous Swan'
+        return f'{self.display_name or "Anonymous Swan"} · guest'
 
 
 class HallOfFameUploadAttempt(models.Model):
