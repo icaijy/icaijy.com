@@ -13,14 +13,18 @@ from .validators import ValidatedVideo
 
 class BrainrotPageTests(TestCase):
     def test_public_pages_load(self):
-        for path in ('/67/', '/67/games/', '/67/hall-of-fame/', '/67/typing/'):
+        for path in ('/67/', '/67/counter/', '/67/hall-of-fame/', '/67/typing/'):
             with self.subTest(path=path):
                 self.assertEqual(self.client.get(path).status_code, 200)
 
+        legacy = self.client.get('/67/games/')
+        self.assertEqual(legacy.status_code, 301)
+        self.assertEqual(legacy['Location'], '/67/')
+
     def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
-        response = self.client.get('/67/')
+        response = self.client.get('/67/counter/')
         self.assertContains(response, 'brainrot.css?v=20260814.3')
-        self.assertContains(response, 'counter.js?v=20260814.4')
+        self.assertContains(response, 'counter.js?v=20260814.5')
         self.assertContains(response, 'id="counter-share-text"')
         self.assertContains(response, 'id="copy-counter-share"')
 
@@ -31,6 +35,7 @@ class BrainrotPageTests(TestCase):
         self.assertNotIn('@mediapipe/tasks-vision@0.10.26', script)
         self.assertIn("startButton.disabled = false;", script)
         self.assertIn("if (poseReady) {\n              beginRun();", script)
+        self.assertIn("new URL('/67/counter/', window.location.origin)", script)
 
     def test_typing_result_has_share_box_and_url(self):
         response = self.client.get('/67/typing/')
