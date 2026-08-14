@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.staticfiles import finders
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
@@ -57,6 +58,31 @@ class VideoValidationTests(TestCase):
             stdout='87.000000,0.033333\n109.966667,0.033333\n',
         )
         self.assertAlmostEqual(_packet_duration('/tmp/run.webm', '/usr/bin/ffprobe'), 23.0)
+
+    @patch('brainrot.validators.subprocess.run')
+    def test_packet_duration_keeps_pts_when_packet_duration_is_na(self, run):
+        run.return_value = SimpleNamespace(
+            returncode=0,
+            stdout='87.000000,N/A\n109.966667,N/A\n',
+        )
+        self.assertAlmostEqual(
+            _packet_duration('/tmp/firefox-run.webm', '/usr/bin/ffprobe'),
+            22.966667,
+        )
+
+    @override_settings(HOF_MAX_VIDEO_SECONDS=26)
+    @patch('brainrot.validators.shutil.which', return_value='/usr/bin/ffprobe')
+    @patch('brainrot.validators._packet_duration', return_value=0)
+    @patch('brainrot.validators.subprocess.run')
+    def test_invalid_duration_error_reports_detected_value(self, run, packet_duration, which):
+        run.return_value = SimpleNamespace(
+            returncode=0,
+            stdout='{"streams":[{"codec_type":"video","codec_name":"vp8"}],"format":{"duration":"110.0"}}',
+        )
+        upload = SimpleUploadedFile('run.webm', b'video bytes', content_type='video/webm')
+
+        with self.assertRaisesMessage(ValidationError, 'detected as 110.00 seconds'):
+            _probe_video(upload, 'video/webm')
 
     @override_settings(HOF_MAX_VIDEO_SECONDS=26)
     @patch('brainrot.validators.shutil.which', return_value='/usr/bin/ffprobe')
