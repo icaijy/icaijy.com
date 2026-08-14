@@ -7,6 +7,10 @@ import markdown
 import json
 
 
+def retired(request, legacy_path=''):
+    return render(request, 'oj/retired.html', status=410)
+
+
 
 def problem_list(request):
     problems = Problem.objects.all().order_by('id')
@@ -153,6 +157,5 @@ def problem_leaderboard(request, problem_id):
         'top10_cpp': top10_cpp,
         'top10_python': top10_python
     })
-
 
 

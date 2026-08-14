@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}67 Counter{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}">
+{% if turnstile_enabled %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}
+
+<main class="br-page counter-page" id="counter-app"
+      data-submit-url="{% url 'brainrot:submit_hall_of_fame' %}"
+      data-hall-url="{% url 'brainrot:hall_of_fame' %}"
+      data-login-url="{% url 'login' %}?next={% url 'brainrot:counter' %}"
+      data-authenticated="{% if request.user.is_authenticated %}true{% else %}false{% endif %}"
+      data-max-upload-mb="{{ max_upload_mb }}">
+  <header class="br-toolbar">
+    <a href="{% url 'brainrot:index' %}">← Research division</a>
+    <a href="{% url 'brainrot:hall_of_fame' %}">Hall of Fame</a>
+  </header>
+
+  <section class="counter-intro">
+    <span class="br-kicker">POSE KINETICS LAB · 20 SECOND PROTOCOL</span>
+    <h1>SIX SEVEN</h1>
+    <p>Alternate your hands up and down. The Institute will count whatever happens next.</p>
+  </section>
+
+  <section class="privacy-strip" aria-label="Camera privacy information">
+    <strong>Camera privacy:</strong> pose detection runs in this browser. Casual runs are never recorded or uploaded.
+    Hall of Fame runs are recorded locally and upload only after you press submit.
+  </section>
+
+  <section class="counter-layout">
+    <div class="camera-card">
+      <div class="camera-stage" id="camera-stage">
+        <video id="camera" playsinline muted></video>
+        <canvas id="pose-overlay"></canvas>
+        <div class="camera-placeholder" id="camera-placeholder">
+          <span class="placeholder-orbit">67</span>
+          <p>Camera is currently doing nothing.</p>
+        </div>
+        <div class="countdown" id="countdown" aria-live="assertive"></div>
+        <div class="live-pill" id="live-pill" hidden>● RECORDING LOCALLY</div>
+      </div>
+      <div class="detector-status" id="detector-status">
+        <span class="status-dot"></span>
+        <span>Camera not started</span>
+      </div>
+    </div>
+
+    <aside class="counter-panel">
+      <div class="score-block">
+        <span>observed 67 events</span>
+        <strong id="score">0</strong>
+      </div>
+      <div class="timer-block"><span>time remaining</span><strong id="counter-time">20.0</strong></div>
+
+      <fieldset class="run-mode" id="run-mode">
+        <legend>Run classification</legend>
+        <label class="mode-option active">
+          <input type="radio" name="mode" value="casual" checked>
+          <span><strong>Casual Run</strong><small>No recording. The score lives and dies in this tab.</small></span>
+        </label>
+        <label class="mode-option">
+          <input type="radio" name="mode" value="hof">
+          <span><strong>Hall of Fame Run</strong><small>Record locally now; decide whether to upload after.</small></span>
+        </label>
+      </fieldset>
+
+      <button class="br-primary" id="enable-camera">Enable camera &amp; detector</button>
+      <button class="br-primary" id="start-run" disabled>Waiting for a visible pose…</button>
+      <button class="br-secondary" id="reset-run" hidden>Run this foolish experiment again</button>
+      <p class="counter-error" id="counter-error" role="alert"></p>
+    </aside>
+  </section>
+
+  <section class="result-card" id="counter-result" hidden>
+    <div>
+      <span class="br-kicker">PEER-REVIEWED BY YOURSELF</span>
+      <h2><span id="result-score">0</span> confirmed-looking events</h2>
+      <p id="result-copy">A result has occurred.</p>
+    </div>
+    <div class="recording-review" id="recording-review" hidden>
+      <video id="recording-preview" controls playsinline></video>
+      <p>The recording remains local unless you submit it below. Closing or resetting discards it.</p>
+      {% if request.user.is_authenticated %}
+        {% if turnstile_enabled %}<div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}"></div>{% endif %}
+        <button class="br-primary" id="submit-hof">Submit to Hall of Fame</button>
+        <button class="br-text-button" id="discard-recording">Discard recording</button>
+      {% else %}
+        <a class="br-primary br-button-link" href="{% url 'login' %}?next={% url 'brainrot:counter' %}">Log in to submit this run</a>
+        <p class="subtle">Logging in reloads the page, so this local recording will be lost.</p>
+      {% endif %}
+      <p id="upload-status" role="status"></p>
+    </div>
+  </section>
+</main>
+
+<script type="module" src="{% static 'brainrot/counter.js' %}"></script>
+{% endblock %}

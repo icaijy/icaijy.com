@@ -1,9 +1,14 @@
 # oj/tasks.py
 from .models import Submission
+from django.conf import settings
 import tempfile, os
 from ijudger import judge
 
 def judge_submission(sub_id):
+    # Defence in depth: even a stale Celery message or a direct task call must
+    # not invoke the judge while the public OJ is retired.
+    if not settings.OJ_ENABLED:
+        return
     try:
         submission = Submission.objects.get(pk=sub_id)
         problem = submission.problem

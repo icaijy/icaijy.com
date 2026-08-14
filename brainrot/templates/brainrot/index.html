@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Institute of 61/67 Studies{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}">
+<main class="br-page">
+  <section class="br-hero">
+    <span class="br-kicker">ICAiJY INSTITUTE OF NUMERICAL CULTURE</span>
+    <h1>61 / 67 Research Division</h1>
+    <p>Two controlled experiments. No useful findings are expected.</p>
+  </section>
+  <section class="br-game-grid" aria-label="Experiments">
+    <a class="br-game-card br-counter-card" href="{% url 'brainrot:counter' %}">
+      <span class="br-card-number">67</span>
+      <div>
+        <span class="br-kicker">EXPERIMENT 01</span>
+        <h2>67 Counter</h2>
+        <p>Local pose tracking, a camera, and approximately zero dignity.</p>
+      </div>
+      <span class="br-card-arrow">Begin →</span>
+    </a>
+    <a class="br-game-card br-typing-card" href="{% url 'brainrot:typing_test' %}">
+      <span class="br-card-number">61</span>
+      <div>
+        <span class="br-kicker">EXPERIMENT 02</span>
+        <h2>61 / 67 Typing Test</h2>
+        <p>Modern typing science, stripped of every unnecessary character.</p>
+      </div>
+      <span class="br-card-arrow">Type →</span>
+    </a>
+  </section>
+</main>
+{% endblock %}

@@ -13,3 +13,34 @@ html, body {
     text-align:center;
 
 }
+
+.retired-page {
+    min-height: 72vh;
+    display: grid;
+    place-items: center;
+    padding: 3rem 1rem;
+    background: radial-gradient(circle at 50% 20%, #fff7d6, #f8fafc 45%);
+}
+
+.retired-card {
+    width: min(620px, 100%);
+    padding: 3.5rem 2rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+    text-align: center;
+}
+
+.retired-card h1 { font-size: clamp(2rem, 7vw, 4rem); margin: 1rem 0; }
+.retired-card p { color: #64748b; font-size: 1.1rem; }
+.retired-card .retired-punchline { color: #0f172a; font-size: 1.45rem; font-weight: 800; }
+.retired-badge {
+    display: inline-block;
+    padding: .4rem .7rem;
+    border-radius: 999px;
+    color: #92400e;
+    background: #fef3c7;
+    font: 700 .75rem/1 system-ui, sans-serif;
+    letter-spacing: .08em;
+}
