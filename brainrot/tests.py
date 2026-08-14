@@ -17,13 +17,35 @@ from .views import _validated_event_timeline
 
 class BrainrotPageTests(TestCase):
     def test_public_pages_load(self):
-        for path in ('/67/', '/67/counter/', '/67/hall-of-fame/', '/67/typing/'):
+        for path in ('/67/', '/67/counter/', '/67/hall-of-fame/', '/67/typing/', '/67/67ifier/'):
             with self.subTest(path=path):
                 self.assertEqual(self.client.get(path).status_code, 200)
 
         legacy = self.client.get('/67/games/')
         self.assertEqual(legacy.status_code, 301)
         self.assertEqual(legacy['Location'], '/67/')
+
+    def test_cpp_67ifier_is_linked_and_runs_locally(self):
+        index = self.client.get('/67/')
+        self.assertContains(index, '/67/67ifier/')
+        self.assertContains(index, 'C++ 67ifier')
+
+        response = self.client.get('/67/67ifier/')
+        self.assertContains(response, 'id="cpp67-input"')
+        self.assertContains(response, 'id="cpp67-output"')
+        self.assertContains(response, 'id="cpp67-preserve"')
+        self.assertContains(response, 'cpp_67ifier.js?v=20260814.1')
+        self.assertContains(response, 'transformation happens entirely in this browser')
+
+        script_path = finders.find('brainrot/cpp_67ifier.js')
+        core_path = finders.find('brainrot/cpp_67ifier_core.mjs')
+        self.assertIsNotNone(script_path)
+        self.assertIsNotNone(core_path)
+        script = Path(script_path).read_text(encoding='utf-8')
+        core = Path(core_path).read_text(encoding='utf-8')
+        self.assertIn("from './cpp_67ifier_core.mjs?v=20260814.1'", script)
+        self.assertIn('export function tokenizeCpp', core)
+        self.assertIn('export function transformCpp', core)
 
     def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
         response = self.client.get('/67/counter/')

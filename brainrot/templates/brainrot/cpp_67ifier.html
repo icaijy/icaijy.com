@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}C++ 67ifier{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.7">
+<main class="br-page cpp67-page" id="cpp67-app">
+  <header class="br-toolbar">
+    <a href="{% url 'brainrot:index' %}">← Research division</a>
+    <span>No code is uploaded, compiled, judged, or understood by the server.</span>
+  </header>
+
+  <section class="cpp67-heading">
+    <span class="br-kicker">POST-LEGIBILITY SOFTWARE ENGINEERING</span>
+    <h1>C++ 67ifier</h1>
+    <p>A lightweight lexical instrument for making valid-looking C++ considerably more six-seven.</p>
+  </section>
+
+  <section class="privacy-strip">
+    <strong>Local laboratory:</strong> transformation happens entirely in this browser. Comments,
+    strings, raw strings, character literals, and preprocessor directives are preserved.
+  </section>
+
+  <section class="cpp67-options" aria-label="Transformation options">
+    <label class="cpp67-toggle">
+      <input id="cpp67-rename" type="checkbox" checked>
+      <span><strong>Rename user identifiers</strong><small>Known C++ / standard-library names stay sober.</small></span>
+    </label>
+    <label>
+      <span>Integer treatment</span>
+      <select id="cpp67-number-mode">
+        <option value="common">Common specimens only</option>
+        <option value="all">Full binary evil mode</option>
+        <option value="off">Leave numbers alone</option>
+      </select>
+    </label>
+    <label class="cpp67-preserve-label">
+      <span>Preserve these identifiers</span>
+      <input id="cpp67-preserve" type="text" placeholder="solve, interactive_api, graderFunction">
+    </label>
+  </section>
+
+  <section class="cpp67-workbench">
+    <article class="cpp67-editor-card">
+      <header><strong>Original C++</strong><span>input</span></header>
+      <textarea id="cpp67-input" spellcheck="false" aria-label="Original C++ source"></textarea>
+    </article>
+    <article class="cpp67-editor-card cpp67-output-card">
+      <header><strong>Peer-reviewed C++</strong><span>output</span></header>
+      <textarea id="cpp67-output" spellcheck="false" readonly aria-label="67ified C++ source"></textarea>
+    </article>
+  </section>
+
+  <section class="cpp67-actions" aria-label="67ifier actions">
+    <button class="br-primary" id="cpp67-transform" type="button">67ify this program</button>
+    <button class="br-secondary" id="cpp67-copy" type="button">Copy output</button>
+    <button class="br-secondary" id="cpp67-download" type="button">Download .cpp</button>
+    <button class="br-text-button" id="cpp67-sample" type="button">load sample</button>
+    <button class="br-text-button" id="cpp67-reset" type="button">reset</button>
+  </section>
+
+  <section class="cpp67-report" id="cpp67-report" aria-live="polite">
+    <div><span>identifiers renamed</span><strong id="cpp67-name-count">0</strong></div>
+    <div><span>integers transformed</span><strong id="cpp67-integer-count">0</strong></div>
+    <div><span>output size</span><strong id="cpp67-expansion">100%</strong></div>
+    <p id="cpp67-status">Awaiting a scientifically unnecessary program.</p>
+  </section>
+
+  <details class="cpp67-notes">
+    <summary>What can still break?</summary>
+    <p>This is a tokenizer, not a full C++ compiler. Names required by a grader, linked library,
+      reflection system, plugin ABI, or generated code should be added to the preserve list.
+      Identifiers beginning with an underscore are conservatively left alone. Floating-point and
+      user-defined numeric literals are also preserved.</p>
+  </details>
+</main>
+<script type="module" src="{% static 'brainrot/cpp_67ifier.js' %}?v=20260814.1"></script>
+{% endblock %}

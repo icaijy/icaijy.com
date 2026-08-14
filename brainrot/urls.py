@@ -15,4 +15,5 @@ urlpatterns = [
     path('hall-of-fame/<int:entry_id>/video/', views.hall_of_fame_video, name='hall_of_fame_video'),
     path('challenge/<int:entry_id>/', views.challenge, name='challenge'),
     path('typing/', views.typing_test, name='typing_test'),
+    path('67ifier/', views.cpp_67ifier, name='cpp_67ifier'),
 ]

@@ -50,6 +50,10 @@ def typing_test(request):
     return render(request, 'brainrot/typing.html')
 
 
+def cpp_67ifier(request):
+    return render(request, 'brainrot/cpp_67ifier.html')
+
+
 def hall_of_fame(request):
     entries = HallOfFameEntry.objects.filter(
         state=HallOfFameEntry.State.APPROVED,

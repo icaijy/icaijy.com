@@ -71,6 +71,8 @@
 .br-game-card p { max-width: 390px; color: #334155; }
 .br-counter-card { background: var(--br-lime); }
 .br-typing-card { background: var(--br-blue); }
+.br-code-card { grid-column: 1 / -1; min-height: 280px; background: #ffd6a0; }
+.br-code-card .br-card-number { right: 1rem; bottom: -1.4rem; font-size: clamp(6rem, 16vw, 12rem); }
 .br-card-number {
   position: absolute;
   right: -1rem;
@@ -267,8 +269,38 @@
 .hall-share-card > p { color: var(--br-muted); }
 .hall-share-card textarea { width: 100%; padding: .8rem; resize: vertical; border: 1px solid var(--br-line); border-radius: 10px; background: #f8fafc; font: .85rem/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
 
+.cpp67-heading { max-width: 960px; margin: 4.5rem 0 2rem; }
+.cpp67-heading h1 { margin: .35rem 0 1rem; font-size: clamp(3.5rem, 10vw, 8rem); font-weight: 950; line-height: .88; letter-spacing: -.07em; }
+.cpp67-heading p { max-width: 760px; color: var(--br-muted); font-size: clamp(1rem, 2vw, 1.25rem); }
+.cpp67-options { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: .8rem; margin: 1.2rem 0; }
+.cpp67-options > label { display: flex; flex-direction: column; justify-content: center; gap: .45rem; min-height: 78px; padding: .8rem 1rem; border: 1px solid var(--br-line); border-radius: 14px; background: rgba(255,255,255,.92); }
+.cpp67-options > label > span { color: var(--br-muted); font-size: .72rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.cpp67-options select, .cpp67-options input[type="text"] { width: 100%; padding: .55rem .65rem; border: 1px solid #cbd5e1; border-radius: 8px; background: white; color: var(--br-ink); }
+.cpp67-options .cpp67-toggle { flex-direction: row; align-items: center; justify-content: flex-start; gap: .7rem; cursor: pointer; }
+.cpp67-toggle input { width: 1.1rem; height: 1.1rem; accent-color: var(--br-accent-dark); }
+.cpp67-toggle span { display: flex; flex-direction: column; color: var(--br-ink) !important; font-size: .82rem !important; letter-spacing: 0 !important; text-transform: none !important; }
+.cpp67-toggle small { margin-top: .15rem; color: var(--br-muted); font-weight: 500; }
+.cpp67-workbench { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.cpp67-editor-card { overflow: hidden; border: 1px solid var(--br-line); border-radius: 18px; background: #111827; box-shadow: 0 12px 35px rgba(15,23,42,.1); }
+.cpp67-editor-card header { display: flex; justify-content: space-between; padding: .75rem 1rem; border-bottom: 1px solid #334155; color: #e2e8f0; font-size: .82rem; }
+.cpp67-editor-card header span { color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; }
+.cpp67-editor-card textarea { display: block; width: 100%; min-height: 510px; padding: 1.1rem; resize: vertical; border: 0; outline: 0; background: #111827; color: #e2e8f0; tab-size: 4; font: .88rem/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.cpp67-output-card textarea { background: #172033; color: #d8ff62; }
+.cpp67-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; margin: 1rem 0; }
+.cpp67-actions .br-primary, .cpp67-actions .br-secondary { width: auto; min-width: 145px; margin: 0; }
+.cpp67-actions .br-text-button { display: inline-block; margin: 0 .2rem; }
+.cpp67-report { display: grid; grid-template-columns: repeat(3, minmax(120px, 190px)) 1fr; gap: .7rem; align-items: stretch; margin-top: 1rem; }
+.cpp67-report > div, .cpp67-report > p { margin: 0; padding: .9rem 1rem; border: 1px solid var(--br-line); border-radius: 12px; background: rgba(255,255,255,.9); }
+.cpp67-report > div { display: flex; flex-direction: column; }
+.cpp67-report span { color: var(--br-muted); font-size: .67rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.cpp67-report strong { font-size: 1.45rem; }
+.cpp67-report p { color: var(--br-muted); font-size: .82rem; line-height: 1.5; }
+.cpp67-notes { margin: 1.2rem 0; padding: 1rem 1.2rem; border: 1px dashed #94a3b8; border-radius: 12px; color: var(--br-muted); font-size: .85rem; }
+.cpp67-notes summary { color: var(--br-ink); font-weight: 800; cursor: pointer; }
+.cpp67-notes p { max-width: 900px; margin-bottom: 0; }
+
 @media (max-width: 780px) {
-  .br-game-grid, .counter-layout, .result-card, .hall-detail-grid { grid-template-columns: 1fr; }
+  .br-game-grid, .counter-layout, .result-card, .hall-detail-grid, .cpp67-workbench, .cpp67-options { grid-template-columns: 1fr; }
   .duel-grid { grid-template-columns: 1fr; }
   .br-game-card { min-height: 300px; }
   .br-toolbar span { display: none; }
@@ -278,6 +310,16 @@
   .hall-detail-heading { align-items: start; flex-direction: column; gap: .6rem; }
   .hall-detail-heading .br-kicker { position: static; transform: none; }
   .typing-viewport { height: 205px; padding: 1.3rem; }
+  .cpp67-heading { margin-top: 3rem; }
+  .cpp67-editor-card textarea { min-height: 360px; }
+  .cpp67-report { grid-template-columns: repeat(3, 1fr); }
+  .cpp67-report p { grid-column: 1 / -1; }
+}
+
+@media (max-width: 520px) {
+  .cpp67-report { grid-template-columns: 1fr; }
+  .cpp67-report p { grid-column: auto; }
+  .cpp67-actions .br-primary, .cpp67-actions .br-secondary { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

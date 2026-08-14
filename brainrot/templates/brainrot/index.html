@@ -4,12 +4,12 @@
 {% block title %}Institute of 61/67 Studies{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.7">
 <main class="br-page">
   <section class="br-hero">
     <span class="br-kicker">ICAiJY INSTITUTE OF NUMERICAL CULTURE</span>
     <h1>61 / 67 Research Division</h1>
-    <p>Two controlled experiments. No useful findings are expected.</p>
+    <p>Three controlled experiments. No useful findings are expected.</p>
   </section>
   <section class="br-game-grid" aria-label="Experiments">
     <a class="br-game-card br-counter-card" href="{% url 'brainrot:counter' %}">
@@ -29,6 +29,15 @@
         <p>Modern typing science, stripped of every unnecessary character.</p>
       </div>
       <span class="br-card-arrow">Type →</span>
+    </a>
+    <a class="br-game-card br-code-card" href="{% url 'brainrot:cpp_67ifier' %}">
+      <span class="br-card-number">67^67</span>
+      <div>
+        <span class="br-kicker">EXPERIMENT 03</span>
+        <h2>C++ 67ifier</h2>
+        <p>Convert respectable competitive-programming code into numerically significant research.</p>
+      </div>
+      <span class="br-card-arrow">Corrupt responsibly →</span>
     </a>
   </section>
 </main>
