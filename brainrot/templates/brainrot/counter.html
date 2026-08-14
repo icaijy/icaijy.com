@@ -18,7 +18,7 @@
     <a href="{% url 'brainrot:index' %}">← Research division</a>
     <div class="br-toolbar-links">
       {% if request.user.is_authenticated %}<a href="{% url 'brainrot:my_hall_of_fame' %}">My HOF</a>{% endif %}
-      <a href="{% url 'brainrot:hall_of_fame' %}">Hall of Fame</a>
+      <a class="br-primary br-button-link" href="{% url 'brainrot:hall_of_fame' %}">🏆 Hall of Fame</a>
     </div>
   </header>
 
@@ -90,8 +90,7 @@
       {% endif %}
 
       <button class="br-primary" id="enable-camera">Enable camera</button>
-      <button class="br-primary" id="start-run" disabled>Detector is still loading…</button>
-      <p class="subtle run-consent">I'm ready starts a local recording. Submitting remains your decision.</p>
+      <p class="subtle run-consent">After the camera is enabled, this same button becomes “I'm ready”. Starting a run records locally; submitting remains your decision.</p>
       <button class="br-secondary" id="reset-run" hidden>Run this foolish experiment again</button>
       <p class="counter-error" id="counter-error" role="alert"></p>
     </aside>
@@ -112,8 +111,7 @@
           <span>Anonymous display name</span>
           <input id="hof-display-name" maxlength="32" placeholder="Anonymous Swan">
         </label>
-        <p class="subtle">No account means no ownership recovery or delete button later.
-          <a href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in before another run</a> if you want those controls.</p>
+        <p class="subtle">Anonymous entries are always marked <strong>anon ·</strong> and cannot use an existing registered username. They are not tied to an account, so there is no self-service delete button; if you need one removed later, contact me with its Hall of Fame link. <a href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in before another run</a> if you want direct ownership controls.</p>
       {% elif request.user.is_authenticated %}
         <p class="subtle">Submitting as <strong>{{ request.user.username }}</strong>. This run will appear in My HOF and can be deleted later.</p>
       {% else %}
@@ -143,5 +141,5 @@
 {% endif %}
 
 {# Keep this version in step with counter.js so browsers cannot retain a broken runtime URL. #}
-<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.12"></script>
+<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.12&ui=1"></script>
 {% endblock %}
