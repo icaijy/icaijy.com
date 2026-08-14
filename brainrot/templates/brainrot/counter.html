@@ -111,7 +111,7 @@
           <span>Anonymous display name</span>
           <input id="hof-display-name" maxlength="32" placeholder="Anonymous Swan">
         </label>
-        <p class="subtle">Anonymous entries are always marked <strong>anon ·</strong> and cannot use an existing registered username. They are not tied to an account, so there is no self-service delete button; if you need one removed later, contact me with its Hall of Fame link. <a href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in before another run</a> if you want direct ownership controls.</p>
+        <p class="subtle">Anonymous entries are always marked <strong>· anon</strong> and cannot use an existing registered username. They are not tied to an account, so there is no self-service delete button; if you need one removed later, contact me with its Hall of Fame link. <a href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in before another run</a> if you want direct ownership controls.</p>
       {% elif request.user.is_authenticated %}
         <p class="subtle">Submitting as <strong>{{ request.user.username }}</strong>. This run will appear in My HOF and can be deleted later.</p>
       {% else %}
