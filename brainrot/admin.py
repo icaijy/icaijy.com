@@ -7,12 +7,16 @@ from .models import HallOfFameEntry
 
 @admin.register(HallOfFameEntry)
 class HallOfFameEntryAdmin(admin.ModelAdmin):
-    list_display = ('user', 'score', 'state', 'duration_seconds', 'created_at', 'review_video')
+    list_display = ('submitter', 'score', 'state', 'duration_seconds', 'created_at', 'review_video')
     list_filter = ('state', 'created_at')
-    search_fields = ('user__username',)
+    search_fields = ('user__username', 'display_name')
     list_editable = ('score', 'state')
     readonly_fields = ('user', 'mime_type', 'duration_seconds', 'event_timeline', 'created_at', 'review_video')
     actions = ('approve_entries', 'reject_entries')
+
+    @admin.display(description='Submitter', ordering='user__username')
+    def submitter(self, obj):
+        return obj.public_name
 
     @admin.display(description='Recording')
     def review_video(self, obj):

@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ entry.user.username }} — 67 Hall of Fame{% endblock %}
+{% block title %}{{ entry.public_name }} — 67 Hall of Fame{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.6">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.7">
 <main class="br-page hall-detail-page" id="hof-detail"
       data-entry-url="{{ request.build_absolute_uri }}"
-      data-username="{{ entry.user.username }}"
+      data-username="{{ entry.public_name }}"
       data-score="{{ entry.score }}">
   <header class="br-toolbar">
     <a href="{% url 'brainrot:hall_of_fame' %}">← Hall of Fame</a>
@@ -18,7 +18,7 @@
     <span class="br-kicker">ARCHIVED HUMAN PERFORMANCE SPECIMEN #{{ entry.id }}</span>
     <h1>{{ entry.score }}</h1>
     <div>
-      <strong>{{ entry.user.username }}</strong>
+      <strong>{{ entry.public_name }}</strong>
       <span>{{ entry.created_at|date:'j M Y · H:i' }} · {{ entry.duration_seconds|floatformat:2 }} seconds</span>
     </div>
   </section>
@@ -44,6 +44,13 @@
       <textarea id="hof-share-text" rows="5" readonly aria-label="Shareable Hall of Fame result"></textarea>
       <button class="br-primary" id="share-hof" type="button">Share Hall of Fame link</button>
       <button class="br-secondary" id="copy-hof-link" type="button">Copy link</button>
+      {% if request.user == entry.user and entry.user_id %}
+      <form class="hof-delete-form" method="post" action="{% url 'brainrot:delete_hall_of_fame_entry' entry.id %}"
+            onsubmit="return confirm('Delete this Hall of Fame entry and its video permanently?');">
+        {% csrf_token %}
+        <button class="br-danger" type="submit">Delete my entry &amp; video</button>
+      </form>
+      {% endif %}
       <p class="subtle" id="hof-share-status" role="status" aria-live="polite"></p>
     </aside>
   </section>

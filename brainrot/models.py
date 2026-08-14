@@ -21,7 +21,10 @@ class HallOfFameEntry(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='hall_of_fame_entries',
+        null=True,
+        blank=True,
     )
+    display_name = models.CharField(max_length=32, blank=True)
     score = models.PositiveSmallIntegerField()
     video = models.FileField(
         upload_to=hall_of_fame_upload_path,
@@ -42,15 +45,30 @@ class HallOfFameEntry(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.user.username}: {self.score} ({self.state})'
+        return f'{self.public_name}: {self.score} ({self.state})'
+
+    @property
+    def public_name(self):
+        if self.user_id:
+            return self.user.username
+        return self.display_name or 'Anonymous Swan'
 
 
 class HallOfFameUploadAttempt(models.Model):
     """Small audit/rate-limit row; failed uploads must count as attempts too."""
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    client_key = models.CharField(max_length=64)
     created_at = models.DateTimeField(auto_now_add=True)
     accepted = models.BooleanField(default=False)
 
     class Meta:
-        indexes = [models.Index(fields=('user', '-created_at'), name='hof_attempt_rate_idx')]
+        indexes = [
+            models.Index(fields=('user', '-created_at'), name='hof_attempt_rate_idx'),
+            models.Index(fields=('client_key', '-created_at'), name='hof_attempt_client_idx'),
+        ]

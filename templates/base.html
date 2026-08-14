@@ -102,6 +102,9 @@
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                 {% if request.user.is_authenticated %}
                   <li>
+                    <a class="dropdown-item" href="{% url 'brainrot:my_hall_of_fame' %}">My 67 Hall of Fame</a>
+                  </li>
+                  <li>
                     <a class="dropdown-item" href="{% url 'logout' %}">{% trans 'Logout' %}</a>
                   </li>
                 {% else %}
