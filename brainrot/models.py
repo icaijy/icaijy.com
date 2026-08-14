@@ -29,6 +29,7 @@ class HallOfFameEntry(models.Model):
     )
     mime_type = models.CharField(max_length=32)
     duration_seconds = models.FloatField()
+    event_timeline = models.JSONField(default=list, blank=True)
     state = models.CharField(max_length=12, choices=State.choices, default=State.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
     reviewed_at = models.DateTimeField(null=True, blank=True)

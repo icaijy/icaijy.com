@@ -1,3 +1,4 @@
+import json
 import tempfile
 from pathlib import Path
 from types import SimpleNamespace
@@ -11,6 +12,7 @@ from django.test import TestCase, override_settings
 
 from .models import HallOfFameEntry
 from .validators import ValidatedVideo, _packet_duration, _probe_video
+from .views import _validated_event_timeline
 
 
 class BrainrotPageTests(TestCase):
@@ -25,8 +27,8 @@ class BrainrotPageTests(TestCase):
 
     def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
         response = self.client.get('/67/counter/')
-        self.assertContains(response, 'brainrot.css?v=20260814.5')
-        self.assertContains(response, 'counter.js?v=20260814.9')
+        self.assertContains(response, 'brainrot.css?v=20260814.6')
+        self.assertContains(response, 'counter.js?v=20260814.11')
         self.assertContains(response, 'id="counter-share-text"')
         self.assertContains(response, 'id="copy-counter-share"')
         self.assertContains(response, 'id="download-recording"')
@@ -48,6 +50,67 @@ class BrainrotPageTests(TestCase):
         self.assertNotIn('currentMode', script)
         self.assertNotIn('modeInputs', script)
         self.assertIn('const blob = await stopRecording();', script)
+        self.assertIn("recordingStream = recordingCanvas.captureStream(30);", script)
+        self.assertIn('recorder = new MediaRecorder(recordingStream', script)
+        self.assertNotIn('recorder = new MediaRecorder(stream', script)
+        self.assertIn("form.append('event_timeline', JSON.stringify(eventTimeline));", script)
+
+
+class HallOfFamePageTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user('swan-scientist')
+        self.entry = HallOfFameEntry.objects.create(
+            user=self.user,
+            score=3,
+            video='hall_of_fame/specimen.webm',
+            mime_type='video/webm',
+            duration_seconds=23.25,
+            event_timeline=[1.2, 4.5, 9.67],
+            state=HallOfFameEntry.State.APPROVED,
+        )
+
+    def test_detail_page_is_shareable_and_linked_from_leaderboard(self):
+        detail_path = f'/67/hall-of-fame/{self.entry.id}/'
+        response = self.client.get(detail_path)
+        self.assertContains(response, 'id="hof-share-text"')
+        self.assertContains(response, 'Share Hall of Fame link')
+        self.assertContains(response, f'/67/challenge/{self.entry.id}/')
+        self.assertContains(response, 'hof_detail.js?v=20260814.1')
+
+        leaderboard = self.client.get('/67/hall-of-fame/')
+        self.assertContains(leaderboard, detail_path)
+        self.assertContains(leaderboard, f'/67/challenge/{self.entry.id}/')
+
+    def test_challenge_embeds_video_and_exact_event_timeline(self):
+        response = self.client.get(f'/67/challenge/{self.entry.id}/')
+        self.assertContains(response, 'id="rival-video"')
+        self.assertContains(response, 'id="rival-score"')
+        self.assertContains(response, 'Recorded event timeline ready')
+        self.assertContains(response, '[1.2, 4.5, 9.67]')
+        self.assertContains(response, 'data-rival-score="3"')
+
+    def test_legacy_challenge_uses_labelled_estimated_pace(self):
+        self.entry.event_timeline = []
+        self.entry.save(update_fields=['event_timeline'])
+        response = self.client.get(f'/67/challenge/{self.entry.id}/')
+        self.assertContains(response, 'Legacy run · estimated count pace')
+
+    def test_non_public_entry_has_no_detail_or_challenge(self):
+        self.entry.state = HallOfFameEntry.State.REJECTED
+        self.entry.save(update_fields=['state'])
+        self.assertEqual(self.client.get(f'/67/hall-of-fame/{self.entry.id}/').status_code, 404)
+        self.assertEqual(self.client.get(f'/67/challenge/{self.entry.id}/').status_code, 404)
+
+
+class EventTimelineValidationTests(TestCase):
+    def test_valid_timeline_is_normalised(self):
+        self.assertEqual(_validated_event_timeline('[1.23456, 9, 20.0]', 3), [1.235, 9.0, 20.0])
+
+    def test_timeline_must_match_score_and_be_monotonic(self):
+        with self.assertRaisesMessage(ValidationError, 'does not match'):
+            _validated_event_timeline('[1.0]', 2)
+        with self.assertRaisesMessage(ValidationError, 'invalid timestamp'):
+            _validated_event_timeline('[4.0, 3.0]', 2)
 
 
 class VideoValidationTests(TestCase):
@@ -136,10 +199,16 @@ class HallOfFameSubmissionTests(TestCase):
         validate.return_value = ValidatedVideo('video/webm', 'webm', 23.0)
         self.client.login(username='scientist', password='test-password-67')
         video = SimpleUploadedFile('run.webm', b'video evidence', content_type='video/webm')
-        response = self.client.post('/67/submit/', {'score': 67, 'video': video})
+        response = self.client.post('/67/submit/', {
+            'score': 3,
+            'event_timeline': json.dumps([1.2, 4.5, 9.67]),
+            'video': video,
+        })
         self.assertEqual(response.status_code, 201)
         entry = HallOfFameEntry.objects.get()
         self.assertEqual(entry.state, HallOfFameEntry.State.APPROVED)
+        self.assertEqual(entry.event_timeline, [1.2, 4.5, 9.67])
+        self.assertEqual(response.json()['entry_url'], f'/67/hall-of-fame/{entry.id}/')
         self.assertIn(entry, self.client.get('/67/hall-of-fame/').context['entries'])
 
         second = SimpleUploadedFile('run.webm', b'more evidence', content_type='video/webm')

@@ -25,11 +25,18 @@ if (app) {
   const submitButton = document.getElementById('submit-hof');
   const discardButton = document.getElementById('discard-recording');
   const uploadStatus = document.getElementById('upload-status');
+  const rivalVideo = document.getElementById('rival-video');
+  const rivalScoreEl = document.getElementById('rival-score');
+  const rivalTimelineNode = document.getElementById('rival-event-timeline');
 
   const GAME_SECONDS = 20;
   const COUNTDOWN_STEP_MS = 1000;
   const GO_DISPLAY_MS = 250;
+  const RECORDING_LEAD_SECONDS = 3 + GO_DISPLAY_MS / 1000;
   const READY_LABEL = "I'm ready — record locally";
+  const rivalTimeline = rivalTimelineNode ? JSON.parse(rivalTimelineNode.textContent) : [];
+  const rivalName = app.dataset.rivalName || '';
+  const rivalFinalScore = Number(app.dataset.rivalScore || 0);
   let stream = null;
   let landmarker = null;
   let runtimePromise = null;
@@ -43,9 +50,17 @@ if (app) {
   let countdownActive = false;
   let endTime = 0;
   let score = 0;
+  let eventTimeline = [];
+  let runStartedAt = 0;
+  let rivalTimelineIndex = 0;
+  let rivalReady = !rivalVideo;
   let lastZone = 0;
   let lastCountAt = 0;
   let recorder = null;
+  let recordingStream = null;
+  let recordingCanvas = null;
+  let recordingContext = null;
+  let recordingFrame = null;
   let recordingChunks = [];
   let recordingBlob = null;
   let recordingUrl = null;
@@ -134,13 +149,15 @@ if (app) {
   }
 
   function shareableResult() {
-    const headline = score === 67
-      ? 'I scored exactly 67 in the 67 Counter. Peer review is complete. 🧪'
-      : `I scored ${score} in the 67 Counter. The data is unfortunately real. 🧪`;
+    const headline = rivalName
+      ? `I scored ${score} against ${rivalName}'s ${rivalFinalScore} in a synchronised 67 Challenge. 🧪`
+      : score === 67
+        ? 'I scored exactly 67 in the 67 Counter. Peer review is complete. 🧪'
+        : `I scored ${score} in the 67 Counter. The data is unfortunately real. 🧪`;
     const blocks = score > 0
       ? `${'🟩'.repeat(Math.min(score, 67))}${score > 67 ? ` +${score - 67}` : ''}`
       : '⬜';
-    const url = new URL('/67/counter/', window.location.origin).href;
+    const url = rivalName ? window.location.href : new URL('/67/counter/', window.location.origin).href;
     return `${headline}\n20 seconds of arm-based research\n${blocks}\nSIX SEVEN\nCan you do better?\n${url}`;
   }
 
@@ -237,6 +254,7 @@ if (app) {
     if (zone !== lastZone && now - lastCountAt > 90) {
       score += 1;
       scoreEl.textContent = score;
+      eventTimeline.push(Number(Math.max(0, (now - runStartedAt) / 1000).toFixed(3)));
       lastZone = zone;
       lastCountAt = now;
     }
@@ -318,18 +336,60 @@ if (app) {
   function startRecording() {
     const type = preferredRecordingType();
     if (!type) throw new Error('This browser cannot record a compatible WebM/MP4 video.');
-    recordingChunks = [];
-    recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 1_600_000 });
-    recorder.addEventListener('dataavailable', (event) => {
-      if (event.data.size) recordingChunks.push(event.data);
-    });
-    recorder.start(500);
-    livePill.hidden = false;
+
+    // Firefox can preserve the age of a long-lived camera track in WebM packet
+    // timestamps. A canvas capture creates a fresh recording clock without
+    // requesting the camera again or changing the stream used by MediaPipe.
+    recordingCanvas = document.createElement('canvas');
+    recordingCanvas.width = video.videoWidth || 640;
+    recordingCanvas.height = video.videoHeight || 480;
+    recordingContext = recordingCanvas.getContext('2d');
+    if (!recordingContext || !recordingCanvas.captureStream) {
+      recordingCanvas = null;
+      recordingContext = null;
+      throw new Error('This browser cannot create a timestamp-safe recording.');
+    }
+
+    const drawRecordingFrame = () => {
+      if (!recordingContext || !recordingCanvas) return;
+      recordingContext.drawImage(video, 0, 0, recordingCanvas.width, recordingCanvas.height);
+      recordingFrame = requestAnimationFrame(drawRecordingFrame);
+    };
+
+    try {
+      drawRecordingFrame();
+      recordingStream = recordingCanvas.captureStream(30);
+      recordingChunks = [];
+      recorder = new MediaRecorder(recordingStream, { mimeType: type, videoBitsPerSecond: 1_600_000 });
+      recorder.addEventListener('dataavailable', (event) => {
+        if (event.data.size) recordingChunks.push(event.data);
+      });
+      recorder.start(500);
+      livePill.hidden = false;
+    } catch (error) {
+      recorder = null;
+      recordingChunks = [];
+      stopRecordingPipeline();
+      throw error;
+    }
+  }
+
+  function stopRecordingPipeline() {
+    if (recordingFrame !== null) cancelAnimationFrame(recordingFrame);
+    recordingFrame = null;
+    recordingStream?.getTracks().forEach((track) => track.stop());
+    recordingStream = null;
+    recordingContext = null;
+    recordingCanvas = null;
   }
 
   function stopRecording() {
     return new Promise((resolve) => {
       if (!recorder || recorder.state === 'inactive') {
+        recorder = null;
+        recordingChunks = [];
+        stopRecordingPipeline();
+        livePill.hidden = true;
         resolve(null);
         return;
       }
@@ -338,6 +398,7 @@ if (app) {
         recordingBlob = new Blob(recordingChunks, { type: baseType });
         recorder = null;
         recordingChunks = [];
+        stopRecordingPipeline();
         livePill.hidden = true;
         resolve(recordingBlob);
       }, { once: true });
@@ -348,6 +409,13 @@ if (app) {
   function updateGameClock() {
     if (!running) return;
     const remaining = Math.max(0, (endTime - performance.now()) / 1000);
+    if (rivalVideo) {
+      const rivalGameTime = Math.max(0, rivalVideo.currentTime - RECORDING_LEAD_SECONDS);
+      while (rivalTimelineIndex < rivalTimeline.length && rivalTimeline[rivalTimelineIndex] <= rivalGameTime) {
+        rivalTimelineIndex += 1;
+      }
+      rivalScoreEl.textContent = rivalTimelineIndex;
+    }
     timeEl.textContent = remaining.toFixed(1);
     if (remaining <= 0) {
       finishRun();
@@ -364,6 +432,14 @@ if (app) {
     startButton.disabled = true;
     startButton.textContent = 'Waiting for your pose…';
     score = 0;
+    eventTimeline = [];
+    runStartedAt = 0;
+    rivalTimelineIndex = 0;
+    if (rivalScoreEl) rivalScoreEl.textContent = '0';
+    if (rivalVideo) {
+      rivalVideo.pause();
+      if (rivalVideo.readyState) rivalVideo.currentTime = 0;
+    }
     lastZone = 0;
     lastCountAt = 0;
     scoreEl.textContent = '0';
@@ -375,13 +451,27 @@ if (app) {
 
   async function beginRun() {
     if (!armed || !poseReady || running || countdownActive) return;
+    if (!rivalReady) {
+      setStatus('Opponent evidence is still buffering', 'busy');
+      startButton.textContent = 'Waiting for opponent video…';
+      return;
+    }
     armed = false;
     countdownActive = true;
     setStatus('Pose locked — countdown commencing', 'ready');
 
     try {
+      if (rivalVideo) {
+        rivalVideo.currentTime = 0;
+        await rivalVideo.play();
+      }
       startRecording();
     } catch (error) {
+      rivalVideo?.pause();
+      if (recorder) {
+        await stopRecording();
+        recordingBlob = null;
+      }
       showError(error.message);
       countdownActive = false;
       startButton.disabled = false;
@@ -398,7 +488,11 @@ if (app) {
     countdownEl.textContent = '';
     countdownActive = false;
     running = true;
-    endTime = performance.now() + GAME_SECONDS * 1000;
+    runStartedAt = performance.now();
+    endTime = runStartedAt + GAME_SECONDS * 1000;
+    if (rivalVideo && Math.abs(rivalVideo.currentTime - RECORDING_LEAD_SECONDS) > 0.35) {
+      rivalVideo.currentTime = RECORDING_LEAD_SECONDS;
+    }
     setStatus('Experiment in progress', 'ready');
     gameLoop = requestAnimationFrame(updateGameClock);
   }
@@ -409,14 +503,22 @@ if (app) {
     cancelAnimationFrame(gameLoop);
     timeEl.textContent = '0.0';
     setStatus('Run complete — detector remains local', 'ready');
+    rivalVideo?.pause();
+    if (rivalScoreEl) rivalScoreEl.textContent = rivalFinalScore;
     const blob = await stopRecording();
 
     resultScore.textContent = score;
-    resultCopy.textContent = score === 67
-      ? 'Exactly 67. There will be no further questions.'
-      : score > 67
-        ? 'The 67 barrier has been disturbed.'
-        : 'The Institute recommends more arm-based research.';
+    resultCopy.textContent = rivalName
+      ? score > rivalFinalScore
+        ? `You defeated ${rivalName} by ${score - rivalFinalScore}. The archive has been destabilised.`
+        : score === rivalFinalScore
+          ? `A draw with ${rivalName}. Statistically annoying.`
+          : `${rivalName} remains ahead by ${rivalFinalScore - score}. Replication is encouraged.`
+      : score === 67
+        ? 'Exactly 67. There will be no further questions.'
+        : score > 67
+          ? 'The 67 barrier has been disturbed.'
+          : 'The Institute recommends more arm-based research.';
     shareText.value = shareableResult();
     copyShareStatus.textContent = '';
     resultCard.hidden = false;
@@ -450,6 +552,14 @@ if (app) {
     armed = false;
     countdownActive = false;
     score = 0;
+    eventTimeline = [];
+    runStartedAt = 0;
+    rivalTimelineIndex = 0;
+    if (rivalScoreEl) rivalScoreEl.textContent = '0';
+    if (rivalVideo) {
+      rivalVideo.pause();
+      if (rivalVideo.readyState) rivalVideo.currentTime = 0;
+    }
     scoreEl.textContent = '0';
     timeEl.textContent = GAME_SECONDS.toFixed(1);
     resultCard.hidden = true;
@@ -473,6 +583,7 @@ if (app) {
     const extension = recordingBlob.type === 'video/mp4' ? 'mp4' : 'webm';
     const form = new FormData();
     form.append('score', String(score));
+    form.append('event_timeline', JSON.stringify(eventTimeline));
     form.append('video', recordingBlob, `67-run.${extension}`);
     if (turnstileResponse) form.append('cf-turnstile-response', turnstileResponse);
 
@@ -490,7 +601,7 @@ if (app) {
       uploadStatus.textContent = payload.message;
       submitButton.hidden = true;
       if (discardButton) discardButton.hidden = true;
-      window.setTimeout(() => { window.location.href = payload.hall_of_fame_url; }, 1200);
+      window.setTimeout(() => { window.location.href = payload.entry_url || payload.hall_of_fame_url; }, 1200);
     } catch (error) {
       uploadStatus.textContent = error.message;
       submitButton.disabled = false;
@@ -505,8 +616,21 @@ if (app) {
   submitButton?.addEventListener('click', submitRecording);
   discardButton?.addEventListener('click', discardRecording);
   copyShareButton?.addEventListener('click', copyShareResult);
+  if (rivalVideo) {
+    const markRivalReady = () => {
+      rivalReady = true;
+      if (landmarker && !running && !countdownActive) {
+        startButton.disabled = false;
+        startButton.textContent = READY_LABEL;
+      }
+    };
+    rivalVideo.addEventListener('canplay', markRivalReady);
+    rivalVideo.addEventListener('loadeddata', markRivalReady);
+    if (rivalVideo.readyState >= 2) markRivalReady();
+  }
   window.addEventListener('beforeunload', () => {
     if (recordingUrl) URL.revokeObjectURL(recordingUrl);
+    stopRecordingPipeline();
     stream?.getTracks().forEach((track) => track.stop());
   });
 }
