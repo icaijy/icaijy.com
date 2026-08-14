@@ -31,16 +31,23 @@ def _packet_duration(path, ffprobe):
     )
     if completed.returncode != 0:
         return 0
-    end_time = 0.0
+    first_pts = None
+    end_time = None
     for line in completed.stdout.splitlines():
         values = line.split(',')
         try:
             pts = float(values[0])
             packet_duration = float(values[1]) if len(values) > 1 and values[1] else 0
-            end_time = max(end_time, pts + packet_duration)
+            first_pts = pts if first_pts is None else min(first_pts, pts)
+            packet_end = pts + packet_duration
+            end_time = packet_end if end_time is None else max(end_time, packet_end)
         except ValueError:
             continue
-    return end_time
+    if first_pts is None or end_time is None:
+        return 0
+    # MediaRecorder packets may retain timestamps from the long-lived camera
+    # stream. Duration is the packet span, not the final absolute PTS.
+    return max(0, end_time - first_pts)
 
 
 def _sniff_container(upload):

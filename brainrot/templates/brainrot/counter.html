@@ -4,7 +4,9 @@
 {% block title %}67 Counter{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.3">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.4">
 {% if turnstile_enabled %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}
 
 <main class="br-page counter-page" id="counter-app"
@@ -43,7 +45,7 @@
       </div>
       <div class="detector-status" id="detector-status">
         <span class="status-dot"></span>
-        <span>Camera not started</span>
+        <span>Preloading pose model — camera remains off</span>
       </div>
     </div>
 
@@ -66,7 +68,7 @@
         </label>
       </fieldset>
 
-      <button class="br-primary" id="enable-camera">Enable camera &amp; detector</button>
+      <button class="br-primary" id="enable-camera">Enable camera</button>
       <button class="br-primary" id="start-run" disabled>Detector is still loading…</button>
       <button class="br-secondary" id="reset-run" hidden>Run this foolish experiment again</button>
       <p class="counter-error" id="counter-error" role="alert"></p>
@@ -82,6 +84,7 @@
     <div class="recording-review" id="recording-review" hidden>
       <video id="recording-preview" controls playsinline></video>
       <p>The recording remains local unless you submit it below. Closing or resetting discards it.</p>
+      <a class="br-secondary br-button-link recording-download" id="download-recording" hidden>Download this recording</a>
       {% if request.user.is_authenticated %}
         {% if turnstile_enabled %}<div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}"></div>{% endif %}
         <button class="br-primary" id="submit-hof">Submit to Hall of Fame</button>
@@ -102,5 +105,5 @@
 </main>
 
 {# Keep this version in step with counter.js so browsers cannot retain a broken runtime URL. #}
-<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.5"></script>
+<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.8"></script>
 {% endblock %}

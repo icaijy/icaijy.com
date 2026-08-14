@@ -21,6 +21,8 @@
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
+.br-page [hidden] { display: none !important; }
+
 .br-kicker {
   color: #475569;
   font-size: .72rem;
@@ -158,6 +160,7 @@
 .result-card h2 { margin-top: .4rem; font-weight: 900; }
 .recording-review video { width: 100%; max-height: 310px; border-radius: 12px; background: #111827; }
 .recording-review p { color: var(--br-muted); font-size: .85rem; }
+.recording-download { margin-bottom: .7rem; }
 .counter-share { grid-column: 1 / -1; padding-top: 1.25rem; border-top: 1px solid var(--br-line); }
 .counter-share h3 { margin: 0 0 .75rem; font-size: 1rem; font-weight: 850; text-align: center; }
 .counter-share textarea {
@@ -220,6 +223,7 @@
 .hall-entry details { text-align: right; }
 .hall-entry summary { cursor: pointer; color: var(--br-accent-dark); font-size: .86rem; font-weight: 800; }
 .hall-entry video { width: min(420px, 75vw); max-height: 300px; margin-top: .7rem; border-radius: 10px; background: #111827; }
+.hall-download { display: block; width: fit-content; margin: .45rem 0 0 auto; color: var(--br-ink); font-size: .8rem; font-weight: 750; }
 .empty-hall { padding: 4rem 1.5rem; text-align: center; }
 .empty-hall strong { font-size: 1.5rem; }
 .empty-hall p { color: var(--br-muted); }

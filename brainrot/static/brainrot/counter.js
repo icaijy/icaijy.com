@@ -21,14 +21,18 @@ if (app) {
   const copyShareStatus = document.getElementById('copy-counter-status');
   const recordingReview = document.getElementById('recording-review');
   const recordingPreview = document.getElementById('recording-preview');
+  const recordingDownload = document.getElementById('download-recording');
   const submitButton = document.getElementById('submit-hof');
   const discardButton = document.getElementById('discard-recording');
   const uploadStatus = document.getElementById('upload-status');
   const modeInputs = [...document.querySelectorAll('input[name="mode"]')];
 
   const GAME_SECONDS = 20;
+  const COUNTDOWN_STEP_MS = 1000;
+  const GO_DISPLAY_MS = 250;
   let stream = null;
   let landmarker = null;
+  let runtimePromise = null;
   let detectorLoop = null;
   let gameLoop = null;
   let lastVideoTime = -1;
@@ -68,6 +72,48 @@ if (app) {
       }
     }
     throw new Error(`Could not load the pose runtime from either CDN: ${lastError?.message || 'network blocked'}`);
+  }
+
+  function initialisePoseRuntime() {
+    if (landmarker) return Promise.resolve(landmarker);
+    if (!runtimePromise) {
+      runtimePromise = (async () => {
+        const { FilesetResolver, PoseLandmarker, wasmRoot } = await loadMediaPipe();
+        const vision = await FilesetResolver.forVisionTasks(wasmRoot);
+        const options = {
+          baseOptions: {
+            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+            delegate: 'GPU',
+          },
+          runningMode: 'VIDEO',
+          numPoses: 1,
+          minPoseDetectionConfidence: 0.55,
+          minPosePresenceConfidence: 0.55,
+          minTrackingConfidence: 0.55,
+        };
+        try {
+          landmarker = await PoseLandmarker.createFromOptions(vision, options);
+        } catch (gpuError) {
+          options.baseOptions.delegate = 'CPU';
+          landmarker = await PoseLandmarker.createFromOptions(vision, options);
+        }
+        return landmarker;
+      })().catch((error) => {
+        runtimePromise = null;
+        throw error;
+      });
+    }
+    return runtimePromise;
+  }
+
+  function preloadPoseRuntime() {
+    setStatus('Preloading pose model — camera remains off', 'busy');
+    initialisePoseRuntime().then(() => {
+      if (!stream) setStatus('Pose model ready — camera remains off', 'ready');
+    }).catch((error) => {
+      if (!stream) setStatus('Pose model preload paused — camera remains off');
+      console.warn('Pose runtime preload failed; the camera button will retry it.', error);
+    });
   }
 
   function setStatus(message, state = '') {
@@ -164,7 +210,9 @@ if (app) {
 
   function sufficientlyVisible(landmarks) {
     if (!landmarks) return false;
-    return [11, 12, 13, 14, 15, 16].every((id) => {
+    // Elbows improve the overlay but do not participate in the counter. A
+    // briefly uncertain elbow should not discard an otherwise usable frame.
+    return [11, 12, 15, 16].every((id) => {
       const point = landmarks[id];
       return point && (point.visibility ?? 1) > 0.45 && point.x > 0.02 && point.x < 0.98 && point.y > 0.02 && point.y < 0.98;
     });
@@ -246,27 +294,8 @@ if (app) {
       video.srcObject = stream;
       await video.play();
       placeholder.hidden = true;
-      setStatus('Loading the pose model into this browser…', 'busy');
-
-      const { FilesetResolver, PoseLandmarker, wasmRoot } = await loadMediaPipe();
-      const vision = await FilesetResolver.forVisionTasks(wasmRoot);
-      const options = {
-        baseOptions: {
-          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
-          delegate: 'GPU',
-        },
-        runningMode: 'VIDEO',
-        numPoses: 1,
-        minPoseDetectionConfidence: 0.55,
-        minPosePresenceConfidence: 0.55,
-        minTrackingConfidence: 0.55,
-      };
-      try {
-        landmarker = await PoseLandmarker.createFromOptions(vision, options);
-      } catch (gpuError) {
-        options.baseOptions.delegate = 'CPU';
-        landmarker = await PoseLandmarker.createFromOptions(vision, options);
-      }
+      setStatus(landmarker ? 'Pose model ready' : 'Finishing pose model preload…', 'busy');
+      await initialisePoseRuntime();
       enableButton.hidden = true;
       startButton.disabled = false;
       startButton.textContent = "I'm ready";
@@ -368,10 +397,10 @@ if (app) {
 
     for (const value of ['3', '2', '1']) {
       countdownEl.textContent = value;
-      await delay(700);
+      await delay(COUNTDOWN_STEP_MS);
     }
     countdownEl.textContent = 'GO';
-    await delay(350);
+    await delay(GO_DISPLAY_MS);
     countdownEl.textContent = '';
     countdownActive = false;
     running = true;
@@ -402,6 +431,9 @@ if (app) {
       if (recordingUrl) URL.revokeObjectURL(recordingUrl);
       recordingUrl = URL.createObjectURL(blob);
       recordingPreview.src = recordingUrl;
+      recordingDownload.href = recordingUrl;
+      recordingDownload.download = blob.type === 'video/mp4' ? '67-run.mp4' : '67-run.webm';
+      recordingDownload.hidden = false;
     }
     resetButton.hidden = false;
     resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -413,6 +445,8 @@ if (app) {
     recordingBlob = null;
     recordingPreview.removeAttribute('src');
     recordingPreview.load();
+    recordingDownload.removeAttribute('href');
+    recordingDownload.hidden = true;
     recordingReview.hidden = true;
     if (uploadStatus) uploadStatus.textContent = 'Recording discarded. Nothing was uploaded.';
   }
@@ -478,6 +512,7 @@ if (app) {
       });
     });
   });
+  preloadPoseRuntime();
   enableButton.addEventListener('click', initialiseDetector);
   startButton.addEventListener('click', armRun);
   resetButton.addEventListener('click', resetRun);

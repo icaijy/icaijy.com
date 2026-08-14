@@ -70,12 +70,12 @@ def _turnstile_is_valid(request):
 @require_POST
 @login_required
 def submit_hall_of_fame(request):
-    recent_cutoff = timezone.now() - timedelta(hours=1)
+    recent_cutoff = timezone.now() - timedelta(minutes=1)
     recent_count = HallOfFameUploadAttempt.objects.filter(
         user=request.user,
         created_at__gte=recent_cutoff,
     ).count()
-    if recent_count >= settings.HOF_SUBMISSIONS_PER_HOUR:
+    if recent_count >= settings.HOF_SUBMISSIONS_PER_MINUTE:
         return JsonResponse({'error': 'Rate limit reached. The Institute requests patience.'}, status=429)
 
     attempt = HallOfFameUploadAttempt.objects.create(user=request.user)
@@ -132,7 +132,8 @@ def hall_of_fame_video(request, entry_id):
 
     response = FileResponse(entry.video.open('rb'), content_type=entry.mime_type)
     response['Content-Length'] = entry.video.size
-    response['Content-Disposition'] = f'inline; filename="67-run-{entry.pk}.{entry.video.name.rsplit(".", 1)[-1]}"'
+    disposition = 'attachment' if request.GET.get('download') == '1' else 'inline'
+    response['Content-Disposition'] = f'{disposition}; filename="67-run-{entry.pk}.{entry.video.name.rsplit(".", 1)[-1]}"'
     response['X-Content-Type-Options'] = 'nosniff'
     response['Cache-Control'] = 'private, max-age=300'
     return response

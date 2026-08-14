@@ -18,7 +18,12 @@ class HallOfFameEntryAdmin(admin.ModelAdmin):
     def review_video(self, obj):
         if not obj.pk:
             return 'Save first'
-        return format_html('<a href="{}" target="_blank">Open private recording</a>', f'/67/hall-of-fame/{obj.pk}/video/')
+        video_url = f'/67/hall-of-fame/{obj.pk}/video/'
+        return format_html(
+            '<a href="{}" target="_blank">Open recording</a> · <a href="{}?download=1">Download</a>',
+            video_url,
+            video_url,
+        )
 
     @admin.action(description='Approve selected entries')
     def approve_entries(self, request, queryset):
