@@ -244,7 +244,7 @@ def submit_hall_of_fame(request):
         'message': (
             'Published to the Hall of Fame. You can manage it from My HOF.'
             if owner
-            else 'Published anonymously. Save the public link; contact the site owner with that link if you need it removed later.'
+            else 'Published anonymously. This run cannot be managed later through an account; save the public link and contact the site owner with it if you need the entry removed.'
         ),
         'hall_of_fame_url': reverse('brainrot:hall_of_fame'),
         'entry_url': entry_url,
