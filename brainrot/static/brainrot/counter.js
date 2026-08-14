@@ -216,8 +216,13 @@ if (app) {
               startButton.textContent = 'Waiting for your pose…';
             }
           } else if (poseReady) {
+            startButton.disabled = false;
+            startButton.textContent = "I'm ready";
             setStatus('Pose detected — click I\'m ready, then take your position', 'ready');
           } else {
+            // Readiness is a user decision; a pose is required to start, not to arm the run.
+            startButton.disabled = false;
+            startButton.textContent = "I'm ready";
             setStatus('Detector ready — click I\'m ready, then step into frame', 'ready');
           }
         }

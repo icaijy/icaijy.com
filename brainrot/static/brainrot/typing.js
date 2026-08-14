@@ -89,7 +89,8 @@
     const verdict = current.wpm === 67
       ? 'The prophecy has cleared peer review.'
       : 'Statistically significant brainrot has occurred.';
-    return `I typed 61 / 67 at ${current.wpm} WPM with ${current.accuracy}% accuracy. 🧪\n${completedGroups} groups survived the keyboard\n61 × ${count61} | 67 × ${count67}\n${verdict}\nSIX SEVEN`;
+    const url = new URL('/67/typing/', window.location.origin).href;
+    return `I typed 61 / 67 at ${current.wpm} WPM with ${current.accuracy}% accuracy. 🧪\n${completedGroups} groups survived the keyboard\n61 × ${count61} | 67 × ${count67}\n${verdict}\nSIX SEVEN\n${url}`;
   }
 
   async function copyShareResult() {
