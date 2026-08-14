@@ -7,6 +7,7 @@ from datetime import timedelta
 
 import requests
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -20,6 +21,13 @@ from django.views.decorators.http import require_POST
 
 from .models import HallOfFameEntry, HallOfFameUploadAttempt
 from .validators import validate_hall_of_fame_video
+
+
+TURNSTILE_TEST_SECRETS = {
+    '1x0000000000000000000000000000000AA',
+    '2x0000000000000000000000000000000AA',
+    '3x0000000000000000000000000000000AA',
+}
 
 
 def index(request):
@@ -126,11 +134,14 @@ def _turnstile_is_valid(request):
         )
         result = response.json()
         expected_hostname = request.get_host().split(':', 1)[0].lower()
-        return (
-            response.ok
-            and result.get('success') is True
-            and result.get('hostname', '').lower() == expected_hostname
+        # Cloudflare's official test secrets deliberately report localhost even
+        # when their dummy widget is embedded on another development host. Real
+        # secrets must still match the actual request hostname.
+        hostname_matches = (
+            settings.TURNSTILE_SECRET_KEY in TURNSTILE_TEST_SECRETS
+            or result.get('hostname', '').lower() == expected_hostname
         )
+        return response.ok and result.get('success') is True and hostname_matches
     except (requests.RequestException, ValueError):
         return False
 
@@ -150,13 +161,15 @@ def _upload_client_key(request):
 
 
 def _anonymous_display_name(raw_name):
-    name = ' '.join((raw_name or '').strip().split())
+    name = unicodedata.normalize('NFKC', ' '.join((raw_name or '').strip().split()))
     if not name:
         return 'Anonymous Swan'
     if len(name) > 32:
         raise ValidationError('Display name must be 32 characters or fewer.')
     if any(unicodedata.category(character).startswith('C') for character in name):
         raise ValidationError('Display name contains an unsupported character.')
+    if get_user_model().objects.filter(username__iexact=name).exists():
+        raise ValidationError('That name belongs to a registered user. Choose a different anonymous display name.')
     return name
 
 
@@ -231,7 +244,7 @@ def submit_hall_of_fame(request):
         'message': (
             'Published to the Hall of Fame. You can manage it from My HOF.'
             if owner
-            else 'Published anonymously. Save the public link; anonymous runs cannot be managed later.'
+            else 'Published anonymously. Save the public link; contact the site owner with that link if you need it removed later.'
         ),
         'hall_of_fame_url': reverse('brainrot:hall_of_fame'),
         'entry_url': entry_url,
