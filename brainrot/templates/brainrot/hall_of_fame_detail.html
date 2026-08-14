@@ -36,8 +36,10 @@
     <aside class="hall-share-card">
       <span class="br-kicker">PUBLIC REPLICATION MATERIAL</span>
       <h2>Share this run</h2>
-      {% if request.user == entry.user %}
+      {% if request.user == entry.user and entry.user_id %}
       <p>This is your permanent Hall of Fame link. Deploy it responsibly.</p>
+      {% elif not entry.user_id %}
+      <p>This is an anonymous entry and is not tied to an account. There is no self-service delete button; contact me with this Hall of Fame link if you need the entry removed.</p>
       {% else %}
       <p>Distribute this evidence to researchers, rivals and confused relatives.</p>
       {% endif %}
