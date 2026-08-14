@@ -6,6 +6,7 @@
 
 - The retired OJ is controlled by `OJ_ENABLED` and defaults to `False`. Its code and database tables remain intact.
 - The 67 Counter uses the published MediaPipe Tasks Vision `1.0.1` browser bundle. It asks for camera permission before loading the pose runtime, and falls back from jsDelivr to unpkg if one CDN is filtered.
+- Counter CSS and JavaScript URLs are cache-busted in the template. If a browser still requests the nonexistent `@mediapipe/tasks-vision@0.10.26/+esm`, production is serving a stale collected static file: run `collectstatic`, reload the static server, and purge any reverse-proxy/CDN cache.
 - Hall of Fame videos require `ffprobe` (provided by the `ffmpeg` system package) for server-side duration/stream validation.
 - Recordings are written to `PRIVATE_MEDIA_ROOT` (default: `private_media/`). Do **not** expose that directory as a public nginx/static alias; videos are served through a permission-checking Django route.
 - Enforce `client_max_body_size 26M;` (or the equivalent at the reverse proxy) in addition to the application-level 25 MiB limit.

@@ -16,6 +16,9 @@ if (app) {
   const resultCard = document.getElementById('counter-result');
   const resultScore = document.getElementById('result-score');
   const resultCopy = document.getElementById('result-copy');
+  const shareText = document.getElementById('counter-share-text');
+  const copyShareButton = document.getElementById('copy-counter-share');
+  const copyShareStatus = document.getElementById('copy-counter-status');
   const recordingReview = document.getElementById('recording-review');
   const recordingPreview = document.getElementById('recording-preview');
   const submitButton = document.getElementById('submit-hof');
@@ -81,6 +84,37 @@ if (app) {
   function csrfToken() {
     const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
     return match ? decodeURIComponent(match[1]) : '';
+  }
+
+  function shareableResult() {
+    const headline = score === 67
+      ? 'I scored exactly 67 in the 67 Counter. Peer review is complete. 🧪'
+      : `I scored ${score} in the 67 Counter. The data is unfortunately real. 🧪`;
+    const blocks = score > 0
+      ? `${'🟩'.repeat(Math.min(score, 67))}${score > 67 ? ` +${score - 67}` : ''}`
+      : '⬜';
+    const url = new URL('/67/', window.location.origin).href;
+    return `${headline}\n20 seconds of arm-based research\n${blocks}\nSIX SEVEN\nCan you do better?\n${url}`;
+  }
+
+  async function copyShareResult() {
+    if (!shareText?.value) return;
+    try {
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(shareText.value);
+      } else {
+        shareText.select();
+        shareText.setSelectionRange(0, shareText.value.length);
+        if (!document.execCommand('copy')) throw new Error('Copy command was rejected.');
+      }
+      copyShareButton.textContent = 'Copied! 🎉';
+      copyShareStatus.textContent = 'Result copied. Scientific distribution may begin.';
+    } catch (error) {
+      copyShareStatus.textContent = 'Automatic copy failed. Select the text and copy it manually.';
+    }
+    window.setTimeout(() => {
+      copyShareButton.textContent = 'Copy to clipboard';
+    }, 1500);
   }
 
   function preferredRecordingType() {
@@ -334,6 +368,8 @@ if (app) {
       : score > 67
         ? 'The 67 barrier has been disturbed.'
         : 'The Institute recommends more arm-based research.';
+    shareText.value = shareableResult();
+    copyShareStatus.textContent = '';
     resultCard.hidden = false;
     recordingReview.hidden = currentMode !== 'hof';
     if (blob) {
@@ -361,6 +397,8 @@ if (app) {
     scoreEl.textContent = '0';
     timeEl.textContent = GAME_SECONDS.toFixed(1);
     resultCard.hidden = true;
+    shareText.value = '';
+    copyShareStatus.textContent = '';
     resetButton.hidden = true;
     modeInputs.forEach((input) => { input.disabled = false; });
     startButton.disabled = !poseReady;
@@ -417,6 +455,7 @@ if (app) {
   resetButton.addEventListener('click', resetRun);
   submitButton?.addEventListener('click', submitRecording);
   discardButton?.addEventListener('click', discardRecording);
+  copyShareButton?.addEventListener('click', copyShareResult);
   window.addEventListener('beforeunload', () => {
     if (recordingUrl) URL.revokeObjectURL(recordingUrl);
     stream?.getTracks().forEach((track) => track.stop());
