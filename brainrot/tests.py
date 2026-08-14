@@ -11,7 +11,7 @@ from .validators import ValidatedVideo
 
 class BrainrotPageTests(TestCase):
     def test_public_pages_load(self):
-        for path in ('/brainrot/', '/brainrot/67/', '/brainrot/67/hall-of-fame/', '/brainrot/typing/'):
+        for path in ('/67/', '/67/games/', '/67/hall-of-fame/', '/67/typing/'):
             with self.subTest(path=path):
                 self.assertEqual(self.client.get(path).status_code, 200)
 
@@ -29,7 +29,7 @@ class HallOfFameSubmissionTests(TestCase):
         self.private_directory.cleanup()
 
     def test_anonymous_upload_is_rejected(self):
-        response = self.client.post('/brainrot/67/submit/', {'score': 67})
+        response = self.client.post('/67/submit/', {'score': 67})
         self.assertEqual(response.status_code, 302)
         self.assertEqual(HallOfFameEntry.objects.count(), 0)
 
@@ -38,14 +38,14 @@ class HallOfFameSubmissionTests(TestCase):
         validate.return_value = ValidatedVideo('video/webm', 'webm', 23.0)
         self.client.login(username='scientist', password='test-password-67')
         video = SimpleUploadedFile('run.webm', b'video evidence', content_type='video/webm')
-        response = self.client.post('/brainrot/67/submit/', {'score': 67, 'video': video})
+        response = self.client.post('/67/submit/', {'score': 67, 'video': video})
         self.assertEqual(response.status_code, 201)
         entry = HallOfFameEntry.objects.get()
         self.assertEqual(entry.state, HallOfFameEntry.State.PENDING)
-        self.assertFalse(self.client.get('/brainrot/67/hall-of-fame/').context['entries'])
+        self.assertFalse(self.client.get('/67/hall-of-fame/').context['entries'])
 
         second = SimpleUploadedFile('run.webm', b'more evidence', content_type='video/webm')
-        response = self.client.post('/brainrot/67/submit/', {'score': 68, 'video': second})
+        response = self.client.post('/67/submit/', {'score': 68, 'video': second})
         self.assertEqual(response.status_code, 429)
         self.assertEqual(HallOfFameEntry.objects.count(), 1)
 
@@ -57,7 +57,7 @@ class HallOfFameSubmissionTests(TestCase):
             mime_type='video/webm',
             duration_seconds=20,
         )
-        path = f'/brainrot/67/hall-of-fame/{entry.id}/video/'
+        path = f'/67/hall-of-fame/{entry.id}/video/'
         self.assertEqual(self.client.get(path).status_code, 404)
 
         self.client.login(username='scientist', password='test-password-67')

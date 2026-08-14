@@ -9,7 +9,7 @@ class HallOfFameUploadLimitMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.method == 'POST' and request.path.rstrip('/') == '/brainrot/67/submit':
+        if request.method == 'POST' and request.path.rstrip('/') == '/67/submit':
             try:
                 content_length = int(request.META.get('CONTENT_LENGTH') or 0)
             except (TypeError, ValueError):
@@ -18,4 +18,3 @@ class HallOfFameUploadLimitMiddleware:
             if content_length > allowance:
                 return JsonResponse({'error': 'Recording is too large.'}, status=413)
         return self.get_response(request)
-

@@ -29,7 +29,7 @@ urlpatterns = [
     path('i18n/',include("django.conf.urls.i18n")),
     path('orac-leaderboards/', include('orac_tracker.urls')),
     path('oj/', include('oj.urls')),
-    path('brainrot/', include('brainrot.urls')),
+    path('67/', include('brainrot.urls')),
     path('', include('oracdata.urls')),
     path("vip/", include("prank.urls")),
 ]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -18,7 +18,7 @@ class HallOfFameEntryAdmin(admin.ModelAdmin):
     def review_video(self, obj):
         if not obj.pk:
             return 'Save first'
-        return format_html('<a href="{}" target="_blank">Open private recording</a>', f'/brainrot/67/hall-of-fame/{obj.pk}/video/')
+        return format_html('<a href="{}" target="_blank">Open private recording</a>', f'/67/hall-of-fame/{obj.pk}/video/')
 
     @admin.action(description='Approve selected entries')
     def approve_entries(self, request, queryset):
@@ -27,4 +27,3 @@ class HallOfFameEntryAdmin(admin.ModelAdmin):
     @admin.action(description='Reject selected entries')
     def reject_entries(self, request, queryset):
         queryset.update(state=HallOfFameEntry.State.REJECTED, reviewed_at=timezone.now())
-

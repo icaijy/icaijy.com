@@ -1,8 +1,3 @@
-import {
-  FilesetResolver,
-  PoseLandmarker,
-} from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.26/+esm';
-
 const app = document.getElementById('counter-app');
 if (app) {
   const video = document.getElementById('camera');
@@ -46,6 +41,29 @@ if (app) {
   let recordingChunks = [];
   let recordingBlob = null;
   let recordingUrl = null;
+
+  async function loadMediaPipe() {
+    const sources = [
+      {
+        module: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/vision_bundle.mjs',
+        wasm: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm',
+      },
+      {
+        module: 'https://unpkg.com/@mediapipe/tasks-vision@1.0.1/vision_bundle.mjs',
+        wasm: 'https://unpkg.com/@mediapipe/tasks-vision@1.0.1/wasm',
+      },
+    ];
+    let lastError = null;
+    for (const source of sources) {
+      try {
+        const library = await import(source.module);
+        return { ...library, wasmRoot: source.wasm };
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw new Error(`Could not load the pose runtime from either CDN: ${lastError?.message || 'network blocked'}`);
+  }
 
   function setStatus(message, state = '') {
     status.className = `detector-status ${state}`;
@@ -184,11 +202,10 @@ if (app) {
       video.srcObject = stream;
       await video.play();
       placeholder.hidden = true;
-      setStatus('Loading local pose model…', 'busy');
+      setStatus('Loading the pose model into this browser…', 'busy');
 
-      const vision = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.26/wasm',
-      );
+      const { FilesetResolver, PoseLandmarker, wasmRoot } = await loadMediaPipe();
+      const vision = await FilesetResolver.forVisionTasks(wasmRoot);
       const options = {
         baseOptions: {
           modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
@@ -210,8 +227,17 @@ if (app) {
       detectorLoop = requestAnimationFrame(detectFrame);
     } catch (error) {
       enableButton.disabled = false;
-      setStatus('Camera or detector unavailable');
-      showError('Could not start the camera. Use HTTPS, allow camera access, and try a current browser.');
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+        stream = null;
+        video.srcObject = null;
+        placeholder.hidden = false;
+        setStatus('Camera permission worked, but the pose runtime did not load');
+        showError(error.message || 'The pose runtime was blocked by this network.');
+      } else {
+        setStatus('Camera unavailable');
+        showError('Could not start the camera. Use HTTPS, allow camera access, and try a current browser.');
+      }
     }
   }
 
