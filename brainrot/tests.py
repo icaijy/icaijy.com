@@ -1,5 +1,6 @@
 import tempfile
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -8,7 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
 from .models import HallOfFameEntry
-from .validators import ValidatedVideo
+from .validators import ValidatedVideo, _packet_duration
 
 
 class BrainrotPageTests(TestCase):
@@ -24,7 +25,7 @@ class BrainrotPageTests(TestCase):
     def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
         response = self.client.get('/67/counter/')
         self.assertContains(response, 'brainrot.css?v=20260814.3')
-        self.assertContains(response, 'counter.js?v=20260814.5')
+        self.assertContains(response, 'counter.js?v=20260814.6')
         self.assertContains(response, 'id="counter-share-text"')
         self.assertContains(response, 'id="copy-counter-share"')
 
@@ -36,6 +37,16 @@ class BrainrotPageTests(TestCase):
         self.assertIn("startButton.disabled = false;", script)
         self.assertIn("if (poseReady) {\n              beginRun();", script)
         self.assertIn("new URL('/67/counter/', window.location.origin)", script)
+
+
+class VideoValidationTests(TestCase):
+    @patch('brainrot.validators.subprocess.run')
+    def test_packet_duration_uses_span_not_absolute_camera_timestamp(self, run):
+        run.return_value = SimpleNamespace(
+            returncode=0,
+            stdout='87.000000,0.033333\n109.966667,0.033333\n',
+        )
+        self.assertAlmostEqual(_packet_duration('/tmp/run.webm', '/usr/bin/ffprobe'), 23.0)
 
     def test_typing_result_has_share_box_and_url(self):
         response = self.client.get('/67/typing/')

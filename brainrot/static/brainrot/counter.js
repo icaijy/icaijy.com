@@ -27,6 +27,8 @@ if (app) {
   const modeInputs = [...document.querySelectorAll('input[name="mode"]')];
 
   const GAME_SECONDS = 20;
+  const COUNTDOWN_STEP_MS = 1000;
+  const GO_DISPLAY_MS = 250;
   let stream = null;
   let landmarker = null;
   let detectorLoop = null;
@@ -368,10 +370,10 @@ if (app) {
 
     for (const value of ['3', '2', '1']) {
       countdownEl.textContent = value;
-      await delay(700);
+      await delay(COUNTDOWN_STEP_MS);
     }
     countdownEl.textContent = 'GO';
-    await delay(350);
+    await delay(GO_DISPLAY_MS);
     countdownEl.textContent = '';
     countdownActive = false;
     running = true;
