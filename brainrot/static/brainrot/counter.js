@@ -35,6 +35,8 @@ if (app) {
   let poseReady = false;
   let readyFrames = 0;
   let running = false;
+  let armed = false;
+  let countdownActive = false;
   let currentMode = 'casual';
   let endTime = 0;
   let score = 0;
@@ -205,15 +207,18 @@ if (app) {
         else readyFrames = Math.max(0, readyFrames - 2);
         poseReady = readyFrames >= 5;
 
-        if (!running) {
-          if (poseReady) {
-            setStatus('Pose detected — alternate both hands vertically', 'ready');
-            startButton.disabled = false;
-            startButton.textContent = 'Start 20 second run';
+        if (!running && !countdownActive) {
+          if (armed) {
+            if (poseReady) {
+              beginRun();
+            } else {
+              setStatus('Armed — step back until shoulders, elbows and wrists are visible', 'busy');
+              startButton.textContent = 'Waiting for your pose…';
+            }
+          } else if (poseReady) {
+            setStatus('Pose detected — click I\'m ready, then take your position', 'ready');
           } else {
-            setStatus('Detector ready — place shoulders, elbows and wrists in frame', 'busy');
-            startButton.disabled = true;
-            startButton.textContent = 'Waiting for a visible pose…';
+            setStatus('Detector ready — click I\'m ready, then step into frame', 'ready');
           }
         }
         observeGesture(landmarks, performance.now());
@@ -258,6 +263,8 @@ if (app) {
         landmarker = await PoseLandmarker.createFromOptions(vision, options);
       }
       enableButton.hidden = true;
+      startButton.disabled = false;
+      startButton.textContent = "I'm ready";
       detectorLoop = requestAnimationFrame(detectFrame);
     } catch (error) {
       enableButton.disabled = false;
@@ -316,27 +323,40 @@ if (app) {
     gameLoop = requestAnimationFrame(updateGameClock);
   }
 
-  async function beginRun() {
-    if (!poseReady || running) return;
+  function armRun() {
+    if (!landmarker || running || countdownActive || armed) return;
     currentMode = document.querySelector('input[name="mode"]:checked').value;
     showError('');
     resultCard.hidden = true;
     resetButton.hidden = true;
     startButton.disabled = true;
+    startButton.textContent = 'Waiting for your pose…';
     modeInputs.forEach((input) => { input.disabled = true; });
     score = 0;
     lastZone = 0;
     lastCountAt = 0;
     scoreEl.textContent = '0';
     timeEl.textContent = GAME_SECONDS.toFixed(1);
+    armed = true;
+    setStatus('Armed — step back until shoulders, elbows and wrists are visible', 'busy');
+    if (poseReady) beginRun();
+  }
+
+  async function beginRun() {
+    if (!armed || !poseReady || running || countdownActive) return;
+    armed = false;
+    countdownActive = true;
+    setStatus('Pose locked — countdown commencing', 'ready');
 
     if (currentMode === 'hof') {
       try {
         startRecording();
       } catch (error) {
         showError(error.message);
+        countdownActive = false;
         modeInputs.forEach((input) => { input.disabled = false; });
         startButton.disabled = false;
+        startButton.textContent = "I'm ready";
         return;
       }
     }
@@ -348,6 +368,7 @@ if (app) {
     countdownEl.textContent = 'GO';
     await delay(350);
     countdownEl.textContent = '';
+    countdownActive = false;
     running = true;
     endTime = performance.now() + GAME_SECONDS * 1000;
     setStatus('Experiment in progress', 'ready');
@@ -393,6 +414,8 @@ if (app) {
 
   function resetRun() {
     discardRecording();
+    armed = false;
+    countdownActive = false;
     score = 0;
     scoreEl.textContent = '0';
     timeEl.textContent = GAME_SECONDS.toFixed(1);
@@ -401,8 +424,8 @@ if (app) {
     copyShareStatus.textContent = '';
     resetButton.hidden = true;
     modeInputs.forEach((input) => { input.disabled = false; });
-    startButton.disabled = !poseReady;
-    startButton.textContent = poseReady ? 'Start 20 second run' : 'Waiting for a visible pose…';
+    startButton.disabled = !landmarker;
+    startButton.textContent = landmarker ? "I'm ready" : 'Detector is still loading…';
     showError('');
   }
 
@@ -451,7 +474,7 @@ if (app) {
     });
   });
   enableButton.addEventListener('click', initialiseDetector);
-  startButton.addEventListener('click', beginRun);
+  startButton.addEventListener('click', armRun);
   resetButton.addEventListener('click', resetRun);
   submitButton?.addEventListener('click', submitRecording);
   discardButton?.addEventListener('click', discardRecording);

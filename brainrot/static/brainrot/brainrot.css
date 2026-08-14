@@ -174,6 +174,7 @@
 }
 .counter-share .br-secondary { width: auto; min-width: 180px; margin: .75rem auto 0; display: block; }
 .counter-share .subtle { min-height: 1.2rem; margin: .45rem 0 0; text-align: center; }
+.typing-share { margin-top: 1.25rem; }
 .subtle { color: var(--br-muted); font-size: .82rem; }
 
 .typing-heading { margin: 6rem 0 1.5rem; }

@@ -19,8 +19,8 @@ class BrainrotPageTests(TestCase):
 
     def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
         response = self.client.get('/67/')
-        self.assertContains(response, 'brainrot.css?v=20260814.2')
-        self.assertContains(response, 'counter.js?v=20260814.2')
+        self.assertContains(response, 'brainrot.css?v=20260814.3')
+        self.assertContains(response, 'counter.js?v=20260814.3')
         self.assertContains(response, 'id="counter-share-text"')
         self.assertContains(response, 'id="copy-counter-share"')
 
@@ -29,6 +29,17 @@ class BrainrotPageTests(TestCase):
         script = Path(script_path).read_text(encoding='utf-8')
         self.assertIn('@mediapipe/tasks-vision@1.0.1/vision_bundle.mjs', script)
         self.assertNotIn('@mediapipe/tasks-vision@0.10.26', script)
+
+    def test_typing_result_has_url_free_share_box(self):
+        response = self.client.get('/67/typing/')
+        self.assertContains(response, 'typing.js?v=20260814.3')
+        self.assertContains(response, 'id="typing-share-text"')
+        self.assertContains(response, 'id="copy-typing-share"')
+
+        script_path = finders.find('brainrot/typing.js')
+        script = Path(script_path).read_text(encoding='utf-8')
+        self.assertNotIn('window.location', script)
+        self.assertNotIn("new URL(", script)
 
 
 @override_settings(TURNSTILE_ENABLED=False, HOF_SUBMISSIONS_PER_HOUR=1)
@@ -49,15 +60,15 @@ class HallOfFameSubmissionTests(TestCase):
         self.assertEqual(HallOfFameEntry.objects.count(), 0)
 
     @patch('brainrot.views.validate_hall_of_fame_video')
-    def test_valid_upload_is_pending_and_rate_limited(self, validate):
+    def test_valid_upload_is_published_and_rate_limited(self, validate):
         validate.return_value = ValidatedVideo('video/webm', 'webm', 23.0)
         self.client.login(username='scientist', password='test-password-67')
         video = SimpleUploadedFile('run.webm', b'video evidence', content_type='video/webm')
         response = self.client.post('/67/submit/', {'score': 67, 'video': video})
         self.assertEqual(response.status_code, 201)
         entry = HallOfFameEntry.objects.get()
-        self.assertEqual(entry.state, HallOfFameEntry.State.PENDING)
-        self.assertFalse(self.client.get('/67/hall-of-fame/').context['entries'])
+        self.assertEqual(entry.state, HallOfFameEntry.State.APPROVED)
+        self.assertIn(entry, self.client.get('/67/hall-of-fame/').context['entries'])
 
         second = SimpleUploadedFile('run.webm', b'more evidence', content_type='video/webm')
         response = self.client.post('/67/submit/', {'score': 68, 'video': second})

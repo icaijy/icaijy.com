@@ -4,7 +4,7 @@
 {% block title %}61 / 67 Typing Test{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.3">
 <main class="br-page typing-page" id="typing-app">
   <header class="br-toolbar">
     <a href="{% url 'brainrot:index' %}">← Research division</a>
@@ -48,7 +48,13 @@
       <div><span>61 count</span><strong id="result-61">0</strong></div>
       <div><span>67 count</span><strong id="result-67">0</strong></div>
     </div>
+    <div class="counter-share typing-share">
+      <h3>🎉 Share your result!</h3>
+      <textarea id="typing-share-text" rows="5" readonly aria-label="Shareable typing result"></textarea>
+      <button class="br-secondary" id="copy-typing-share" type="button">Copy to clipboard</button>
+      <p class="subtle" id="copy-typing-status" role="status" aria-live="polite"></p>
+    </div>
   </section>
 </main>
-<script src="{% static 'brainrot/typing.js' %}" defer></script>
+<script src="{% static 'brainrot/typing.js' %}?v=20260814.3" defer></script>
 {% endblock %}
