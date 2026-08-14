@@ -43,6 +43,8 @@
 .br-toolbar a { color: var(--br-ink); font-weight: 750; text-decoration: none; }
 .br-toolbar a:hover { color: var(--br-accent-dark); }
 .br-toolbar-links { display: flex; gap: 1rem; }
+.br-toolbar .hof-nav-link { padding: .28rem .6rem; border-radius: 999px; background: var(--br-ink); color: var(--br-lime); }
+.br-toolbar .hof-nav-link:hover { color: white; }
 
 .br-hero { max-width: 880px; padding: 3rem 0 4rem; }
 .br-hero h1, .counter-intro h1, .typing-heading h1, .hall-heading h1 {
@@ -83,6 +85,12 @@
   line-height: 1;
 }
 .br-card-arrow { position: absolute; left: 2rem; bottom: 2rem; font-weight: 850; }
+.br-hof-banner { display: flex; align-items: center; justify-content: space-between; gap: 2rem; margin: -1.5rem 0 1.2rem; padding: 1.5rem 1.7rem; border-radius: 20px; background: var(--br-ink); color: white; text-decoration: none; box-shadow: 0 16px 40px rgba(15,23,42,.16); transition: transform .18s ease, box-shadow .18s ease; }
+.br-hof-banner:hover { color: white; transform: translateY(-3px); box-shadow: 0 22px 48px rgba(15,23,42,.22); }
+.br-hof-banner .br-kicker { color: var(--br-lime); }
+.br-hof-banner h2 { margin: .15rem 0 .25rem; font-size: 2rem; font-weight: 900; }
+.br-hof-banner p { margin: 0; color: #cbd5e1; }
+.br-hof-banner > strong { flex: 0 0 auto; color: var(--br-lime); }
 
 .privacy-strip {
   margin: 2rem 0;
@@ -292,6 +300,7 @@
   .hall-detail-heading { align-items: start; flex-direction: column; gap: .6rem; }
   .hall-detail-heading .br-kicker { position: static; transform: none; }
   .typing-viewport { height: 205px; padding: 1.3rem; }
+  .br-hof-banner { align-items: flex-start; flex-direction: column; margin-top: -2rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

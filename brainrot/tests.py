@@ -28,8 +28,8 @@ class BrainrotPageTests(TestCase):
     @override_settings(DEBUG=True)
     def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
         response = self.client.get('/67/counter/')
-        self.assertContains(response, 'brainrot.css?v=20260814.7')
-        self.assertContains(response, 'counter.js?v=20260814.12')
+        self.assertContains(response, 'brainrot.css?v=20260814.8')
+        self.assertContains(response, 'counter.js?v=20260814.13')
         self.assertContains(response, 'id="counter-share-text"')
         self.assertContains(response, 'id="copy-counter-share"')
         self.assertContains(response, 'id="download-recording"')
@@ -38,6 +38,8 @@ class BrainrotPageTests(TestCase):
         self.assertContains(response, 'nothing uploads unless you press Submit to Hall of Fame')
         self.assertContains(response, 'id="submit-hof"')
         self.assertContains(response, 'id="hof-display-name"')
+        self.assertContains(response, 'id="start-run" disabled hidden')
+        self.assertContains(response, '★ Hall of Fame')
         self.assertNotContains(response, 'Log in to submit this run')
 
         script_path = finders.find('brainrot/counter.js')
@@ -59,6 +61,12 @@ class BrainrotPageTests(TestCase):
         self.assertNotIn('recorder = new MediaRecorder(stream', script)
         self.assertIn("form.append('event_timeline', JSON.stringify(eventTimeline));", script)
         self.assertIn("form.append('display_name', displayNameInput.value);", script)
+        self.assertIn("const rawResponse = await response.text();", script)
+        self.assertIn('payload = JSON.parse(rawResponse);', script)
+        self.assertNotIn('await response.json()', script)
+        self.assertIn("const preferCpu = /Firefox\\//.test(navigator.userAgent);", script)
+        self.assertIn("delegate: preferCpu ? 'CPU' : 'GPU'", script)
+        self.assertLess(script.index('enableButton.hidden = true;'), script.index('await initialisePoseRuntime();', script.index('async function initialiseDetector')))
 
 
 class HallOfFamePageTests(TestCase):
@@ -118,6 +126,8 @@ class HallOfFamePageTests(TestCase):
         )
         detail = self.client.get(f'/67/hall-of-fame/{anonymous.id}/')
         self.assertContains(detail, 'Nameless Researcher')
+        self.assertContains(detail, 'guest')
+        self.assertContains(detail, 'contact the site owner')
         self.assertNotContains(detail, 'Delete my entry')
 
         challenge = self.client.get(f'/67/challenge/{anonymous.id}/')
@@ -231,7 +241,7 @@ class HallOfFameSubmissionTests(TestCase):
         entry = HallOfFameEntry.objects.get()
         self.assertIsNone(entry.user)
         self.assertEqual(entry.display_name, 'Anonymous Swan 67')
-        self.assertIn('cannot be managed later', response.json()['message'])
+        self.assertIn('send the public link', response.json()['message'])
 
         attempt = HallOfFameUploadAttempt.objects.get()
         self.assertEqual(len(attempt.client_key), 64)
@@ -240,6 +250,25 @@ class HallOfFameSubmissionTests(TestCase):
         second = SimpleUploadedFile('run.webm', b'more evidence', content_type='video/webm')
         response = self.client.post('/67/submit/', {'score': 68, 'video': second}, REMOTE_ADDR='203.0.113.67')
         self.assertEqual(response.status_code, 429)
+
+    def test_anonymous_name_cannot_impersonate_registered_user(self):
+        response = self.client.post('/67/submit/', {
+            'score': 1,
+            'display_name': 'ＳＣＩＥＮＴＩＳＴ',
+            'event_timeline': '[1.0]',
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('registered user', response.json()['error'])
+        self.assertEqual(HallOfFameEntry.objects.count(), 0)
+
+    def test_anonymous_name_cannot_claim_reserved_admin_role(self):
+        response = self.client.post('/67/submit/', {
+            'score': 1,
+            'display_name': 'ＡＤＭＩＮ',
+            'event_timeline': '[1.0]',
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('reserved site role', response.json()['error'])
 
     @patch('brainrot.views.validate_hall_of_fame_video')
     def test_valid_upload_is_published_and_rate_limited(self, validate):

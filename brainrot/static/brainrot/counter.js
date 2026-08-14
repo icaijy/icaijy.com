@@ -35,6 +35,7 @@ if (app) {
   const GO_DISPLAY_MS = 250;
   const RECORDING_LEAD_SECONDS = 3 + GO_DISPLAY_MS / 1000;
   const READY_LABEL = "I'm ready — record locally";
+  const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
   const rivalTimeline = rivalTimelineNode ? JSON.parse(rivalTimelineNode.textContent) : [];
   const rivalName = app.dataset.rivalName || '';
   const rivalFinalScore = Number(app.dataset.rivalScore || 0);
@@ -95,10 +96,13 @@ if (app) {
       runtimePromise = (async () => {
         const { FilesetResolver, PoseLandmarker, wasmRoot } = await loadMediaPipe();
         const vision = await FilesetResolver.forVisionTasks(wasmRoot);
+        // Firefox can spend several seconds failing the GPU delegate before
+        // repeating the same initialisation on CPU. Start on CPU there.
+        const preferCpu = /Firefox\//.test(navigator.userAgent);
         const options = {
           baseOptions: {
-            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
-            delegate: 'GPU',
+            modelAssetPath: MODEL_URL,
+            delegate: preferCpu ? 'CPU' : 'GPU',
           },
           runningMode: 'VIDEO',
           numPoses: 1,
@@ -109,6 +113,7 @@ if (app) {
         try {
           landmarker = await PoseLandmarker.createFromOptions(vision, options);
         } catch (gpuError) {
+          if (preferCpu) throw gpuError;
           options.baseOptions.delegate = 'CPU';
           landmarker = await PoseLandmarker.createFromOptions(vision, options);
         }
@@ -312,14 +317,19 @@ if (app) {
       video.srcObject = stream;
       await video.play();
       placeholder.hidden = true;
+      enableButton.hidden = true;
+      startButton.hidden = false;
+      startButton.disabled = true;
+      startButton.textContent = landmarker ? READY_LABEL : 'Finishing detector setup…';
       setStatus(landmarker ? 'Pose model ready' : 'Finishing pose model preload…', 'busy');
       await initialisePoseRuntime();
-      enableButton.hidden = true;
       startButton.disabled = false;
       startButton.textContent = READY_LABEL;
       detectorLoop = requestAnimationFrame(detectFrame);
     } catch (error) {
       enableButton.disabled = false;
+      enableButton.hidden = false;
+      startButton.hidden = true;
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
         stream = null;
@@ -459,6 +469,7 @@ if (app) {
     }
     armed = false;
     countdownActive = true;
+    startButton.hidden = true;
     setStatus('Pose locked — countdown commencing', 'ready');
 
     try {
@@ -475,6 +486,7 @@ if (app) {
       }
       showError(error.message);
       countdownActive = false;
+      startButton.hidden = false;
       startButton.disabled = false;
       startButton.textContent = READY_LABEL;
       return;
@@ -532,6 +544,7 @@ if (app) {
       recordingDownload.download = blob.type === 'video/mp4' ? '67-run.mp4' : '67-run.webm';
       recordingDownload.hidden = false;
     }
+    startButton.hidden = true;
     resetButton.hidden = false;
     resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
@@ -567,6 +580,7 @@ if (app) {
     shareText.value = '';
     copyShareStatus.textContent = '';
     resetButton.hidden = true;
+    startButton.hidden = false;
     startButton.disabled = !landmarker;
     startButton.textContent = landmarker ? READY_LABEL : 'Detector is still loading…';
     showError('');
@@ -598,7 +612,20 @@ if (app) {
         headers: { 'X-CSRFToken': csrfToken() },
         credentials: 'same-origin',
       });
-      const payload = await response.json();
+      const rawResponse = await response.text();
+      let payload;
+      try {
+        payload = JSON.parse(rawResponse);
+      } catch {
+        const statusHint = response.status === 403
+          ? 'Security check rejected the upload. Refresh this page and try again.'
+          : response.status === 413
+            ? 'The web server rejected the recording as too large.'
+            : response.status >= 500
+              ? `The server returned HTTP ${response.status}. The site owner may need to run database migrations or inspect the server log.`
+              : `The server returned HTTP ${response.status} instead of JSON.`;
+        throw new Error(statusHint);
+      }
       if (!response.ok) throw new Error(payload.error || 'Upload failed.');
       uploadStatus.textContent = payload.message;
       submitButton.hidden = true;
