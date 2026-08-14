@@ -37,16 +37,7 @@ def hall_of_fame(request):
     entries = HallOfFameEntry.objects.filter(
         state=HallOfFameEntry.State.APPROVED,
     ).select_related('user')[:67]
-    own_pending = []
-    if request.user.is_authenticated:
-        own_pending = HallOfFameEntry.objects.filter(
-            user=request.user,
-            state=HallOfFameEntry.State.PENDING,
-        ).order_by('-created_at')[:5]
-    return render(request, 'brainrot/hall_of_fame.html', {
-        'entries': entries,
-        'own_pending': own_pending,
-    })
+    return render(request, 'brainrot/hall_of_fame.html', {'entries': entries})
 
 
 def _turnstile_is_valid(request):
@@ -113,6 +104,8 @@ def submit_hall_of_fame(request):
             score=score,
             mime_type=inspected.mime_type,
             duration_seconds=inspected.duration_seconds,
+            state=HallOfFameEntry.State.APPROVED,
+            reviewed_at=timezone.now(),
         )
         entry._validated_extension = inspected.extension
         entry.video = upload
@@ -122,7 +115,7 @@ def submit_hall_of_fame(request):
 
     return JsonResponse({
         'ok': True,
-        'message': 'Submitted for human review. Peer review has never been this important.',
+        'message': 'Published to the Hall of Fame. Peer review has been replaced by vibes.',
         'hall_of_fame_url': reverse('brainrot:hall_of_fame'),
     }, status=201)
 

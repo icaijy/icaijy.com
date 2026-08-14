@@ -8,6 +8,9 @@
   const wpmEl = document.getElementById('typing-wpm');
   const accuracyEl = document.getElementById('typing-accuracy');
   const result = document.getElementById('typing-result');
+  const shareText = document.getElementById('typing-share-text');
+  const copyShareButton = document.getElementById('copy-typing-share');
+  const copyShareStatus = document.getElementById('copy-typing-status');
   const durationButtons = [...document.querySelectorAll('[data-duration]')];
 
   let duration = 30;
@@ -82,6 +85,31 @@
     }
   }
 
+  function shareableResult(current, completedGroups, count61, count67) {
+    const verdict = current.wpm === 67
+      ? 'The prophecy has cleared peer review.'
+      : 'Statistically significant brainrot has occurred.';
+    return `I typed 61 / 67 at ${current.wpm} WPM with ${current.accuracy}% accuracy. 🧪\n${completedGroups} groups survived the keyboard\n61 × ${count61} | 67 × ${count67}\n${verdict}\nSIX SEVEN`;
+  }
+
+  async function copyShareResult() {
+    if (!shareText.value) return;
+    try {
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(shareText.value);
+      } else {
+        shareText.select();
+        shareText.setSelectionRange(0, shareText.value.length);
+        if (!document.execCommand('copy')) throw new Error('Copy command was rejected.');
+      }
+      copyShareButton.textContent = 'Copied! 🎉';
+      copyShareStatus.textContent = 'Result copied. No leaderboard was harmed.';
+    } catch (error) {
+      copyShareStatus.textContent = 'Automatic copy failed. Select the text and copy it manually.';
+    }
+    window.setTimeout(() => { copyShareButton.textContent = 'Copy to clipboard'; }, 1500);
+  }
+
   function finish() {
     if (finished) return;
     finished = true;
@@ -102,6 +130,8 @@
     document.getElementById('result-groups').textContent = completedGroups;
     document.getElementById('result-61').textContent = count61;
     document.getElementById('result-67').textContent = count67;
+    shareText.value = shareableResult(current, completedGroups, count61, count67);
+    copyShareStatus.textContent = '';
 
     let verdict = 'Statistically significant brainrot.';
     if (current.wpm === 67) verdict = 'Exactly 67 WPM. The prophecy has cleared peer review.';
@@ -161,6 +191,8 @@
     stream.replaceChildren();
     stream.style.transform = '';
     result.hidden = true;
+    shareText.value = '';
+    copyShareStatus.textContent = '';
     appendGroups(120);
     timeEl.textContent = duration;
     wpmEl.textContent = '0';
@@ -171,6 +203,7 @@
 
   viewport.addEventListener('keydown', handleKey);
   document.getElementById('typing-restart').addEventListener('click', reset);
+  copyShareButton.addEventListener('click', copyShareResult);
   durationButtons.forEach((button) => {
     button.addEventListener('click', () => {
       duration = Number(button.dataset.duration);

@@ -4,7 +4,7 @@
 {% block title %}67 Counter{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.2">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.3">
 {% if turnstile_enabled %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}
 
 <main class="br-page counter-page" id="counter-app"
@@ -67,7 +67,7 @@
       </fieldset>
 
       <button class="br-primary" id="enable-camera">Enable camera &amp; detector</button>
-      <button class="br-primary" id="start-run" disabled>Waiting for a visible pose…</button>
+      <button class="br-primary" id="start-run" disabled>Detector is still loading…</button>
       <button class="br-secondary" id="reset-run" hidden>Run this foolish experiment again</button>
       <p class="counter-error" id="counter-error" role="alert"></p>
     </aside>
@@ -102,5 +102,5 @@
 </main>
 
 {# Keep this version in step with counter.js so browsers cannot retain a broken runtime URL. #}
-<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.2"></script>
+<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.3"></script>
 {% endblock %}
