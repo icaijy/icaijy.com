@@ -4,7 +4,7 @@
 {% block title %}67 Counter{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.2">
 {% if turnstile_enabled %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}
 
 <main class="br-page counter-page" id="counter-app"
@@ -92,8 +92,15 @@
       {% endif %}
       <p id="upload-status" role="status"></p>
     </div>
+    <div class="counter-share" id="counter-share">
+      <h3>🎉 Share your result!</h3>
+      <textarea id="counter-share-text" rows="6" readonly aria-label="Shareable 67 Counter result"></textarea>
+      <button class="br-secondary" id="copy-counter-share" type="button">Copy to clipboard</button>
+      <p class="subtle" id="copy-counter-status" role="status" aria-live="polite"></p>
+    </div>
   </section>
 </main>
 
-<script type="module" src="{% static 'brainrot/counter.js' %}"></script>
+{# Keep this version in step with counter.js so browsers cannot retain a broken runtime URL. #}
+<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260814.2"></script>
 {% endblock %}

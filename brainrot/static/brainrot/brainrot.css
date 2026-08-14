@@ -158,6 +158,22 @@
 .result-card h2 { margin-top: .4rem; font-weight: 900; }
 .recording-review video { width: 100%; max-height: 310px; border-radius: 12px; background: #111827; }
 .recording-review p { color: var(--br-muted); font-size: .85rem; }
+.counter-share { grid-column: 1 / -1; padding-top: 1.25rem; border-top: 1px solid var(--br-line); }
+.counter-share h3 { margin: 0 0 .75rem; font-size: 1rem; font-weight: 850; text-align: center; }
+.counter-share textarea {
+  display: block;
+  width: 100%;
+  min-height: 9.5rem;
+  padding: .9rem 1rem;
+  resize: vertical;
+  border: 1px solid var(--br-line);
+  border-radius: 11px;
+  background: #f8fafc;
+  color: var(--br-ink);
+  font: .92rem/1.55 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.counter-share .br-secondary { width: auto; min-width: 180px; margin: .75rem auto 0; display: block; }
+.counter-share .subtle { min-height: 1.2rem; margin: .45rem 0 0; text-align: center; }
 .subtle { color: var(--br-muted); font-size: .82rem; }
 
 .typing-heading { margin: 6rem 0 1.5rem; }

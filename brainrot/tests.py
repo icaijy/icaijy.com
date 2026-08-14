@@ -1,7 +1,9 @@
 import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.staticfiles import finders
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
@@ -14,6 +16,19 @@ class BrainrotPageTests(TestCase):
         for path in ('/67/', '/67/games/', '/67/hall-of-fame/', '/67/typing/'):
             with self.subTest(path=path):
                 self.assertEqual(self.client.get(path).status_code, 200)
+
+    def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
+        response = self.client.get('/67/')
+        self.assertContains(response, 'brainrot.css?v=20260814.2')
+        self.assertContains(response, 'counter.js?v=20260814.2')
+        self.assertContains(response, 'id="counter-share-text"')
+        self.assertContains(response, 'id="copy-counter-share"')
+
+        script_path = finders.find('brainrot/counter.js')
+        self.assertIsNotNone(script_path)
+        script = Path(script_path).read_text(encoding='utf-8')
+        self.assertIn('@mediapipe/tasks-vision@1.0.1/vision_bundle.mjs', script)
+        self.assertNotIn('@mediapipe/tasks-vision@0.10.26', script)
 
 
 @override_settings(TURNSTILE_ENABLED=False, HOF_SUBMISSIONS_PER_HOUR=1)
