@@ -20,7 +20,7 @@ class BrainrotPageTests(TestCase):
     def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
         response = self.client.get('/67/')
         self.assertContains(response, 'brainrot.css?v=20260814.3')
-        self.assertContains(response, 'counter.js?v=20260814.3')
+        self.assertContains(response, 'counter.js?v=20260814.4')
         self.assertContains(response, 'id="counter-share-text"')
         self.assertContains(response, 'id="copy-counter-share"')
 
@@ -29,17 +29,18 @@ class BrainrotPageTests(TestCase):
         script = Path(script_path).read_text(encoding='utf-8')
         self.assertIn('@mediapipe/tasks-vision@1.0.1/vision_bundle.mjs', script)
         self.assertNotIn('@mediapipe/tasks-vision@0.10.26', script)
+        self.assertIn("startButton.disabled = false;", script)
+        self.assertIn("if (poseReady) {\n              beginRun();", script)
 
-    def test_typing_result_has_url_free_share_box(self):
+    def test_typing_result_has_share_box_and_url(self):
         response = self.client.get('/67/typing/')
-        self.assertContains(response, 'typing.js?v=20260814.3')
+        self.assertContains(response, 'typing.js?v=20260814.4')
         self.assertContains(response, 'id="typing-share-text"')
         self.assertContains(response, 'id="copy-typing-share"')
 
         script_path = finders.find('brainrot/typing.js')
         script = Path(script_path).read_text(encoding='utf-8')
-        self.assertNotIn('window.location', script)
-        self.assertNotIn("new URL(", script)
+        self.assertIn("new URL('/67/typing/', window.location.origin)", script)
 
 
 @override_settings(TURNSTILE_ENABLED=False, HOF_SUBMISSIONS_PER_HOUR=1)
