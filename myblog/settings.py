@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'oj',
     'oracdata',
     'prank',
+    'brainrot',
 ]
 
 MIDDLEWARE = [
@@ -60,6 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'brainrot.middleware.HallOfFameUploadLimitMiddleware',
 ]
 
 ROOT_URLCONF = 'myblog.urls'
@@ -139,6 +141,23 @@ LOCALE_PATHS = [
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Retained as a feature flag so the OJ can be restored without resurrecting
+# public submission endpoints by accident.
+OJ_ENABLED = os.getenv('OJ_ENABLED', 'False') == 'True'
+
+# Hall of Fame recordings are deliberately not placed below MEDIA_ROOT.  They
+# are only served by a permission-checking Django view (approved, owner, staff).
+PRIVATE_MEDIA_ROOT = Path(os.getenv('PRIVATE_MEDIA_ROOT', BASE_DIR / 'private_media'))
+HOF_MAX_UPLOAD_BYTES = int(os.getenv('HOF_MAX_UPLOAD_BYTES', 25 * 1024 * 1024))
+HOF_MAX_VIDEO_SECONDS = float(os.getenv('HOF_MAX_VIDEO_SECONDS', 26))
+HOF_SUBMISSIONS_PER_HOUR = int(os.getenv('HOF_SUBMISSIONS_PER_HOUR', 3))
+
+# Optional but recommended in production.  If both values are present the
+# Hall of Fame upload endpoint requires a server-verified Turnstile token.
+TURNSTILE_SITE_KEY = os.getenv('TURNSTILE_SITE_KEY', '')
+TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
+TURNSTILE_ENABLED = bool(TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY)
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -157,4 +176,3 @@ CSRF_TRUSTED_ORIGINS = [
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
-

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}67 Hall of Fame{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}">
+<main class="br-page hall-page">
+  <header class="br-toolbar">
+    <a href="{% url 'brainrot:counter' %}">← 67 Counter</a>
+    <a href="{% url 'brainrot:index' %}">All experiments</a>
+  </header>
+  <section class="hall-heading">
+    <span class="br-kicker">PUBLIC ARCHIVE OF EXCEPTIONAL ARM ACTIVITY</span>
+    <h1>67 Hall of Fame</h1>
+    <p>Scores appear only after a human checks the submitted evidence. Revolutionary stuff.</p>
+  </section>
+
+  {% if own_pending %}
+  <section class="pending-panel">
+    <strong>Your pending peer review:</strong>
+    {% for entry in own_pending %}
+      <a href="{% url 'brainrot:hall_of_fame_video' entry.id %}" target="_blank">{{ entry.score }} points · {{ entry.created_at|date:'j M, H:i' }}</a>{% if not forloop.last %}<span>·</span>{% endif %}
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <section class="hall-list">
+    {% for entry in entries %}
+    <article class="hall-entry">
+      <span class="hall-rank">#{{ forloop.counter }}</span>
+      <div class="hall-person">
+        <strong>{{ entry.user.username }}</strong>
+        <span>{{ entry.created_at|date:'j M Y' }}</span>
+      </div>
+      <strong class="hall-score">{{ entry.score }}</strong>
+      <details>
+        <summary>Watch the evidence</summary>
+        <video controls preload="none" playsinline src="{% url 'brainrot:hall_of_fame_video' entry.id %}"></video>
+      </details>
+    </article>
+    {% empty %}
+    <div class="empty-hall">
+      <strong>No verified legends yet.</strong>
+      <p>The scientific community remains unconvinced.</p>
+      <a href="{% url 'brainrot:counter' %}" class="br-primary br-button-link">Submit the first specimen</a>
+    </div>
+    {% endfor %}
+  </section>
+</main>
+{% endblock %}

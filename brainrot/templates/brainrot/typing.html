@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}61 / 67 Typing Test{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}">
+<main class="br-page typing-page" id="typing-app">
+  <header class="br-toolbar">
+    <a href="{% url 'brainrot:index' %}">← Research division</a>
+    <span>Backspace has been administratively disabled.</span>
+  </header>
+
+  <section class="typing-heading">
+    <span class="br-kicker">BINARY CULTURAL LITERACY ASSESSMENT</span>
+    <h1>61 / 67 Typing Test</h1>
+  </section>
+
+  <div class="typing-controls" aria-label="Test duration">
+    <span>duration</span>
+    <button data-duration="15">15</button>
+    <button data-duration="30" class="active">30</button>
+    <button data-duration="60">60</button>
+    <button data-duration="67">67</button>
+  </div>
+
+  <section class="typing-stats" aria-label="Live typing statistics">
+    <div><span>time</span><strong id="typing-time">30</strong></div>
+    <div><span>wpm</span><strong id="typing-wpm">0</strong></div>
+    <div><span>accuracy</span><strong id="typing-accuracy">100%</strong></div>
+  </section>
+
+  <section class="typing-viewport" id="typing-viewport" tabindex="0" aria-label="Typing target">
+    <div class="typing-stream" id="typing-stream"></div>
+    <div class="focus-hint" id="focus-hint">click here, then type only 6, 1 and 7</div>
+  </section>
+
+  <button class="typing-restart" id="typing-restart" aria-label="Restart typing test">↻ restart</button>
+
+  <section class="typing-result" id="typing-result" hidden>
+    <span class="br-kicker">LABORATORY OUTPUT</span>
+    <h2 id="typing-verdict">Statistically significant brainrot.</h2>
+    <div class="result-grid">
+      <div><span>WPM</span><strong id="result-wpm">0</strong></div>
+      <div><span>accuracy</span><strong id="result-accuracy">0%</strong></div>
+      <div><span>characters</span><strong id="result-characters">0</strong></div>
+      <div><span>groups</span><strong id="result-groups">0</strong></div>
+      <div><span>61 count</span><strong id="result-61">0</strong></div>
+      <div><span>67 count</span><strong id="result-67">0</strong></div>
+    </div>
+  </section>
+</main>
+<script src="{% static 'brainrot/typing.js' %}" defer></script>
+{% endblock %}

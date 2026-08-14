@@ -96,6 +96,7 @@
     .btn-leader { background: #f0fdf4; color: #15803d; border-color: #dcfce7; }
     .btn-oj { background: #fffbeb; color: #b45309; border-color: #fef3c7; }
     .btn-analytics { background: #faf5ff; color: #7e22ce; border-color: #f3e8ff; }
+    .btn-brainrot { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
 
     @media (max-width: 600px) {
         #homepage-wrapper h1 { font-size: 2.5rem; }
@@ -114,7 +115,7 @@
                 <a href="/blog">{% trans "blog" %}</a>,
                 <a href="/orac-leaderboards">ORAC Leaderboards++</a>,
                 {% trans "or" %}
-                <a href="/oj">{% trans "Speed Online Judge" %}</a>.
+                <a href="{% url 'brainrot:index' %}">61/67 Research Division</a>.
             </p>
         </div>
     </div>
@@ -127,10 +128,13 @@
             🏆 ORAC Leaderboards++
         </a>
         <a href="/oj" class="nav-card btn-oj">
-            🚀 {% trans "Speed Online Judge" %}
+            🪦 {% trans "Speed Online Judge" %} (retired)
         </a>
         <a href="/oracdata" class="nav-card btn-analytics">
             📊 {% trans "ORAC2 Analytics" %}
+        </a>
+        <a href="{% url 'brainrot:index' %}" class="nav-card btn-brainrot">
+            🧪 61/67 Research Division
         </a>
     </div>
 </div>
