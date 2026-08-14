@@ -46,6 +46,10 @@ if (app) {
   let lastZone = 0;
   let lastCountAt = 0;
   let recorder = null;
+  let recordingStream = null;
+  let recordingCanvas = null;
+  let recordingContext = null;
+  let recordingFrame = null;
   let recordingChunks = [];
   let recordingBlob = null;
   let recordingUrl = null;
@@ -318,18 +322,60 @@ if (app) {
   function startRecording() {
     const type = preferredRecordingType();
     if (!type) throw new Error('This browser cannot record a compatible WebM/MP4 video.');
-    recordingChunks = [];
-    recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 1_600_000 });
-    recorder.addEventListener('dataavailable', (event) => {
-      if (event.data.size) recordingChunks.push(event.data);
-    });
-    recorder.start(500);
-    livePill.hidden = false;
+
+    // Firefox can preserve the age of a long-lived camera track in WebM packet
+    // timestamps. A canvas capture creates a fresh recording clock without
+    // requesting the camera again or changing the stream used by MediaPipe.
+    recordingCanvas = document.createElement('canvas');
+    recordingCanvas.width = video.videoWidth || 640;
+    recordingCanvas.height = video.videoHeight || 480;
+    recordingContext = recordingCanvas.getContext('2d');
+    if (!recordingContext || !recordingCanvas.captureStream) {
+      recordingCanvas = null;
+      recordingContext = null;
+      throw new Error('This browser cannot create a timestamp-safe recording.');
+    }
+
+    const drawRecordingFrame = () => {
+      if (!recordingContext || !recordingCanvas) return;
+      recordingContext.drawImage(video, 0, 0, recordingCanvas.width, recordingCanvas.height);
+      recordingFrame = requestAnimationFrame(drawRecordingFrame);
+    };
+
+    try {
+      drawRecordingFrame();
+      recordingStream = recordingCanvas.captureStream(30);
+      recordingChunks = [];
+      recorder = new MediaRecorder(recordingStream, { mimeType: type, videoBitsPerSecond: 1_600_000 });
+      recorder.addEventListener('dataavailable', (event) => {
+        if (event.data.size) recordingChunks.push(event.data);
+      });
+      recorder.start(500);
+      livePill.hidden = false;
+    } catch (error) {
+      recorder = null;
+      recordingChunks = [];
+      stopRecordingPipeline();
+      throw error;
+    }
+  }
+
+  function stopRecordingPipeline() {
+    if (recordingFrame !== null) cancelAnimationFrame(recordingFrame);
+    recordingFrame = null;
+    recordingStream?.getTracks().forEach((track) => track.stop());
+    recordingStream = null;
+    recordingContext = null;
+    recordingCanvas = null;
   }
 
   function stopRecording() {
     return new Promise((resolve) => {
       if (!recorder || recorder.state === 'inactive') {
+        recorder = null;
+        recordingChunks = [];
+        stopRecordingPipeline();
+        livePill.hidden = true;
         resolve(null);
         return;
       }
@@ -338,6 +384,7 @@ if (app) {
         recordingBlob = new Blob(recordingChunks, { type: baseType });
         recorder = null;
         recordingChunks = [];
+        stopRecordingPipeline();
         livePill.hidden = true;
         resolve(recordingBlob);
       }, { once: true });
@@ -507,6 +554,7 @@ if (app) {
   copyShareButton?.addEventListener('click', copyShareResult);
   window.addEventListener('beforeunload', () => {
     if (recordingUrl) URL.revokeObjectURL(recordingUrl);
+    stopRecordingPipeline();
     stream?.getTracks().forEach((track) => track.stop());
   });
 }
