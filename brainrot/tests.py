@@ -28,8 +28,8 @@ class BrainrotPageTests(TestCase):
     @override_settings(DEBUG=True)
     def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
         response = self.client.get('/67/counter/')
-        self.assertContains(response, 'brainrot.css?v=20260817.1')
-        self.assertContains(response, 'counter.js?v=20260817.1')
+        self.assertContains(response, 'brainrot.css?v=20260817.2')
+        self.assertContains(response, 'counter.js?v=20260817.2')
         self.assertContains(response, 'id="counter-share-text"')
         self.assertContains(response, 'id="copy-counter-share"')
         self.assertContains(response, 'id="download-recording"')
@@ -44,6 +44,8 @@ class BrainrotPageTests(TestCase):
         self.assertContains(response, 'id="start-run" disabled hidden')
         self.assertContains(response, 'id="counter-hof-portal"')
         self.assertContains(response, 'PUBLIC VIDEO LEADERBOARD')
+        self.assertContains(response, 'type="button" data-counter-mode="six_seven"')
+        self.assertContains(response, 'type="button" data-counter-mode="leg_claps"')
         self.assertNotContains(response, 'hof-nav-link')
         self.assertNotContains(response, 'Log in to submit this run')
 
@@ -57,9 +59,13 @@ class BrainrotPageTests(TestCase):
         self.assertIn("new URL('/67/counter/', window.location.origin)", script)
         self.assertIn('preloadPoseRuntime();', script)
         self.assertLess(script.index('preloadPoseRuntime();'), script.index("enableButton.addEventListener('click'"))
-        self.assertIn('return [11, 12, 15, 16].every', script)
-        self.assertNotIn('currentMode', script)
-        self.assertNotIn('modeInputs', script)
+        self.assertIn("from './gesture_engine.js?v=20260817.2'", script)
+        self.assertIn('let currentMode =', script)
+        self.assertIn('createGestureTracker(currentMode)', script)
+        self.assertIn('const GAME_SECONDS = 20;', script)
+        self.assertIn('if (!running || now >= endTime || !sufficientlyVisible(landmarks)) return;', script)
+        self.assertIn('gestureTracker.reset();', script)
+        self.assertIn('setModeControlsDisabled(true);', script)
         self.assertIn('const blob = await stopRecording();', script)
         self.assertIn("recordingStream = recordingCanvas.captureStream(30);", script)
         self.assertIn('recorder = new MediaRecorder(recordingStream', script)
@@ -67,6 +73,7 @@ class BrainrotPageTests(TestCase):
         self.assertIn("form.append('event_timeline', JSON.stringify(eventTimeline));", script)
         self.assertIn("form.append('display_name', displayNameInput.value);", script)
         self.assertIn("form.append('publication_consent', 'yes');", script)
+        self.assertIn("form.append('game_mode', currentMode);", script)
         self.assertIn('drawRecordingHud();', script)
         self.assertIn("'67 COUNT'", script)
         self.assertIn("const rawResponse = await response.text();", script)
@@ -77,12 +84,31 @@ class BrainrotPageTests(TestCase):
         self.assertIn('I made ${score} 6️⃣7️⃣ moves in 20 seconds.', script)
         self.assertLess(script.index('enableButton.hidden = true;'), script.index('await initialisePoseRuntime();', script.index('async function initialiseDetector')))
 
+        engine_path = finders.find('brainrot/gesture_engine.js')
+        self.assertIsNotNone(engine_path)
+        engine = Path(engine_path).read_text(encoding='utf-8')
+        self.assertIn("LEG_CLAPS: 'leg_claps'", engine)
+        self.assertIn('[23, 24, 25, 26, 27, 28]', engine)
+        self.assertIn('this.readyForClose = false;', engine)
+
+    def test_counter_mode_switch_is_server_rendered_and_invalid_mode_falls_back(self):
+        leg_claps = self.client.get('/67/counter/?mode=leg_claps')
+        self.assertContains(leg_claps, 'data-game-mode="leg_claps"')
+        self.assertContains(leg_claps, 'TUNG TUNG LEG CLAPS')
+        self.assertContains(leg_claps, 'data-counter-mode="leg_claps" class="active"')
+        self.assertContains(leg_claps, 'leg claps counted')
+
+        fallback = self.client.get('/67/counter/?mode=not-a-real-experiment')
+        self.assertContains(fallback, 'data-game-mode="six_seven"')
+
     def test_brainrot_pages_have_chinese_translation(self):
         response = self.client.get('/67/', HTTP_ACCEPT_LANGUAGE='zh-hans')
         self.assertContains(response, '61 / 67 研究部')
         counter = self.client.get('/67/counter/', HTTP_ACCEPT_LANGUAGE='zh-hans')
         self.assertContains(counter, '启用摄像头')
         self.assertContains(counter, '你的视频将会公开')
+        leg_claps = self.client.get('/67/counter/?mode=leg_claps', HTTP_ACCEPT_LANGUAGE='zh-hans')
+        self.assertContains(leg_claps, '酸黄瓜舞计数')
 
 
 class HallOfFamePageTests(TestCase):
@@ -106,7 +132,7 @@ class HallOfFamePageTests(TestCase):
         self.assertContains(response, 'Copy share message')
         self.assertContains(response, f'/67/challenge/{self.entry.id}/')
         self.assertContains(response, 'swan-scientist made 3 6️⃣7️⃣ moves in 20 seconds.')
-        self.assertContains(response, 'hof_detail.js?v=20260817.1')
+        self.assertContains(response, 'hof_detail.js?v=20260817.2')
 
         leaderboard = self.client.get('/67/hall-of-fame/')
         self.assertContains(leaderboard, detail_path)
@@ -120,6 +146,7 @@ class HallOfFamePageTests(TestCase):
         self.assertIsNotNone(script_path)
         script = Path(script_path).read_text(encoding='utf-8')
         self.assertIn('made ${score} 6️⃣7️⃣ moves in 20 seconds! 🔥', script)
+        self.assertIn('made ${score} Tung Tung Leg Claps in 20 seconds! 🥒', script)
         self.assertIn("'🟩'.repeat(Math.min(score, 20))", script)
         self.assertIn('copyShareMessage', script)
         self.assertNotIn('navigator.clipboard.writeText(url)', script)
@@ -131,6 +158,32 @@ class HallOfFamePageTests(TestCase):
         self.assertContains(response, 'Recorded event timeline ready')
         self.assertContains(response, '[1.2, 4.5, 9.67]')
         self.assertContains(response, 'data-rival-score="3"')
+        self.assertContains(response, 'data-game-mode="six_seven"')
+
+    def test_leaderboards_and_challenges_keep_game_modes_separate(self):
+        leg_entry = HallOfFameEntry.objects.create(
+            user=self.user,
+            game_mode=HallOfFameEntry.GameMode.LEG_CLAPS,
+            score=12,
+            video='hall_of_fame/leg-claps.webm',
+            mime_type='video/webm',
+            duration_seconds=23,
+            event_timeline=[float(value) for value in range(1, 13)],
+            visibility=HallOfFameEntry.Visibility.PUBLIC,
+        )
+        six_seven_board = self.client.get('/67/hall-of-fame/')
+        self.assertIn(self.entry, six_seven_board.context['entries'])
+        self.assertNotIn(leg_entry, six_seven_board.context['entries'])
+
+        leg_board = self.client.get('/67/hall-of-fame/?mode=leg_claps')
+        self.assertIn(leg_entry, leg_board.context['entries'])
+        self.assertNotIn(self.entry, leg_board.context['entries'])
+        self.assertContains(leg_board, 'made 12 leg claps in 20 seconds')
+
+        challenge = self.client.get(f'/67/challenge/{leg_entry.id}/')
+        self.assertContains(challenge, 'data-game-mode="leg_claps"')
+        self.assertContains(challenge, 'Challenge mode:')
+        self.assertNotContains(challenge, 'data-counter-mode="six_seven"')
 
     def test_legacy_challenge_uses_labelled_estimated_pace(self):
         self.entry.event_timeline = []
@@ -274,6 +327,16 @@ class HallOfFameSubmissionTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn('公开发布', response.json()['error'])
 
+    def test_invalid_counter_mode_is_rejected(self):
+        self.client.login(username='scientist', password='test-password-67')
+        response = self.client.post('/67/submit/', {
+            'score': 1,
+            'game_mode': 'knees_everywhere',
+            'publication_consent': 'yes',
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['error'], 'Invalid counter mode.')
+
     @patch('brainrot.views.validate_hall_of_fame_video')
     def test_anonymous_upload_is_published_and_rate_limited_by_client(self, validate):
         validate.return_value = ValidatedVideo('video/webm', 'webm', 23.0)
@@ -335,6 +398,7 @@ class HallOfFameSubmissionTests(TestCase):
         entry = HallOfFameEntry.objects.get()
         self.assertEqual(entry.user, self.user)
         self.assertEqual(entry.display_name, '')
+        self.assertEqual(entry.game_mode, HallOfFameEntry.GameMode.SIX_SEVEN)
         self.assertEqual(entry.visibility, HallOfFameEntry.Visibility.PUBLIC)
         self.assertEqual(entry.event_timeline, [1.2, 4.5, 9.67])
         self.assertEqual(response.json()['entry_url'], f'/67/hall-of-fame/{entry.id}/')
@@ -344,6 +408,24 @@ class HallOfFameSubmissionTests(TestCase):
         response = self.client.post('/67/submit/', {'score': 68, 'video': second})
         self.assertEqual(response.status_code, 429)
         self.assertEqual(HallOfFameEntry.objects.count(), 1)
+
+    @patch('brainrot.views.validate_hall_of_fame_video')
+    def test_leg_clap_upload_keeps_an_explicit_mode(self, validate):
+        validate.return_value = ValidatedVideo('video/webm', 'webm', 23.0)
+        self.client.login(username='scientist', password='test-password-67')
+        video = SimpleUploadedFile('leg-claps.webm', b'knee evidence', content_type='video/webm')
+        response = self.client.post('/67/submit/', {
+            'game_mode': HallOfFameEntry.GameMode.LEG_CLAPS,
+            'score': 2,
+            'event_timeline': '[4.2, 12.5]',
+            'publication_consent': 'yes',
+            'video': video,
+        })
+        self.assertEqual(response.status_code, 201)
+        entry = HallOfFameEntry.objects.get()
+        self.assertEqual(entry.game_mode, HallOfFameEntry.GameMode.LEG_CLAPS)
+        self.assertIn(entry, self.client.get('/67/hall-of-fame/?mode=leg_claps').context['entries'])
+        self.assertNotIn(entry, self.client.get('/67/hall-of-fame/').context['entries'])
 
     def test_private_video_is_owner_only_then_public(self):
         entry = HallOfFameEntry.objects.create(

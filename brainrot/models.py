@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from .storage import private_media_storage
 
@@ -12,9 +13,13 @@ def hall_of_fame_upload_path(instance, filename):
 
 
 class HallOfFameEntry(models.Model):
+    class GameMode(models.TextChoices):
+        SIX_SEVEN = 'six_seven', _('67 Counter')
+        LEG_CLAPS = 'leg_claps', _('Tung Tung Leg Claps')
+
     class Visibility(models.TextChoices):
-        PUBLIC = 'public', 'Public'
-        PRIVATE = 'private', 'Private'
+        PUBLIC = 'public', _('Public')
+        PRIVATE = 'private', _('Private')
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -24,6 +29,11 @@ class HallOfFameEntry(models.Model):
         blank=True,
     )
     display_name = models.CharField(max_length=32, blank=True)
+    game_mode = models.CharField(
+        max_length=16,
+        choices=GameMode.choices,
+        default=GameMode.SIX_SEVEN,
+    )
     score = models.PositiveSmallIntegerField()
     video = models.FileField(
         upload_to=hall_of_fame_upload_path,
@@ -42,12 +52,12 @@ class HallOfFameEntry(models.Model):
     class Meta:
         ordering = ('-score', 'created_at')
         indexes = [
-            models.Index(fields=('visibility', '-score', 'created_at'), name='hof_public_rank_idx'),
+            models.Index(fields=('game_mode', 'visibility', '-score', 'created_at'), name='hof_mode_public_rank_idx'),
             models.Index(fields=('user', '-created_at'), name='hof_user_rate_idx'),
         ]
 
     def __str__(self):
-        return f'{self.public_name}: {self.score} ({self.visibility})'
+        return f'{self.public_name}: {self.score} {self.game_mode} ({self.visibility})'
 
     @property
     def public_name(self):

@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-17 15:57+1000\n"
+"POT-Creation-Date: 2026-08-17 16:40+1000\n"
 "Language: zh_Hans\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -35,11 +35,23 @@ msgstr "欢迎来到我的博客"
 msgid "Read"
 msgstr "阅读"
 
-#: brainrot/templates/brainrot/_entry_controls.html:6
+#: brainrot/models.py:17 brainrot/templates/brainrot/hall_of_fame.html:10
+#: brainrot/templates/brainrot/index.html:27
+msgid "67 Counter"
+msgstr "67 计数器"
+
+#: brainrot/models.py:18 brainrot/templates/brainrot/counter.html:4
+#: brainrot/templates/brainrot/counter.html:45
+#: brainrot/templates/brainrot/hall_of_fame.html:10
+#: brainrot/templates/brainrot/hall_of_fame.html:19
+msgid "Tung Tung Leg Claps"
+msgstr "酸黄瓜舞计数"
+
+#: brainrot/models.py:21 brainrot/templates/brainrot/_entry_controls.html:6
 msgid "Public"
 msgstr "公开"
 
-#: brainrot/templates/brainrot/_entry_controls.html:6
+#: brainrot/models.py:22 brainrot/templates/brainrot/_entry_controls.html:6
 msgid "Private"
 msgstr "私有"
 
@@ -59,16 +71,80 @@ msgstr "永久删除这条名人堂记录及其视频？"
 msgid "Delete"
 msgstr "删除"
 
-#: brainrot/templates/brainrot/counter.html:20
+#: brainrot/templates/brainrot/counter.html:22
 #: brainrot/templates/brainrot/typing.html:10
 msgid "Research division"
 msgstr "研究部"
 
-#: brainrot/templates/brainrot/counter.html:26
+#: brainrot/templates/brainrot/counter.html:27
+#: brainrot/templates/brainrot/counter.html:61
+msgid "TUNG TUNG LEG CLAPS"
+msgstr "酸黄瓜舞计数"
+
+#: brainrot/templates/brainrot/counter.html:28
+#: brainrot/templates/brainrot/counter.html:62
+msgid ""
+"Move your arms up and down in the 6–7 pattern. Make as many counted moves as "
+"you can in 20 seconds."
+msgstr "按 6–7 模式上下摆动双臂，在 20 秒内完成尽可能多的有效动作。"
+
+#: brainrot/templates/brainrot/counter.html:29
+#: brainrot/templates/brainrot/counter.html:62
+msgid ""
+"Count each time Tung Tung's knees swing inward from a clearly open position. "
+"The knees must open again before another clap."
+msgstr "双膝从明显打开状态向内合拢时计数；再次计数前，双膝必须重新打开。"
+
+#: brainrot/templates/brainrot/counter.html:30
+#: brainrot/templates/brainrot/counter.html:120
+msgid "6️⃣7️⃣ moves counted"
+msgstr "已计 6️⃣7️⃣ 动作"
+
+#: brainrot/templates/brainrot/counter.html:31
+#: brainrot/templates/brainrot/counter.html:120
+msgid "leg claps counted"
+msgstr "已计膝盖合拢"
+
+#: brainrot/templates/brainrot/counter.html:32
+#: brainrot/templates/brainrot/counter.html:143
+msgid "6️⃣7️⃣ moves in 20 seconds"
+msgstr "次 6️⃣7️⃣ 动作 / 20 秒"
+
+#: brainrot/templates/brainrot/counter.html:33
+#: brainrot/templates/brainrot/counter.html:143
+msgid "leg claps in 20 seconds"
+msgstr "次膝盖合拢 / 20 秒"
+
+#: brainrot/templates/brainrot/counter.html:39
+msgid "Counter mode"
+msgstr "计数模式"
+
+#: brainrot/templates/brainrot/counter.html:42
+msgid "arm pattern"
+msgstr "手臂动作"
+
+#: brainrot/templates/brainrot/counter.html:46
+msgid "酸黄瓜舞计数"
+msgstr "酸黄瓜舞计数"
+
+#: brainrot/templates/brainrot/counter.html:50
+msgid "Challenge mode:"
+msgstr "挑战模式："
+
+#: brainrot/templates/brainrot/counter.html:56
 msgid "SYNCHRONISED HUMAN PERFORMANCE TRIAL · 20 SECONDS"
 msgstr "同步人体表现试验 · 20 秒"
 
-#: brainrot/templates/brainrot/counter.html:28
+#: brainrot/templates/brainrot/counter.html:58
+#, python-format
+msgid ""
+"%(name)s made %(score)s Tung Tung Leg Claps in 20 seconds. Their video will "
+"play beside yours."
+msgstr ""
+"%(name)s 在 20 秒内完成了 %(score)s 次酸黄瓜舞膝盖合拢。他们的视频会与你同步"
+"播放。"
+
+#: brainrot/templates/brainrot/counter.html:58
 #, python-format
 msgid ""
 "%(name)s made %(score)s 6️⃣7️⃣ moves in 20 seconds. Their video will play beside "
@@ -76,41 +152,35 @@ msgid ""
 msgstr ""
 "%(name)s 在 20 秒内完成了 %(score)s 次 6️⃣7️⃣ 动作。他们的视频会与你同步播放。"
 
-#: brainrot/templates/brainrot/counter.html:30
+#: brainrot/templates/brainrot/counter.html:60
 msgid "POSE KINETICS LAB · 20 SECOND PROTOCOL"
 msgstr "姿态动力学实验室 · 20 秒协议"
 
-#: brainrot/templates/brainrot/counter.html:32
-msgid ""
-"Move your arms up and down in the 6–7 pattern. Make as many counted moves as "
-"you can in 20 seconds."
-msgstr "按 6–7 模式上下摆动双臂，在 20 秒内完成尽可能多的有效动作。"
-
-#: brainrot/templates/brainrot/counter.html:37
+#: brainrot/templates/brainrot/counter.html:67
 msgid "PUBLIC VIDEO LEADERBOARD"
 msgstr "公开视频排行榜"
 
-#: brainrot/templates/brainrot/counter.html:39
+#: brainrot/templates/brainrot/counter.html:69
 msgid "HALL OF FAME"
 msgstr "名人堂"
 
-#: brainrot/templates/brainrot/counter.html:40
+#: brainrot/templates/brainrot/counter.html:70
 msgid "Watch runs · preview videos · challenge scores"
 msgstr "观看记录 · 预览视频 · 挑战分数"
 
-#: brainrot/templates/brainrot/counter.html:43
+#: brainrot/templates/brainrot/counter.html:73
 msgid "Manage all submitted runs"
 msgstr "管理全部投稿"
 
-#: brainrot/templates/brainrot/counter.html:43
+#: brainrot/templates/brainrot/counter.html:73
 msgid "Manage my submitted runs"
 msgstr "管理我的投稿"
 
-#: brainrot/templates/brainrot/counter.html:49
+#: brainrot/templates/brainrot/counter.html:79
 msgid "Camera privacy:"
 msgstr "摄像头隐私："
 
-#: brainrot/templates/brainrot/counter.html:49
+#: brainrot/templates/brainrot/counter.html:79
 msgid ""
 "Pose detection and recording run in this browser. Every run is recorded "
 "locally from the countdown, but nothing uploads unless you choose to submit "
@@ -120,91 +190,83 @@ msgstr ""
 "姿态检测和录像都在本浏览器内运行。每局会从倒计时开始在本地录制，但只有你主动"
 "提交才会上传。提交后视频会公开供所有人观看；重置或关闭页面会丢弃录像。"
 
-#: brainrot/templates/brainrot/counter.html:66
+#: brainrot/templates/brainrot/counter.html:96
 msgid "Recorded event timeline ready"
 msgstr "原始计数时间线已就绪"
 
-#: brainrot/templates/brainrot/counter.html:66
+#: brainrot/templates/brainrot/counter.html:96
 msgid "Legacy run · estimated count pace"
 msgstr "旧记录 · 使用估算计数节奏"
 
-#: brainrot/templates/brainrot/counter.html:76
+#: brainrot/templates/brainrot/counter.html:106
 msgid "Camera is currently doing nothing."
 msgstr "摄像头目前什么也没干。"
 
-#: brainrot/templates/brainrot/counter.html:79
+#: brainrot/templates/brainrot/counter.html:109
 msgid "RECORDING LOCALLY"
 msgstr "正在本地录像"
 
-#: brainrot/templates/brainrot/counter.html:83
+#: brainrot/templates/brainrot/counter.html:113
 msgid "Preloading pose model — camera remains off"
 msgstr "正在预加载姿态模型——摄像头仍关闭"
 
-#: brainrot/templates/brainrot/counter.html:90
-msgid "6️⃣7️⃣ moves counted"
-msgstr "已计 6️⃣7️⃣ 动作"
-
-#: brainrot/templates/brainrot/counter.html:93
+#: brainrot/templates/brainrot/counter.html:123
 msgid "time remaining"
 msgstr "剩余时间"
 
-#: brainrot/templates/brainrot/counter.html:96
+#: brainrot/templates/brainrot/counter.html:126
 msgid "score to beat"
 msgstr "目标分数"
 
-#: brainrot/templates/brainrot/counter.html:98
+#: brainrot/templates/brainrot/counter.html:128
 msgid "View HOF entry"
 msgstr "查看名人堂记录"
 
-#: brainrot/templates/brainrot/counter.html:102
+#: brainrot/templates/brainrot/counter.html:132
 msgid "Enable camera"
 msgstr "启用摄像头"
 
-#: brainrot/templates/brainrot/counter.html:103
+#: brainrot/templates/brainrot/counter.html:133
 msgid "Detector is still loading…"
 msgstr "检测器仍在加载……"
 
-#: brainrot/templates/brainrot/counter.html:104
+#: brainrot/templates/brainrot/counter.html:134
 msgid ""
 "I'm ready starts a local recording with the live count burned into the "
 "video. Submitting remains your decision."
 msgstr ""
 "点击“我准备好了”会开始本地录像，并把实时计数写入视频。是否提交仍由你决定。"
 
-#: brainrot/templates/brainrot/counter.html:105
+#: brainrot/templates/brainrot/counter.html:135
 msgid "Run this foolish experiment again"
 msgstr "再做一次这项愚蠢实验"
 
-#: brainrot/templates/brainrot/counter.html:112
+#: brainrot/templates/brainrot/counter.html:142
 msgid "PEER-REVIEWED BY YOURSELF"
 msgstr "由你本人完成同行评审"
 
-#: brainrot/templates/brainrot/counter.html:113
-msgid "6️⃣7️⃣ moves in 20 seconds"
-msgstr "次 6️⃣7️⃣ 动作 / 20 秒"
-
-#: brainrot/templates/brainrot/counter.html:114
+#: brainrot/templates/brainrot/counter.html:144
 msgid "A result has occurred."
 msgstr "一个结果发生了。"
 
-#: brainrot/templates/brainrot/counter.html:118
+#: brainrot/templates/brainrot/counter.html:148
 msgid ""
 "The recording remains local unless you submit it below. The downloaded and "
-"uploaded video includes the live 67 count. Closing or resetting discards it."
+"uploaded video includes the live count. Closing or resetting discards it."
 msgstr ""
-"除非你在下方提交，否则录像只保留在本地。下载和上传的视频都会包含实时 67 计"
-"数；关闭或重置会丢弃录像。"
+"除非你在下方提交，否则录像只保留在本地。下载和上传的视频都会包含实时计数；关"
+"闭或重置会丢弃录像。"
 
-#: brainrot/templates/brainrot/counter.html:119
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:32
+#: brainrot/templates/brainrot/counter.html:149
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:34
 msgid "Download counted video"
 msgstr "下载带计数的视频"
 
-#: brainrot/templates/brainrot/counter.html:122
+#: brainrot/templates/brainrot/counter.html:152
 msgid "Anonymous display name"
 msgstr "匿名显示名称"
 
-#: brainrot/templates/brainrot/counter.html:125
+#: brainrot/templates/brainrot/counter.html:155
 msgid ""
 "Guest runs are labelled “guest” and cannot impersonate registered usernames. "
 "Guest submissions have no self-service privacy or delete controls; contact "
@@ -213,15 +275,15 @@ msgstr ""
 "访客记录会标注“guest”，且不能冒充已注册用户名。访客投稿无法自行切换隐私或删"
 "除；如需修改，请把公开名人堂链接发给我。"
 
-#: brainrot/templates/brainrot/counter.html:126
+#: brainrot/templates/brainrot/counter.html:156
 msgid "Log in before another run"
 msgstr "下局开始前登录"
 
-#: brainrot/templates/brainrot/counter.html:126
+#: brainrot/templates/brainrot/counter.html:156
 msgid "if you want ownership controls."
 msgstr "即可使用所有者管理功能。"
 
-#: brainrot/templates/brainrot/counter.html:128
+#: brainrot/templates/brainrot/counter.html:158
 #, python-format
 msgid ""
 "Submitting as <strong>%(username)s</strong>. New submissions are public, but "
@@ -230,88 +292,88 @@ msgstr ""
 "将以 <strong>%(username)s</strong> 的身份提交。新投稿默认公开，之后可在“我的"
 "名人堂”中设为私有或删除。"
 
-#: brainrot/templates/brainrot/counter.html:130
+#: brainrot/templates/brainrot/counter.html:160
 msgid ""
 "Anonymous submission is temporarily unavailable because the production human-"
 "verification gate is not configured."
 msgstr "生产环境的人机验证尚未配置，匿名投稿暂时不可用。"
 
-#: brainrot/templates/brainrot/counter.html:134
+#: brainrot/templates/brainrot/counter.html:164
 msgid "Submit to Hall of Fame"
 msgstr "提交到名人堂"
 
-#: brainrot/templates/brainrot/counter.html:135
-#: brainrot/templates/brainrot/counter.html:138
+#: brainrot/templates/brainrot/counter.html:165
+#: brainrot/templates/brainrot/counter.html:168
 msgid "Discard recording"
 msgstr "丢弃录像"
 
-#: brainrot/templates/brainrot/counter.html:137
+#: brainrot/templates/brainrot/counter.html:167
 msgid "Log in to submit this run"
 msgstr "登录后提交本局"
 
-#: brainrot/templates/brainrot/counter.html:143
+#: brainrot/templates/brainrot/counter.html:173
 #: brainrot/templates/brainrot/typing.html:52
 msgid "Share your result!"
 msgstr "分享您的结果！"
 
-#: brainrot/templates/brainrot/counter.html:145
+#: brainrot/templates/brainrot/counter.html:175
 #: brainrot/templates/brainrot/typing.html:54
 msgid "Copy to clipboard"
 msgstr "复制到剪贴板"
 
-#: brainrot/templates/brainrot/counter.html:154
+#: brainrot/templates/brainrot/counter.html:184
 msgid "Close"
 msgstr "关闭"
 
-#: brainrot/templates/brainrot/counter.html:155
+#: brainrot/templates/brainrot/counter.html:185
 msgid "PUBLICATION CONSENT"
 msgstr "公开发布确认"
 
-#: brainrot/templates/brainrot/counter.html:156
+#: brainrot/templates/brainrot/counter.html:186
 msgid "Your video will be public"
 msgstr "你的视频将会公开"
 
-#: brainrot/templates/brainrot/counter.html:157
+#: brainrot/templates/brainrot/counter.html:187
 msgid ""
 "Submitting publishes this recording to the 67 Hall of Fame. Anyone can "
 "watch, download and share it."
 msgstr "提交后，这段录像会发布到 67 名人堂。任何人都可以观看、下载和分享。"
 
-#: brainrot/templates/brainrot/counter.html:159
+#: brainrot/templates/brainrot/counter.html:189
 msgid ""
 "Because you are logged in, you can make it private or delete it later from "
 "My HOF."
 msgstr "你已经登录，因此之后可以在“我的名人堂”中将其设为私有或删除。"
 
-#: brainrot/templates/brainrot/counter.html:161
+#: brainrot/templates/brainrot/counter.html:191
 msgid ""
 "Guest submissions cannot be privately managed or deleted by you later. "
 "Contact the site owner with the HOF link if you need it removed."
 msgstr ""
 "访客投稿之后无法由你自行设为私有或删除。如需移除，请将名人堂链接发给站长。"
 
-#: brainrot/templates/brainrot/counter.html:165
+#: brainrot/templates/brainrot/counter.html:195
 msgid "I understand that my video will be published for anyone to watch."
 msgstr "我已知晓我的视频会被公开，任何人都可以观看。"
 
-#: brainrot/templates/brainrot/counter.html:168
+#: brainrot/templates/brainrot/counter.html:198
 msgid "Not now"
 msgstr "暂不提交"
 
-#: brainrot/templates/brainrot/counter.html:169
+#: brainrot/templates/brainrot/counter.html:199
 msgid "Publish this video"
 msgstr "公开发布此视频"
 
 #: brainrot/templates/brainrot/hall_of_fame.html:4
-#: brainrot/templates/brainrot/hall_of_fame.html:19
-#: brainrot/templates/brainrot/index.html:17
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:4
+msgid "Tung Tung Leg Claps Hall of Fame"
+msgstr "酸黄瓜舞计数名人堂"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:4
+#: brainrot/templates/brainrot/hall_of_fame.html:23
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:4
 msgid "67 Hall of Fame"
 msgstr "67 名人堂"
-
-#: brainrot/templates/brainrot/hall_of_fame.html:10
-#: brainrot/templates/brainrot/index.html:27
-msgid "67 Counter"
-msgstr "67 计数器"
 
 #: brainrot/templates/brainrot/hall_of_fame.html:12
 #: brainrot/templates/brainrot/my_hall_of_fame.html:16
@@ -324,16 +386,33 @@ msgid "My HOF"
 msgstr "我的名人堂"
 
 #: brainrot/templates/brainrot/hall_of_fame.html:14
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:14
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:15
 msgid "All experiments"
 msgstr "全部实验"
 
-#: brainrot/templates/brainrot/hall_of_fame.html:18
+#: brainrot/templates/brainrot/hall_of_fame.html:17
+msgid "Leaderboard mode"
+msgstr "排行榜模式"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:22
 #: brainrot/templates/brainrot/index.html:16
 msgid "PUBLIC 20-SECOND VIDEO LEADERBOARD"
 msgstr "公开 20 秒视频排行榜"
 
-#: brainrot/templates/brainrot/hall_of_fame.html:20
+#: brainrot/templates/brainrot/hall_of_fame.html:23
+msgid "Leg Claps Hall of Fame"
+msgstr "酸黄瓜舞名人堂"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:24
+msgid ""
+"See who made the most inward knee claps in 20 seconds, watch each run, then "
+"challenge it yourself. Each clap requires the knees to open again before the "
+"next count."
+msgstr ""
+"看看谁能在 20 秒内完成最多次双膝向内合拢，观看每局录像，再亲自发起挑战。每次"
+"计数后，双膝必须重新打开才能计下一次。"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:24
 msgid ""
 "See who made the most 6️⃣7️⃣ moves in 20 seconds, watch each run, then challenge "
 "it yourself. Guest names are visibly labelled and cannot copy registered "
@@ -342,97 +421,110 @@ msgstr ""
 "看看谁能在 20 秒内完成最多的 6️⃣7️⃣ 动作，观看每局录像，再亲自发起挑战。访客名称"
 "会明确标注，且不能冒充注册用户。"
 
-#: brainrot/templates/brainrot/hall_of_fame.html:29
+#: brainrot/templates/brainrot/hall_of_fame.html:33
+#, python-format
+msgid "made %(score)s leg claps in 20 seconds · %(date)s"
+msgstr "在 20 秒内完成 %(score)s 次膝盖合拢 · %(date)s"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:33
 #, python-format
 msgid "made %(score)s 6️⃣7️⃣ moves in 20 seconds · %(date)s"
 msgstr "在 20 秒内完成 %(score)s 次 6️⃣7️⃣ 动作 · %(date)s"
 
-#: brainrot/templates/brainrot/hall_of_fame.html:31
+#: brainrot/templates/brainrot/hall_of_fame.html:35
+msgid "claps"
+msgstr "次合拢"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:35
 msgid "moves"
 msgstr "次动作"
 
-#: brainrot/templates/brainrot/hall_of_fame.html:33
+#: brainrot/templates/brainrot/hall_of_fame.html:37
 msgid "Full details"
 msgstr "完整详情"
 
-#: brainrot/templates/brainrot/hall_of_fame.html:34
+#: brainrot/templates/brainrot/hall_of_fame.html:38
 msgid "Challenge this run"
 msgstr "挑战这局"
 
-#: brainrot/templates/brainrot/hall_of_fame.html:38
+#: brainrot/templates/brainrot/hall_of_fame.html:42
 msgid "Watch video preview"
 msgstr "观看视频预览"
 
-#: brainrot/templates/brainrot/hall_of_fame.html:42
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:21
+#: brainrot/templates/brainrot/hall_of_fame.html:46
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:22
+#, python-format
+msgid "%(name)s made %(score)s Tung Tung Leg Claps in 20 seconds."
+msgstr "%(name)s 在 20 秒内完成了 %(score)s 次酸黄瓜舞膝盖合拢。"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:46
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:22
 #, python-format
 msgid "%(name)s made %(score)s 6️⃣7️⃣ moves in 20 seconds."
 msgstr "%(name)s 在 20 秒内完成了 %(score)s 次 6️⃣7️⃣ 动作。"
 
-#: brainrot/templates/brainrot/hall_of_fame.html:43
+#: brainrot/templates/brainrot/hall_of_fame.html:47
 msgid ""
 "Open the detail page to share this run, download it, or start a synchronized "
 "challenge."
 msgstr "打开详情页即可分享、下载录像或开始同步挑战。"
 
-#: brainrot/templates/brainrot/hall_of_fame.html:45
+#: brainrot/templates/brainrot/hall_of_fame.html:49
 msgid "Open full run"
 msgstr "打开完整记录"
 
-#: brainrot/templates/brainrot/hall_of_fame.html:46
+#: brainrot/templates/brainrot/hall_of_fame.html:50
 msgid "Download video"
 msgstr "下载视频"
 
-#: brainrot/templates/brainrot/hall_of_fame.html:55
+#: brainrot/templates/brainrot/hall_of_fame.html:59
 msgid "No legends yet."
 msgstr "目前还没有神人。"
 
-#: brainrot/templates/brainrot/hall_of_fame.html:56
+#: brainrot/templates/brainrot/hall_of_fame.html:60
 msgid "The scientific community has uploaded absolutely nothing."
 msgstr "科研界目前什么也没上传。"
 
-#: brainrot/templates/brainrot/hall_of_fame.html:57
+#: brainrot/templates/brainrot/hall_of_fame.html:61
 msgid "Submit the first specimen"
 msgstr "提交第一份样本"
 
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:13
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:14
 msgid "Hall of Fame"
 msgstr "名人堂"
 
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:18
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:19
 #, python-format
 msgid "ARCHIVED HUMAN PERFORMANCE SPECIMEN #%(id)s"
 msgstr "已归档人体表现样本 #%(id)s"
 
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:22
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:23
 #: brainrot/templates/brainrot/my_hall_of_fame.html:32
 #, python-format
 msgid "%(duration)s seconds"
 msgstr "%(duration)s 秒"
 
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:34
-#, fuzzy
-#| msgid "Challenge this run"
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:36
 msgid "Challenge this specimen"
-msgstr "挑战这局"
+msgstr "挑战这份样本"
 
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:40
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:42
 msgid "PUBLIC REPLICATION MATERIAL"
 msgstr "公开复现实验材料"
 
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:40
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:42
 msgid "PRIVATE OWNER VIEW"
 msgstr "私有所有者视图"
 
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:41
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:43
 msgid "Share this run"
 msgstr "分享这局"
 
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:41
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:43
 msgid "Private run"
 msgstr "私有记录"
 
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:43
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:45
 msgid ""
 "Only you and site superusers can open this page or video. Publish it to "
 "restore its Hall of Fame listing and share link."
@@ -440,11 +532,11 @@ msgstr ""
 "只有你和网站超级用户可以打开此页面和视频。重新公开后，它才会恢复在名人堂中的"
 "展示和分享链接。"
 
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:45
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:47
 msgid "This is your permanent Hall of Fame link. Deploy it responsibly."
 msgstr "这是你的永久名人堂链接。请负责任地传播。"
 
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:47
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:49
 msgid ""
 "This is a guest submission and has no self-service access. To request "
 "privacy changes or removal, contact the site owner and include this page's "
@@ -452,15 +544,15 @@ msgid ""
 msgstr ""
 "这是访客投稿，无法自行管理。如需更改隐私或删除，请联系站长并附上本页链接。"
 
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:49
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:51
 msgid "Distribute this evidence to researchers, rivals and confused relatives."
 msgstr "把这份证据分发给研究员、对手和一脸困惑的亲戚。"
 
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:53
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:55
 msgid "Share result!"
 msgstr "分享您的结果！"
 
-#: brainrot/templates/brainrot/hall_of_fame_detail.html:54
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:56
 msgid "Copy share message"
 msgstr "复制分享信息"
 
@@ -480,11 +572,15 @@ msgstr "61 / 67 研究部"
 msgid "Two controlled experiments. No useful findings are expected."
 msgstr "两项受控实验。预计不会产生任何有用成果。"
 
+#: brainrot/templates/brainrot/index.html:17
+msgid "Pose Hall of Fame"
+msgstr "姿态计数名人堂"
+
 #: brainrot/templates/brainrot/index.html:18
 msgid ""
-"Watch how many 6️⃣7️⃣ moves people made in 20 seconds, share a run, or challenge "
-"its score."
-msgstr "观看其他人在 20 秒内完成了多少次 6️⃣7️⃣ 动作，分享记录，或挑战其分数。"
+"Watch 67 arm runs or Tung Tung knee runs, share the evidence, or challenge a "
+"score."
+msgstr "观看 67 手臂或 Tung Tung 膝盖录像，分享证据，或者挑战分数。"
 
 #: brainrot/templates/brainrot/index.html:20
 msgid "Enter the archive"
@@ -495,8 +591,11 @@ msgid "EXPERIMENT 01"
 msgstr "实验 01"
 
 #: brainrot/templates/brainrot/index.html:28
-msgid "Local pose tracking, a camera, and approximately zero dignity."
-msgstr "本地姿态追踪、一台摄像头，以及约等于零的尊严。"
+msgid ""
+"Local pose tracking for 67 arms and Tung Tung knees, with one camera and "
+"approximately zero dignity."
+msgstr ""
+"在本地追踪 67 手臂和 Tung Tung 膝盖，只需一台摄像头，以及约等于零的尊严。"
 
 #: brainrot/templates/brainrot/index.html:30
 msgid "Begin"
@@ -634,33 +733,37 @@ msgstr "61 数量"
 msgid "67 count"
 msgstr "67 数量"
 
-#: brainrot/views.py:90
+#: brainrot/views.py:103
 msgid "This Hall of Fame entry is private."
 msgstr "这条名人堂记录当前不公开。"
 
-#: brainrot/views.py:207
+#: brainrot/views.py:221
 msgid "You must confirm that this video will be published for anyone to watch."
 msgstr "你必须确认该视频将公开发布，任何人都可以观看。"
 
-#: brainrot/views.py:255
+#: brainrot/views.py:233
+msgid "Invalid counter mode."
+msgstr "计数模式无效。"
+
+#: brainrot/views.py:274
 msgid "Published to the Hall of Fame. You can manage it from My HOF."
 msgstr "已发布到名人堂。你可以在“我的 HOF”中管理它。"
 
-#: brainrot/views.py:257
+#: brainrot/views.py:276
 msgid ""
 "Published as a guest. To remove it later, send the public link to the site "
 "owner."
 msgstr "已以访客身份发布。如需日后删除，请把公开链接发给站长。"
 
-#: brainrot/views.py:269 brainrot/views.py:295
+#: brainrot/views.py:288 brainrot/views.py:314
 msgid "You cannot manage this entry."
 msgstr "你无权管理这条记录。"
 
-#: brainrot/views.py:298
+#: brainrot/views.py:317
 msgid "Invalid visibility."
 msgstr "公开状态无效。"
 
-#: brainrot/views.py:312
+#: brainrot/views.py:331
 msgid "Recording is not public."
 msgstr "该录像当前不公开。"
 
@@ -900,6 +1003,11 @@ msgstr "我的 67 名人堂"
 #: templates/base.html:109
 msgid "Logout"
 msgstr ""
+
+#~ msgid ""
+#~ "Watch how many 6️⃣7️⃣ moves people made in 20 seconds, share a run, or "
+#~ "challenge its score."
+#~ msgstr "观看其他人在 20 秒内完成了多少次 6️⃣7️⃣ 动作，分享记录，或挑战其分数。"
 
 #~ msgid "I'm ready — record locally"
 #~ msgstr "我准备好了——开始本地录像"

@@ -6,8 +6,8 @@ from .models import HallOfFameEntry
 
 @admin.register(HallOfFameEntry)
 class HallOfFameEntryAdmin(admin.ModelAdmin):
-    list_display = ('submitter', 'score', 'visibility', 'duration_seconds', 'created_at', 'review_video')
-    list_filter = ('visibility', 'created_at')
+    list_display = ('submitter', 'game_mode', 'score', 'visibility', 'duration_seconds', 'created_at', 'review_video')
+    list_filter = ('game_mode', 'visibility', 'created_at')
     search_fields = ('user__username', 'display_name')
     list_editable = ('score', 'visibility')
     readonly_fields = ('user', 'mime_type', 'duration_seconds', 'event_timeline', 'created_at', 'review_video')

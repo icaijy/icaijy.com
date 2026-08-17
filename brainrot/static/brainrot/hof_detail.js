@@ -7,10 +7,15 @@ if (detail) {
   const status = document.getElementById('hof-share-status');
   const url = detail.dataset.entryUrl;
   const score = Number(detail.dataset.score);
+  const isLegClaps = detail.dataset.gameMode === 'leg_claps';
   const blocks = score > 0
     ? `${'🟩'.repeat(Math.min(score, 20))}${score > 20 ? ` +${score - 20}` : ''}`
     : '⬜';
-  const text = `${detail.dataset.username} made ${score} 6️⃣7️⃣ moves in 20 seconds! 🔥\n${blocks}\nSIX SEVEN!\nWatch the run and try to beat it!\n${url}`;
+  const headline = isLegClaps
+    ? `${detail.dataset.username} made ${score} Tung Tung Leg Claps in 20 seconds! 🥒`
+    : `${detail.dataset.username} made ${score} 6️⃣7️⃣ moves in 20 seconds! 🔥`;
+  const experiment = isLegClaps ? 'TUNG TUNG LEG CLAPS · 酸黄瓜舞计数' : 'SIX SEVEN!';
+  const text = `${headline}\n${blocks}\n${experiment}\nWatch the run and try to beat it!\n${url}`;
   shareText.value = text;
 
   async function copyShareMessage() {
@@ -23,7 +28,9 @@ if (detail) {
         if (!document.execCommand('copy')) throw new Error('Copy command was rejected.');
       }
       copyButton.textContent = tr('Copied! 🎉');
-      status.textContent = tr('Full result copied! The 6️⃣7️⃣ evidence is ready for deployment.');
+      status.textContent = isLegClaps
+        ? tr('Full result copied! The knee evidence is ready for deployment.')
+        : tr('Full result copied! The 6️⃣7️⃣ evidence is ready for deployment.');
     } catch (error) {
       shareText.select();
       status.textContent = tr('Automatic copy failed. Select the message and copy it manually.');
@@ -34,7 +41,7 @@ if (detail) {
   shareButton.addEventListener('click', async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: '67 Hall of Fame', text });
+        await navigator.share({ title: isLegClaps ? 'Tung Tung Leg Claps Hall of Fame' : '67 Hall of Fame', text });
         status.textContent = tr('Result launched into the world! 🚀');
         return;
       } catch (error) {
