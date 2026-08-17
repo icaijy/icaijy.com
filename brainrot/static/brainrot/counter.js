@@ -3,7 +3,7 @@ import {
   OVERLAY_GEOMETRY,
   createGestureTracker,
   landmarksAreVisible,
-} from './gesture_engine.js?v=20260817.2';
+} from './gesture_engine.js';
 
 const app = document.getElementById('counter-app');
 if (app) {
@@ -121,8 +121,6 @@ if (app) {
       runtimePromise = (async () => {
         const { FilesetResolver, PoseLandmarker, wasmRoot } = await loadMediaPipe();
         const vision = await FilesetResolver.forVisionTasks(wasmRoot);
-        // Firefox can spend several seconds failing the GPU delegate before
-        // repeating the same initialisation on CPU. Start on CPU there.
         const preferCpu = /Firefox\//.test(navigator.userAgent);
         const options = {
           baseOptions: {
@@ -192,14 +190,14 @@ if (app) {
       resultUnit: modeNode(prefix, 'result-unit'),
       mark: modeNode(prefix, 'placeholder'),
       hudLabel: mode === GAME_MODES.LEG_CLAPS ? 'LEG CLAPS' : '67 COUNT',
-      hudBrand: mode === GAME_MODES.LEG_CLAPS ? 'ICAiJY · TUNG TUNG' : 'ICAiJY · SIX SEVEN',
+      hudBrand: 'icaijy.com',
       downloadSlug: mode === GAME_MODES.LEG_CLAPS ? 'tung-tung-leg-claps' : '67-run',
     };
   }
 
   function armedStatus() {
     return currentMode === GAME_MODES.LEG_CLAPS
-      ? tr('Armed — keep hips, knees and ankles visible')
+      ? tr('Detector ready — step into frame')
       : tr('Armed — step back until shoulders and wrists are visible');
   }
 
@@ -332,9 +330,6 @@ if (app) {
   }
 
   function observeGesture(landmarks, now) {
-    // The detector and timer use separate animation-frame loops. Enforce the
-    // deadline here too so a detector frame cannot sneak in after 20 seconds
-    // but before the timer loop has rendered the finished state.
     if (!running || now >= endTime || !sufficientlyVisible(landmarks)) return;
     if (gestureTracker.observe(landmarks, now)) {
       score += 1;
@@ -368,7 +363,6 @@ if (app) {
             startButton.textContent = READY_LABEL;
             setStatus(tr("Pose detected — click I'm ready, then take your position"), 'ready');
           } else {
-            // Readiness is a user decision; a pose is required to start, not to arm the run.
             startButton.disabled = false;
             startButton.textContent = READY_LABEL;
             setStatus(tr("Detector ready — click I'm ready, then step into frame"), 'ready');
@@ -425,9 +419,6 @@ if (app) {
     const type = preferredRecordingType();
     if (!type) throw new Error('This browser cannot record a compatible WebM/MP4 video.');
 
-    // Firefox can preserve the age of a long-lived camera track in WebM packet
-    // timestamps. A canvas capture creates a fresh recording clock without
-    // requesting the camera again or changing the stream used by MediaPipe.
     recordingCanvas = document.createElement('canvas');
     recordingCanvas.width = video.videoWidth || 640;
     recordingCanvas.height = video.videoHeight || 480;
@@ -437,7 +428,6 @@ if (app) {
       recordingContext = null;
       throw new Error('This browser cannot create a timestamp-safe recording.');
     }
-
     const drawRecordingFrame = () => {
       if (!recordingContext || !recordingCanvas) return;
       recordingContext.drawImage(video, 0, 0, recordingCanvas.width, recordingCanvas.height);
@@ -688,7 +678,7 @@ if (app) {
     recordingDownload.removeAttribute('href');
     recordingDownload.hidden = true;
     recordingReview.hidden = true;
-      if (uploadStatus) uploadStatus.textContent = tr('Recording discarded. Nothing was uploaded.');
+    if (uploadStatus) uploadStatus.textContent = tr('Recording discarded. Nothing was uploaded.');
   }
 
   function resetRun() {
