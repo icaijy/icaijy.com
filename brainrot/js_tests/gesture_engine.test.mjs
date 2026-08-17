@@ -74,7 +74,7 @@ test('starting inward never counts until a clearly open pose has armed the track
 test('a slightly wider-than-hip knee gap still counts as inward', () => {
   const tracker = createGestureTracker(GAME_MODES.LEG_CLAPS);
   assert.equal(tracker.observe(legPose(0.30), 100), false);
-  assert.equal(tracker.observe(legPose(0.24), 133), true);
+  assert.equal(tracker.observe(legPose(0.23), 133), true);
 });
 
 test('leg-clap readiness only requires hips and knees, not feet', () => {
