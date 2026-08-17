@@ -4,40 +4,61 @@
 {% block title %}{% translate "Institute of 61/67 Studies" %}{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260817.2">
-<main class="br-page">
-  <section class="br-hero">
-    <span class="br-kicker">{% translate "ICAiJY INSTITUTE OF NUMERICAL CULTURE" %}</span>
-    <h1>{% translate "61 / 67 Research Division" %}</h1>
-    <p>{% translate "Two controlled experiments. No useful findings are expected." %}</p>
-  </section>
-  <a class="br-hof-banner" href="{% url 'brainrot:hall_of_fame' %}">
+<main class="container py-4 py-md-5">
+  <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4 mb-md-5">
     <div>
-      <span class="br-kicker">{% translate "PUBLIC 20-SECOND VIDEO LEADERBOARD" %}</span>
-      <h2>{% translate "Pose Hall of Fame" %}</h2>
-      <p>{% translate "Watch 67 arm runs or Tung Tung knee runs, share the evidence, or challenge a score." %}</p>
+      <div class="text-secondary small text-uppercase fw-semibold mb-2">{% translate "ICAiJY INSTITUTE OF NUMERICAL CULTURE" %}</div>
+      <h1 class="display-5 fw-bold mb-2">{% translate "61 / 67 Research Division" %}</h1>
+      <p class="lead text-secondary mb-0">Choose a scientifically unnecessary experiment.</p>
     </div>
-    <strong>{% translate "Enter the archive" %} →</strong>
-  </a>
-  <section class="br-game-grid" aria-label="Experiments">
-    <a class="br-game-card br-counter-card" href="{% url 'brainrot:counter' %}">
-      <span class="br-card-number">67</span>
-      <div>
-        <span class="br-kicker">{% translate "EXPERIMENT 01" %}</span>
-        <h2>{% translate "67 Counter" %}</h2>
-        <p>{% translate "Local pose tracking for 67 arms and Tung Tung knees, with one camera and approximately zero dignity." %}</p>
-      </div>
-      <span class="br-card-arrow">{% translate "Begin" %} →</span>
+    <a class="btn btn-outline-dark" href="{% url 'brainrot:hall_of_fame' %}">
+      <i class="fa-solid fa-ranking-star me-1"></i> {% translate "Pose Hall of Fame" %}
     </a>
-    <a class="br-game-card br-typing-card" href="{% url 'brainrot:typing_test' %}">
-      <span class="br-card-number">61</span>
-      <div>
-        <span class="br-kicker">{% translate "EXPERIMENT 02" %}</span>
-        <h2>{% translate "61 / 67 Typing Test" %}</h2>
-        <p>{% translate "Modern typing science, stripped of every unnecessary character." %}</p>
-      </div>
-      <span class="br-card-arrow">{% translate "Type" %} →</span>
-    </a>
-  </section>
+  </div>
+
+  <div class="row g-3 g-lg-4">
+    <div class="col-12 col-md-6 col-xl-4">
+      <a class="card h-100 text-decoration-none text-body shadow-sm border-primary" href="{% url 'brainrot:counter' %}?mode=six_seven">
+        <div class="card-body p-4 d-flex flex-column">
+          <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
+            <span class="badge text-bg-primary">20 s · camera</span>
+            <span class="display-6 fw-bold text-primary">67</span>
+          </div>
+          <h2 class="h3 fw-bold">{% translate "67 Counter" %}</h2>
+          <p class="text-secondary flex-grow-1 mb-4">{% translate "Move your arms up and down in the 6–7 pattern. Make as many counted moves as you can in 20 seconds." %}</p>
+          <span class="fw-semibold text-primary">{% translate "Begin" %} →</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4">
+      <a class="card h-100 text-decoration-none text-body shadow-sm border-success" href="{% url 'brainrot:counter' %}?mode=leg_claps">
+        <div class="card-body p-4 d-flex flex-column">
+          <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
+            <span class="badge text-bg-success">20 s · camera</span>
+            <span class="display-6 fw-bold text-success">TT</span>
+          </div>
+          <h2 class="h3 fw-bold mb-1">{% translate "Tung Tung Leg Claps" %}</h2>
+          <div class="small text-secondary mb-3">酸黄瓜舞计数</div>
+          <p class="text-secondary flex-grow-1 mb-4">{% translate "Count each time Tung Tung's knees swing inward from a clearly open position. The knees must open again before another clap." %}</p>
+          <span class="fw-semibold text-success">{% translate "Begin" %} →</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4">
+      <a class="card h-100 text-decoration-none text-body shadow-sm border-secondary" href="{% url 'brainrot:typing_test' %}">
+        <div class="card-body p-4 d-flex flex-column">
+          <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
+            <span class="badge text-bg-secondary">keyboard</span>
+            <span class="display-6 fw-bold text-secondary">61</span>
+          </div>
+          <h2 class="h3 fw-bold">{% translate "61 / 67 Typing Test" %}</h2>
+          <p class="text-secondary flex-grow-1 mb-4">{% translate "Modern typing science, stripped of every unnecessary character." %}</p>
+          <span class="fw-semibold text-secondary">{% translate "Type" %} →</span>
+        </div>
+      </a>
+    </div>
+  </div>
 </main>
 {% endblock %}
