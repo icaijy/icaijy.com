@@ -250,17 +250,15 @@ if (app) {
         ? `I made ${score} Tung Tung Leg Claps in 20 seconds against ${rivalName}'s ${rivalFinalScore}.`
         : `I made ${score} 6️⃣7️⃣ moves in 20 seconds against ${rivalName}'s ${rivalFinalScore}.`
       : isLegClaps
-        ? `I made ${score} Tung Tung Leg Claps in 20 seconds. The knees have submitted their findings. 🥒`
-        : score === 67
-          ? 'I made exactly 67 6️⃣7️⃣ moves in 20 seconds. Peer review is complete. 🧪'
-          : `I made ${score} 6️⃣7️⃣ moves in 20 seconds.`;
+        ? `I made ${score} Tung Tung Leg Claps in 20 seconds.`
+        : `I made ${score} 6️⃣7️⃣ moves in 20 seconds.`;
     const blocks = score > 0
       ? `${'🟩'.repeat(Math.min(score, 67))}${score > 67 ? ` +${score - 67}` : ''}`
       : '⬜';
     const pageUrl = rivalName ? new URL(window.location.href) : new URL('/67/counter/', window.location.origin);
     pageUrl.searchParams.set('mode', currentMode);
-    const experiment = isLegClaps ? 'TUNG TUNG LEG CLAPS · 酸黄瓜舞计数' : 'SIX SEVEN';
-    return `${headline}\n${blocks}\n${experiment}\nWatch the run or try to beat it.\n${pageUrl.href}`;
+    const gameName = isLegClaps ? 'TUNG TUNG LEG CLAPS' : '67 COUNTER';
+    return `${headline}\n${blocks}\n${gameName}\n${pageUrl.href}`;
   }
 
   async function copyShareResult() {
@@ -274,7 +272,7 @@ if (app) {
         if (!document.execCommand('copy')) throw new Error('Copy command was rejected.');
       }
       copyShareButton.textContent = tr('Copied! 🎉');
-      copyShareStatus.textContent = tr('Result copied. Scientific distribution may begin.');
+      copyShareStatus.textContent = tr('Result copied.');
     } catch (error) {
       copyShareStatus.textContent = tr('Automatic copy failed. Select the text and copy it manually.');
     }
@@ -330,7 +328,7 @@ if (app) {
   }
 
   function observeGesture(landmarks, now) {
-    if (!running || now >= endTime || !sufficientlyVisible(landmarks)) return;
+    if (!running || now >= endTime) return;
     if (gestureTracker.observe(landmarks, now)) {
       score += 1;
       scoreEl.textContent = score;
@@ -620,7 +618,7 @@ if (app) {
     if (rivalVideo && Math.abs(rivalVideo.currentTime - RECORDING_LEAD_SECONDS) > 0.35) {
       rivalVideo.currentTime = RECORDING_LEAD_SECONDS;
     }
-    setStatus(tr('Experiment in progress'), 'ready');
+    setStatus(tr('Run in progress'), 'ready');
     gameLoop = requestAnimationFrame(updateGameClock);
   }
 
@@ -638,19 +636,19 @@ if (app) {
     resultScore.textContent = score;
     resultCopy.textContent = rivalName
       ? score > rivalFinalScore
-        ? `You defeated ${rivalName} by ${score - rivalFinalScore}. The archive has been destabilised.`
+        ? `You beat ${rivalName} by ${score - rivalFinalScore}.`
         : score === rivalFinalScore
-          ? `A draw with ${rivalName}. Statistically annoying.`
-          : `${rivalName} remains ahead by ${rivalFinalScore - score}. Replication is encouraged.`
+          ? `You tied ${rivalName}.`
+          : `${rivalName} is ahead by ${rivalFinalScore - score}.`
       : currentMode === GAME_MODES.LEG_CLAPS
         ? score > 0
-          ? tr('The knees opened, closed and produced a statistically usable result.')
-          : tr('No inward knee events were observed. The pickle remains motionless.')
+          ? `Counted ${score} leg claps.`
+          : tr('No leg claps were counted.')
         : score === 67
-          ? tr('Exactly 67. There will be no further questions.')
+          ? tr('Exactly 67.')
           : score > 67
-            ? tr('The 67 barrier has been disturbed.')
-            : tr('The Institute recommends more arm-based research.');
+            ? `You passed 67 with ${score} moves.`
+            : `Counted ${score} moves.`;
     shareText.value = shareableResult();
     copyShareStatus.textContent = '';
     resultCard.hidden = false;
@@ -732,7 +730,7 @@ if (app) {
     if (turnstileResponse) form.append('cf-turnstile-response', turnstileResponse);
 
     submitButton.disabled = true;
-    uploadStatus.textContent = tr('Uploading public evidence after the timer has safely stopped…');
+    uploadStatus.textContent = tr('Uploading video…');
     try {
       const response = await fetch(app.dataset.submitUrl, {
         method: 'POST',
