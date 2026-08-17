@@ -1,24 +1,26 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
 {% block title %}My 67 Hall of Fame{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.7">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260817.1">
 <main class="br-page hall-page">
   <header class="br-toolbar">
-    <a href="{% url 'brainrot:hall_of_fame' %}">← Public Hall of Fame</a>
-    <a href="{% url 'brainrot:counter' %}">New run</a>
+    <a href="{% url 'brainrot:hall_of_fame' %}">← {% translate "Public Hall of Fame" %}</a>
+    <a href="{% url 'brainrot:counter' %}">{% translate "New run" %}</a>
   </header>
 
   <section class="hall-heading">
-    <span class="br-kicker">PERSONAL ARM-ACTIVITY RECORDS</span>
-    <h1>My HOF</h1>
-    <p>Runs submitted while logged in belong to you. Deleting one removes both its listing and private video file.</p>
+    <span class="br-kicker">{% if superuser_mode %}{% translate "SUPERUSER HALL OF FAME CONTROL" %}{% else %}{% translate "PERSONAL ARM-ACTIVITY RECORDS" %}{% endif %}</span>
+    <h1>{% if superuser_mode %}{% translate "Manage HOF" %}{% else %}{% translate "My HOF" %}{% endif %}</h1>
+    <p>{% if superuser_mode %}{% translate "You can change visibility or delete any registered or guest run." %}{% else %}{% translate "Your runs can be public or private. Deleting one removes both its listing and video file." %}{% endif %}</p>
   </section>
 
   {% if request.GET.deleted %}
-  <p class="hof-delete-notice" role="status">Entry and recording deleted. The evidence has left the building.</p>
+  <p class="hof-delete-notice" role="status">{% translate "Entry and recording deleted. The evidence has left the building." %}</p>
+  {% elif request.GET.updated %}
+  <p class="hof-delete-notice" role="status">{% translate "Visibility updated." %}</p>
   {% endif %}
 
   <section class="hall-list">
@@ -26,27 +28,21 @@
     <article class="hall-entry my-hall-entry">
       <span class="hall-rank">#{{ entry.id }}</span>
       <div class="hall-person">
-        <strong>{{ entry.created_at|date:'j M Y · H:i' }}</strong>
-        <span>{{ entry.get_state_display }} · {{ entry.duration_seconds|floatformat:2 }} seconds</span>
+        <strong>{% if superuser_mode %}{{ entry.public_name }} · {% endif %}{{ entry.created_at|date:'j M Y · H:i' }}</strong>
+        <span>{{ entry.get_visibility_display }} · {% blocktranslate with duration=entry.duration_seconds|floatformat:2 %}{{ duration }} seconds{% endblocktranslate %}</span>
       </div>
       <strong class="hall-score">{{ entry.score }}</strong>
       <div class="hall-actions">
-        {% if entry.state == 'approved' %}
-        <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">View</a>
-        {% endif %}
-        <a href="{% url 'brainrot:hall_of_fame_video' entry.id %}?download=1">Download</a>
-        <form method="post" action="{% url 'brainrot:delete_hall_of_fame_entry' entry.id %}"
-              onsubmit="return confirm('Delete this Hall of Fame entry and its video permanently?');">
-          {% csrf_token %}
-          <button class="hall-delete-link" type="submit">Delete</button>
-        </form>
+        <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "View" %}</a>
+        <a href="{% url 'brainrot:hall_of_fame_video' entry.id %}?download=1">{% translate "Download" %}</a>
       </div>
+      {% include 'brainrot/_entry_controls.html' %}
     </article>
     {% empty %}
     <div class="empty-hall">
-      <strong>No owned specimens yet.</strong>
-      <p>Anonymous submissions cannot be retroactively attached to this account.</p>
-      <a href="{% url 'brainrot:counter' %}" class="br-primary br-button-link">Create an unnecessarily documented run</a>
+      <strong>{% translate "No owned specimens yet." %}</strong>
+      <p>{% translate "Anonymous submissions cannot be retroactively attached to this account." %}</p>
+      <a href="{% url 'brainrot:counter' %}" class="br-primary br-button-link">{% translate "Create an unnecessarily documented run" %}</a>
     </div>
     {% endfor %}
   </section>

@@ -1,6 +1,7 @@
 (() => {
   const app = document.getElementById('typing-app');
   if (!app) return;
+  const tr = (message) => typeof gettext === 'function' ? gettext(message) : message;
 
   const viewport = document.getElementById('typing-viewport');
   const stream = document.getElementById('typing-stream');
@@ -103,12 +104,12 @@
         shareText.setSelectionRange(0, shareText.value.length);
         if (!document.execCommand('copy')) throw new Error('Copy command was rejected.');
       }
-      copyShareButton.textContent = 'Copied! 🎉';
-      copyShareStatus.textContent = 'Result copied. No leaderboard was harmed.';
+      copyShareButton.textContent = tr('Copied! 🎉');
+      copyShareStatus.textContent = tr('Result copied. No leaderboard was harmed.');
     } catch (error) {
-      copyShareStatus.textContent = 'Automatic copy failed. Select the text and copy it manually.';
+      copyShareStatus.textContent = tr('Automatic copy failed. Select the text and copy it manually.');
     }
-    window.setTimeout(() => { copyShareButton.textContent = 'Copy to clipboard'; }, 1500);
+    window.setTimeout(() => { copyShareButton.textContent = tr('Copy to clipboard'); }, 1500);
   }
 
   function finish() {
@@ -134,11 +135,11 @@
     shareText.value = shareableResult(current, completedGroups, count61, count67);
     copyShareStatus.textContent = '';
 
-    let verdict = 'Statistically significant brainrot.';
-    if (current.wpm === 67) verdict = 'Exactly 67 WPM. The prophecy has cleared peer review.';
-    else if (current.wpm === 61) verdict = 'Exactly 61 WPM. Close enough to be culturally important.';
-    else if (current.accuracy === 67) verdict = '67% accuracy. Incorrect in precisely the correct way.';
-    else if (completedGroups >= 67) verdict = '67 groups survived contact with the keyboard.';
+    let verdict = tr('Statistically significant brainrot.');
+    if (current.wpm === 67) verdict = tr('Exactly 67 WPM. The prophecy has cleared peer review.');
+    else if (current.wpm === 61) verdict = tr('Exactly 61 WPM. Close enough to be culturally important.');
+    else if (current.accuracy === 67) verdict = tr('67% accuracy. Incorrect in precisely the correct way.');
+    else if (completedGroups >= 67) verdict = tr('67 groups survived contact with the keyboard.');
     document.getElementById('typing-verdict').textContent = verdict;
     result.hidden = false;
   }

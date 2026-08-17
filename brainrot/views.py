@@ -16,6 +16,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import gettext as _
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
@@ -58,28 +60,36 @@ def typing_test(request):
 
 def hall_of_fame(request):
     entries = HallOfFameEntry.objects.filter(
-        state=HallOfFameEntry.State.APPROVED,
+        visibility=HallOfFameEntry.Visibility.PUBLIC,
     ).select_related('user')[:67]
     return render(request, 'brainrot/hall_of_fame.html', {'entries': entries})
 
 
 @login_required
 def my_hall_of_fame(request):
-    entries = HallOfFameEntry.objects.filter(user=request.user)[:67]
-    return render(request, 'brainrot/my_hall_of_fame.html', {'entries': entries})
+    entries = HallOfFameEntry.objects.select_related('user')
+    if not request.user.is_superuser:
+        entries = entries.filter(user=request.user)
+    return render(request, 'brainrot/my_hall_of_fame.html', {
+        'entries': entries[:67],
+        'superuser_mode': request.user.is_superuser,
+    })
 
 
 def _public_hall_entry(entry_id):
     return get_object_or_404(
         HallOfFameEntry.objects.select_related('user'),
         pk=entry_id,
-        state=HallOfFameEntry.State.APPROVED,
+        visibility=HallOfFameEntry.Visibility.PUBLIC,
     )
 
 
 def hall_of_fame_detail(request, entry_id):
+    entry = get_object_or_404(HallOfFameEntry.objects.select_related('user'), pk=entry_id)
+    if entry.visibility != HallOfFameEntry.Visibility.PUBLIC and not _may_manage_entry(request.user, entry):
+        return JsonResponse({'error': _('This Hall of Fame entry is private.')}, status=404)
     return render(request, 'brainrot/hall_of_fame_detail.html', {
-        'entry': _public_hall_entry(entry_id),
+        'entry': entry,
     })
 
 
@@ -192,6 +202,11 @@ def submit_hall_of_fame(request):
     if not _turnstile_is_valid(request):
         return JsonResponse({'error': 'Human verification failed. Please try again.'}, status=400)
 
+    if request.POST.get('publication_consent') != 'yes':
+        return JsonResponse({
+            'error': _('You must confirm that this video will be published for anyone to watch.'),
+        }, status=400)
+
     try:
         score = int(request.POST.get('score', ''))
     except (TypeError, ValueError):
@@ -225,8 +240,7 @@ def submit_hall_of_fame(request):
             mime_type=inspected.mime_type,
             duration_seconds=inspected.duration_seconds,
             event_timeline=event_timeline,
-            state=HallOfFameEntry.State.APPROVED,
-            reviewed_at=timezone.now(),
+            visibility=HallOfFameEntry.Visibility.PUBLIC,
         )
         entry._validated_extension = inspected.extension
         entry.video = upload
@@ -238,9 +252,9 @@ def submit_hall_of_fame(request):
     return JsonResponse({
         'ok': True,
         'message': (
-            'Published to the Hall of Fame. You can manage it from My HOF.'
+            _('Published to the Hall of Fame. You can manage it from My HOF.')
             if owner
-            else 'Published as a guest. To remove it later, send the public link to the site owner.'
+            else _('Published as a guest. To remove it later, send the public link to the site owner.')
         ),
         'hall_of_fame_url': reverse('brainrot:hall_of_fame'),
         'entry_url': entry_url,
@@ -250,20 +264,52 @@ def submit_hall_of_fame(request):
 @require_POST
 @login_required
 def delete_hall_of_fame_entry(request, entry_id):
-    entry = get_object_or_404(HallOfFameEntry, pk=entry_id, user=request.user)
+    entry = get_object_or_404(HallOfFameEntry, pk=entry_id)
+    if not _may_manage_entry(request.user, entry):
+        return JsonResponse({'error': _('You cannot manage this entry.')}, status=404)
     entry.delete()
-    return redirect(f"{reverse('brainrot:my_hall_of_fame')}?deleted=1")
+    return redirect(_management_redirect(request, deleted=True))
+
+
+def _may_manage_entry(user, entry):
+    return user.is_authenticated and (user.is_superuser or entry.user_id == user.id)
+
+
+def _management_redirect(request, deleted=False):
+    requested = request.POST.get('next', '')
+    if requested and url_has_allowed_host_and_scheme(
+        requested,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return requested
+    suffix = '?deleted=1' if deleted else '?updated=1'
+    return f"{reverse('brainrot:my_hall_of_fame')}{suffix}"
+
+
+@require_POST
+@login_required
+def set_hall_of_fame_visibility(request, entry_id):
+    entry = get_object_or_404(HallOfFameEntry, pk=entry_id)
+    if not _may_manage_entry(request.user, entry):
+        return JsonResponse({'error': _('You cannot manage this entry.')}, status=404)
+    visibility = request.POST.get('visibility')
+    if visibility not in HallOfFameEntry.Visibility.values:
+        return JsonResponse({'error': _('Invalid visibility.')}, status=400)
+    entry.visibility = visibility
+    entry.save(update_fields=['visibility'])
+    return redirect(_management_redirect(request))
 
 
 def hall_of_fame_video(request, entry_id):
     entry = get_object_or_404(HallOfFameEntry.objects.select_related('user'), pk=entry_id)
     may_view = (
-        entry.state == HallOfFameEntry.State.APPROVED
+        entry.visibility == HallOfFameEntry.Visibility.PUBLIC
         or entry.user_id == request.user.id
-        or request.user.is_staff
+        or request.user.is_superuser
     )
     if not may_view:
-        return JsonResponse({'error': 'Recording is not public.'}, status=404)
+        return JsonResponse({'error': _('Recording is not public.')}, status=404)
 
     response = FileResponse(entry.video.open('rb'), content_type=entry.mime_type)
     response['Content-Length'] = entry.video.size

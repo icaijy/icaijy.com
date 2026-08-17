@@ -1,5 +1,9 @@
 const app = document.getElementById('counter-app');
 if (app) {
+  const tr = (message) => typeof gettext === 'function' ? gettext(message) : message;
+  const fmt = (message, values) => typeof interpolate === 'function'
+    ? interpolate(tr(message), values, true)
+    : Object.entries(values).reduce((text, [key, value]) => text.replaceAll(`%(${key})s`, value), message);
   const video = document.getElementById('camera');
   const canvas = document.getElementById('pose-overlay');
   const context = canvas.getContext('2d');
@@ -26,6 +30,9 @@ if (app) {
   const displayNameInput = document.getElementById('hof-display-name');
   const discardButton = document.getElementById('discard-recording');
   const uploadStatus = document.getElementById('upload-status');
+  const publicationModal = document.getElementById('publication-modal');
+  const publicationConsent = document.getElementById('publication-consent');
+  const confirmPublication = document.getElementById('confirm-publication');
   const rivalVideo = document.getElementById('rival-video');
   const rivalScoreEl = document.getElementById('rival-score');
   const rivalTimelineNode = document.getElementById('rival-event-timeline');
@@ -34,7 +41,7 @@ if (app) {
   const COUNTDOWN_STEP_MS = 1000;
   const GO_DISPLAY_MS = 250;
   const RECORDING_LEAD_SECONDS = 3 + GO_DISPLAY_MS / 1000;
-  const READY_LABEL = "I'm ready — record locally";
+  const READY_LABEL = tr("I'm ready — record locally");
   const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
   const rivalTimeline = rivalTimelineNode ? JSON.parse(rivalTimelineNode.textContent) : [];
   const rivalName = app.dataset.rivalName || '';
@@ -127,11 +134,11 @@ if (app) {
   }
 
   function preloadPoseRuntime() {
-    setStatus('Preloading pose model — camera remains off', 'busy');
+    setStatus(tr('Preloading pose model — camera remains off'), 'busy');
     initialisePoseRuntime().then(() => {
-      if (!stream) setStatus('Pose model ready — camera remains off', 'ready');
+      if (!stream) setStatus(tr('Pose model ready — camera remains off'), 'ready');
     }).catch((error) => {
-      if (!stream) setStatus('Pose model preload paused — camera remains off');
+      if (!stream) setStatus(tr('Pose model preload paused — camera remains off'));
       console.warn('Pose runtime preload failed; the camera button will retry it.', error);
     });
   }
@@ -177,13 +184,13 @@ if (app) {
         shareText.setSelectionRange(0, shareText.value.length);
         if (!document.execCommand('copy')) throw new Error('Copy command was rejected.');
       }
-      copyShareButton.textContent = 'Copied! 🎉';
-      copyShareStatus.textContent = 'Result copied. Scientific distribution may begin.';
+      copyShareButton.textContent = tr('Copied! 🎉');
+      copyShareStatus.textContent = tr('Result copied. Scientific distribution may begin.');
     } catch (error) {
-      copyShareStatus.textContent = 'Automatic copy failed. Select the text and copy it manually.';
+      copyShareStatus.textContent = tr('Automatic copy failed. Select the text and copy it manually.');
     }
     window.setTimeout(() => {
-      copyShareButton.textContent = 'Copy to clipboard';
+      copyShareButton.textContent = tr('Copy to clipboard');
     }, 1500);
   }
 
@@ -283,23 +290,23 @@ if (app) {
             if (poseReady) {
               beginRun();
             } else {
-              setStatus('Armed — step back until shoulders, elbows and wrists are visible', 'busy');
-              startButton.textContent = 'Waiting for your pose…';
+              setStatus(tr('Armed — step back until shoulders and wrists are visible'), 'busy');
+              startButton.textContent = tr('Waiting for your pose…');
             }
           } else if (poseReady) {
             startButton.disabled = false;
             startButton.textContent = READY_LABEL;
-            setStatus('Pose detected — click I\'m ready, then take your position', 'ready');
+            setStatus(tr("Pose detected — click I'm ready, then take your position"), 'ready');
           } else {
             // Readiness is a user decision; a pose is required to start, not to arm the run.
             startButton.disabled = false;
             startButton.textContent = READY_LABEL;
-            setStatus('Detector ready — click I\'m ready, then step into frame', 'ready');
+            setStatus(tr("Detector ready — click I'm ready, then step into frame"), 'ready');
           }
         }
         observeGesture(landmarks, performance.now());
       } catch (error) {
-        showError(`Pose detector paused: ${error.message}`);
+        showError(`${tr('Pose detector paused:')} ${error.message}`);
       }
     }
     detectorLoop = requestAnimationFrame(detectFrame);
@@ -307,7 +314,7 @@ if (app) {
 
   async function initialiseDetector() {
     enableButton.disabled = true;
-    setStatus('Requesting camera permission…', 'busy');
+    setStatus(tr('Requesting camera permission…'), 'busy');
     showError('');
     try {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -320,8 +327,8 @@ if (app) {
       enableButton.hidden = true;
       startButton.hidden = false;
       startButton.disabled = true;
-      startButton.textContent = landmarker ? READY_LABEL : 'Finishing detector setup…';
-      setStatus(landmarker ? 'Pose model ready' : 'Finishing pose model preload…', 'busy');
+      startButton.textContent = landmarker ? READY_LABEL : tr('Finishing detector setup…');
+      setStatus(landmarker ? tr('Pose model ready') : tr('Finishing pose model preload…'), 'busy');
       await initialisePoseRuntime();
       startButton.disabled = false;
       startButton.textContent = READY_LABEL;
@@ -335,11 +342,11 @@ if (app) {
         stream = null;
         video.srcObject = null;
         placeholder.hidden = false;
-        setStatus('Camera permission worked, but the pose runtime did not load');
+        setStatus(tr('Camera permission worked, but the pose runtime did not load'));
         showError(error.message || 'The pose runtime was blocked by this network.');
       } else {
-        setStatus('Camera unavailable');
-        showError('Could not start the camera. Use HTTPS, allow camera access, and try a current browser.');
+        setStatus(tr('Camera unavailable'));
+        showError(tr('Could not start the camera. Use HTTPS, allow camera access, and try a current browser.'));
       }
     }
   }
@@ -364,6 +371,7 @@ if (app) {
     const drawRecordingFrame = () => {
       if (!recordingContext || !recordingCanvas) return;
       recordingContext.drawImage(video, 0, 0, recordingCanvas.width, recordingCanvas.height);
+      drawRecordingHud();
       recordingFrame = requestAnimationFrame(drawRecordingFrame);
     };
 
@@ -383,6 +391,51 @@ if (app) {
       stopRecordingPipeline();
       throw error;
     }
+  }
+
+  function drawRecordingHud() {
+    const width = recordingCanvas.width;
+    const height = recordingCanvas.height;
+    const padding = Math.max(14, width * 0.026);
+    const scoreSize = Math.max(34, width * 0.085);
+    const labelSize = Math.max(12, width * 0.024);
+    const time = running ? Math.max(0, (endTime - performance.now()) / 1000).toFixed(1) : '20.0';
+    recordingContext.save();
+    recordingContext.fillStyle = 'rgba(15, 23, 42, .82)';
+    recordingContext.fillRect(padding, padding, scoreSize * 2.25, scoreSize * 1.42);
+    recordingContext.fillStyle = '#d8ff62';
+    recordingContext.font = `900 ${scoreSize}px Inter, Arial, sans-serif`;
+    recordingContext.textBaseline = 'top';
+    recordingContext.fillText(String(score), padding * 1.55, padding * 1.15);
+    recordingContext.fillStyle = '#ffffff';
+    recordingContext.font = `800 ${labelSize}px Inter, Arial, sans-serif`;
+    recordingContext.fillText('67 COUNT', padding * 1.55, padding * 1.15 + scoreSize);
+
+    recordingContext.textAlign = 'right';
+    recordingContext.fillStyle = 'rgba(15, 23, 42, .76)';
+    recordingContext.fillRect(width - padding - scoreSize * 1.75, padding, scoreSize * 1.75, scoreSize * .72);
+    recordingContext.fillStyle = '#ffffff';
+    recordingContext.font = `850 ${scoreSize * .43}px ui-monospace, monospace`;
+    recordingContext.fillText(`${time}s`, width - padding * 1.45, padding * 1.22);
+
+    const countdown = countdownEl.textContent.trim();
+    if (countdownActive && countdown) {
+      recordingContext.textAlign = 'center';
+      recordingContext.textBaseline = 'middle';
+      recordingContext.fillStyle = 'rgba(15, 23, 42, .45)';
+      recordingContext.fillRect(0, height * .31, width, height * .38);
+      recordingContext.fillStyle = '#ffffff';
+      recordingContext.font = `950 ${Math.max(80, height * .3)}px Inter, Arial, sans-serif`;
+      recordingContext.fillText(countdown, width / 2, height / 2);
+    }
+    recordingContext.textAlign = 'left';
+    recordingContext.textBaseline = 'alphabetic';
+    recordingContext.fillStyle = 'rgba(15, 23, 42, .72)';
+    recordingContext.fillRect(padding, height - padding - labelSize * 2.1, labelSize * 9.2, labelSize * 2.1);
+    recordingContext.fillStyle = '#ffffff';
+    recordingContext.font = `800 ${labelSize}px Inter, Arial, sans-serif`;
+    recordingContext.fillText('ICAiJY · SIX SEVEN', padding * 1.45, height - padding - labelSize * .55);
+    recordingContext.restore();
   }
 
   function stopRecordingPipeline() {
@@ -441,7 +494,7 @@ if (app) {
     resultCard.hidden = true;
     resetButton.hidden = true;
     startButton.disabled = true;
-    startButton.textContent = 'Waiting for your pose…';
+    startButton.textContent = tr('Waiting for your pose…');
     score = 0;
     eventTimeline = [];
     runStartedAt = 0;
@@ -456,21 +509,21 @@ if (app) {
     scoreEl.textContent = '0';
     timeEl.textContent = GAME_SECONDS.toFixed(1);
     armed = true;
-    setStatus('Armed — step back until shoulders, elbows and wrists are visible', 'busy');
+    setStatus(tr('Armed — step back until shoulders and wrists are visible'), 'busy');
     if (poseReady) beginRun();
   }
 
   async function beginRun() {
     if (!armed || !poseReady || running || countdownActive) return;
     if (!rivalReady) {
-      setStatus('Opponent evidence is still buffering', 'busy');
-      startButton.textContent = 'Waiting for opponent video…';
+      setStatus(tr('Opponent evidence is still buffering'), 'busy');
+      startButton.textContent = tr('Waiting for opponent video…');
       return;
     }
     armed = false;
     countdownActive = true;
     startButton.hidden = true;
-    setStatus('Pose locked — countdown commencing', 'ready');
+    setStatus(tr('Pose locked — countdown commencing'), 'ready');
 
     try {
       if (rivalVideo) {
@@ -506,7 +559,7 @@ if (app) {
     if (rivalVideo && Math.abs(rivalVideo.currentTime - RECORDING_LEAD_SECONDS) > 0.35) {
       rivalVideo.currentTime = RECORDING_LEAD_SECONDS;
     }
-    setStatus('Experiment in progress', 'ready');
+    setStatus(tr('Experiment in progress'), 'ready');
     gameLoop = requestAnimationFrame(updateGameClock);
   }
 
@@ -515,7 +568,7 @@ if (app) {
     running = false;
     cancelAnimationFrame(gameLoop);
     timeEl.textContent = '0.0';
-    setStatus('Run complete — detector remains local', 'ready');
+    setStatus(tr('Run complete — detector remains local'), 'ready');
     rivalVideo?.pause();
     if (rivalScoreEl) rivalScoreEl.textContent = rivalFinalScore;
     const blob = await stopRecording();
@@ -528,10 +581,10 @@ if (app) {
           ? `A draw with ${rivalName}. Statistically annoying.`
           : `${rivalName} remains ahead by ${rivalFinalScore - score}. Replication is encouraged.`
       : score === 67
-        ? 'Exactly 67. There will be no further questions.'
+        ? tr('Exactly 67. There will be no further questions.')
         : score > 67
-          ? 'The 67 barrier has been disturbed.'
-          : 'The Institute recommends more arm-based research.';
+          ? tr('The 67 barrier has been disturbed.')
+          : tr('The Institute recommends more arm-based research.');
     shareText.value = shareableResult();
     copyShareStatus.textContent = '';
     resultCard.hidden = false;
@@ -541,7 +594,7 @@ if (app) {
       recordingUrl = URL.createObjectURL(blob);
       recordingPreview.src = recordingUrl;
       recordingDownload.href = recordingUrl;
-      recordingDownload.download = blob.type === 'video/mp4' ? '67-run.mp4' : '67-run.webm';
+      recordingDownload.download = blob.type === 'video/mp4' ? '67-run-counted.mp4' : '67-run-counted.webm';
       recordingDownload.hidden = false;
     }
     startButton.hidden = true;
@@ -558,7 +611,7 @@ if (app) {
     recordingDownload.removeAttribute('href');
     recordingDownload.hidden = true;
     recordingReview.hidden = true;
-    if (uploadStatus) uploadStatus.textContent = 'Recording discarded. Nothing was uploaded.';
+      if (uploadStatus) uploadStatus.textContent = tr('Recording discarded. Nothing was uploaded.');
   }
 
   function resetRun() {
@@ -582,12 +635,16 @@ if (app) {
     resetButton.hidden = true;
     startButton.hidden = false;
     startButton.disabled = !landmarker;
-    startButton.textContent = landmarker ? READY_LABEL : 'Detector is still loading…';
+    startButton.textContent = landmarker ? READY_LABEL : tr('Detector is still loading…');
     showError('');
   }
 
   async function submitRecording() {
     if (!recordingBlob || !submitButton) return;
+    if (!publicationConsent?.checked) {
+      openPublicationModal();
+      return;
+    }
     const maxBytes = Number(app.dataset.maxUploadMb) * 1024 * 1024;
     if (recordingBlob.size > maxBytes) {
       uploadStatus.textContent = `Recording exceeded the ${app.dataset.maxUploadMb} MB upload limit.`;
@@ -599,12 +656,13 @@ if (app) {
     const form = new FormData();
     form.append('score', String(score));
     form.append('event_timeline', JSON.stringify(eventTimeline));
+    form.append('publication_consent', 'yes');
     form.append('video', recordingBlob, `67-run.${extension}`);
     if (displayNameInput) form.append('display_name', displayNameInput.value);
     if (turnstileResponse) form.append('cf-turnstile-response', turnstileResponse);
 
     submitButton.disabled = true;
-    uploadStatus.textContent = 'Uploading evidence after the timer has safely stopped…';
+    uploadStatus.textContent = tr('Uploading public evidence after the timer has safely stopped…');
     try {
       const response = await fetch(app.dataset.submitUrl, {
         method: 'POST',
@@ -638,11 +696,39 @@ if (app) {
     }
   }
 
+  function openPublicationModal() {
+    if (!publicationModal) return;
+    publicationModal.hidden = false;
+    document.body.classList.add('publication-modal-open');
+    confirmPublication.disabled = !publicationConsent.checked;
+    publicationConsent.focus();
+  }
+
+  function closePublicationModal() {
+    if (!publicationModal) return;
+    publicationModal.hidden = true;
+    document.body.classList.remove('publication-modal-open');
+  }
+
   preloadPoseRuntime();
   enableButton.addEventListener('click', initialiseDetector);
   startButton.addEventListener('click', armRun);
   resetButton.addEventListener('click', resetRun);
-  submitButton?.addEventListener('click', submitRecording);
+  submitButton?.addEventListener('click', openPublicationModal);
+  publicationConsent?.addEventListener('change', () => {
+    confirmPublication.disabled = !publicationConsent.checked;
+  });
+  confirmPublication?.addEventListener('click', () => {
+    if (!publicationConsent.checked) return;
+    closePublicationModal();
+    submitRecording();
+  });
+  document.querySelectorAll('[data-close-publication-modal], #cancel-publication').forEach((button) => {
+    button.addEventListener('click', closePublicationModal);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && publicationModal && !publicationModal.hidden) closePublicationModal();
+  });
   discardButton?.addEventListener('click', discardRecording);
   copyShareButton?.addEventListener('click', copyShareResult);
   if (rivalVideo) {

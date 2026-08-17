@@ -1,25 +1,26 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
 {% block title %}{{ entry.public_name }} — 67 Hall of Fame{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.9">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260817.1">
 <main class="br-page hall-detail-page" id="hof-detail"
       data-entry-url="{{ request.build_absolute_uri }}"
       data-username="{{ entry.public_name }}"
       data-score="{{ entry.score }}">
   <header class="br-toolbar">
-    <a href="{% url 'brainrot:hall_of_fame' %}">← Hall of Fame</a>
-    <a href="{% url 'brainrot:index' %}">All experiments</a>
+    <a href="{% url 'brainrot:hall_of_fame' %}">← {% translate "Hall of Fame" %}</a>
+    <a href="{% url 'brainrot:index' %}">{% translate "All experiments" %}</a>
   </header>
 
   <section class="hall-detail-heading">
-    <span class="br-kicker">ARCHIVED HUMAN PERFORMANCE SPECIMEN #{{ entry.id }}</span>
+    <span class="br-kicker">{% blocktranslate with id=entry.id %}ARCHIVED HUMAN PERFORMANCE SPECIMEN #{{ id }}{% endblocktranslate %}</span>
     <h1>{{ entry.score }}</h1>
     <div>
-      <strong>{{ entry.public_name }} made {{ entry.score }} 6️⃣7️⃣ moves in 20 seconds.</strong>
-      <span>{{ entry.created_at|date:'j M Y · H:i' }} · {{ entry.duration_seconds|floatformat:2 }} seconds</span>
+      <strong>{% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds.{% endblocktranslate %}</strong>
+      <span>{{ entry.created_at|date:'j M Y · H:i' }} · {% blocktranslate with duration=entry.duration_seconds|floatformat:2 %}{{ duration }} seconds{% endblocktranslate %}</span>
+      <span class="visibility-badge visibility-{{ entry.visibility }}">{{ entry.get_visibility_display }}</span>
     </div>
   </section>
 
@@ -28,35 +29,37 @@
     <div class="hall-evidence-card">
       <video controls preload="metadata" playsinline src="{{ evidence_url }}"></video>
       <div class="hall-evidence-actions">
-        <a class="br-secondary br-button-link" href="{{ evidence_url }}?download=1">Download evidence</a>
-        <a class="br-primary br-button-link" href="{% url 'brainrot:challenge' entry.id %}">Challenge this specimen</a>
+        <a class="br-secondary br-button-link" href="{{ evidence_url }}?download=1">{% translate "Download counted video" %}</a>
+        {% if entry.visibility == 'public' %}
+        <a class="br-primary br-button-link" href="{% url 'brainrot:challenge' entry.id %}">{% translate "Challenge this specimen" %}</a>
+        {% endif %}
       </div>
     </div>
 
     <aside class="hall-share-card">
-      <span class="br-kicker">PUBLIC REPLICATION MATERIAL</span>
-      <h2>Share this run</h2>
-      {% if entry.user_id and request.user == entry.user %}
-      <p>This is your permanent Hall of Fame link. Deploy it responsibly.</p>
+      <span class="br-kicker">{% if entry.visibility == 'public' %}{% translate "PUBLIC REPLICATION MATERIAL" %}{% else %}{% translate "PRIVATE OWNER VIEW" %}{% endif %}</span>
+      <h2>{% if entry.visibility == 'public' %}{% translate "Share this run" %}{% else %}{% translate "Private run" %}{% endif %}</h2>
+      {% if entry.visibility == 'private' %}
+      <p>{% translate "Only you and site superusers can open this page or video. Publish it to restore its Hall of Fame listing and share link." %}</p>
+      {% elif entry.user_id and request.user == entry.user %}
+      <p>{% translate "This is your permanent Hall of Fame link. Deploy it responsibly." %}</p>
       {% elif not entry.user_id %}
-      <p>This is a guest submission and has no self-service delete access. To request removal,
-        <a href="https://github.com/icaijy" rel="noopener">contact the site owner</a> and include this page's URL.</p>
+      <p>{% translate "This is a guest submission and has no self-service access. To request privacy changes or removal, contact the site owner and include this page's URL." %}</p>
       {% else %}
-      <p>Distribute this evidence to researchers, rivals and confused relatives.</p>
+      <p>{% translate "Distribute this evidence to researchers, rivals and confused relatives." %}</p>
       {% endif %}
+      {% if entry.visibility == 'public' %}
       <textarea id="hof-share-text" rows="6" readonly aria-label="Shareable Hall of Fame result"></textarea>
-      <button class="br-primary" id="share-hof" type="button">Share result!</button>
-      <button class="br-secondary" id="copy-hof-link" type="button">Copy share message</button>
-      {% if request.user == entry.user and entry.user_id %}
-      <form class="hof-delete-form" method="post" action="{% url 'brainrot:delete_hall_of_fame_entry' entry.id %}"
-            onsubmit="return confirm('Delete this Hall of Fame entry and its video permanently?');">
-        {% csrf_token %}
-        <button class="br-danger" type="submit">Delete my entry &amp; video</button>
-      </form>
+      <button class="br-primary" id="share-hof" type="button">{% translate "Share result!" %}</button>
+      <button class="br-secondary" id="copy-hof-link" type="button">{% translate "Copy share message" %}</button>
       {% endif %}
+      {% include 'brainrot/_entry_controls.html' %}
       <p class="subtle" id="hof-share-status" role="status" aria-live="polite"></p>
     </aside>
   </section>
 </main>
-<script src="{% static 'brainrot/hof_detail.js' %}?v=20260814.3" defer></script>
+{% if entry.visibility == 'public' %}
+<script src="{% url 'brainrot:javascript_catalog' %}"></script>
+<script src="{% static 'brainrot/hof_detail.js' %}?v=20260817.1" defer></script>
+{% endif %}
 {% endblock %}

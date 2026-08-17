@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.utils import timezone
 from django.utils.html import format_html
 
 from .models import HallOfFameEntry
@@ -7,12 +6,12 @@ from .models import HallOfFameEntry
 
 @admin.register(HallOfFameEntry)
 class HallOfFameEntryAdmin(admin.ModelAdmin):
-    list_display = ('submitter', 'score', 'state', 'duration_seconds', 'created_at', 'review_video')
-    list_filter = ('state', 'created_at')
+    list_display = ('submitter', 'score', 'visibility', 'duration_seconds', 'created_at', 'review_video')
+    list_filter = ('visibility', 'created_at')
     search_fields = ('user__username', 'display_name')
-    list_editable = ('score', 'state')
+    list_editable = ('score', 'visibility')
     readonly_fields = ('user', 'mime_type', 'duration_seconds', 'event_timeline', 'created_at', 'review_video')
-    actions = ('approve_entries', 'reject_entries')
+    actions = ('make_public', 'make_private')
 
     @admin.display(description='Submitter', ordering='user__username')
     def submitter(self, obj):
@@ -29,10 +28,10 @@ class HallOfFameEntryAdmin(admin.ModelAdmin):
             video_url,
         )
 
-    @admin.action(description='Approve selected entries')
-    def approve_entries(self, request, queryset):
-        queryset.update(state=HallOfFameEntry.State.APPROVED, reviewed_at=timezone.now())
+    @admin.action(description='Make selected entries public')
+    def make_public(self, request, queryset):
+        queryset.update(visibility=HallOfFameEntry.Visibility.PUBLIC)
 
-    @admin.action(description='Reject selected entries')
-    def reject_entries(self, request, queryset):
-        queryset.update(state=HallOfFameEntry.State.REJECTED, reviewed_at=timezone.now())
+    @admin.action(description='Make selected entries private')
+    def make_private(self, request, queryset):
+        queryset.update(visibility=HallOfFameEntry.Visibility.PRIVATE)

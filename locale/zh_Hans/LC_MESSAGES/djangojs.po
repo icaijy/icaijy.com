@@ -1,0 +1,610 @@
+msgid ""
+msgstr ""
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-17 14:00+0800\n"
+"Language: zh_Hans\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: brainrot/static/brainrot/counter.js:44
+msgid "I'm ready — record locally"
+msgstr "我准备好了——开始本地录像"
+
+#: brainrot/static/brainrot/counter.js:137
+msgid "Preloading pose model — camera remains off"
+msgstr "正在预加载姿态模型——摄像头仍关闭"
+
+#: brainrot/static/brainrot/counter.js:139
+msgid "Pose model ready — camera remains off"
+msgstr "姿态模型已就绪——摄像头仍关闭"
+
+#: brainrot/static/brainrot/counter.js:141
+msgid "Pose model preload paused — camera remains off"
+msgstr "姿态模型预加载暂停——摄像头仍关闭"
+
+#: brainrot/static/brainrot/counter.js:187
+#: brainrot/static/brainrot/typing.js:107
+#: brainrot/static/brainrot/hof_detail.js:25
+msgid "Copied! 🎉"
+msgstr "已复制！🎉"
+
+#: brainrot/static/brainrot/counter.js:188
+msgid "Result copied. Scientific distribution may begin."
+msgstr "结果已复制，可以开始科学传播。"
+
+#: brainrot/static/brainrot/counter.js:190
+#: brainrot/static/brainrot/typing.js:110
+msgid "Automatic copy failed. Select the text and copy it manually."
+msgstr "自动复制失败，请选中文字手动复制。"
+
+#: brainrot/static/brainrot/counter.js:193
+#: brainrot/static/brainrot/typing.js:112
+msgid "Copy to clipboard"
+msgstr "复制到剪贴板"
+
+#: brainrot/static/brainrot/counter.js:293
+#: brainrot/static/brainrot/counter.js:512
+msgid "Armed — step back until shoulders and wrists are visible"
+msgstr "已待命——请后退，确保双肩和双腕可见"
+
+#: brainrot/static/brainrot/counter.js:294
+#: brainrot/static/brainrot/counter.js:497
+msgid "Waiting for your pose…"
+msgstr "正在等待检测到你的姿态……"
+
+#: brainrot/static/brainrot/counter.js:299
+msgid "Pose detected — click I'm ready, then take your position"
+msgstr "已检测到姿态——点击“我准备好了”，然后站好位置"
+
+#: brainrot/static/brainrot/counter.js:304
+msgid "Detector ready — click I'm ready, then step into frame"
+msgstr "检测器已就绪——点击“我准备好了”，然后进入画面"
+
+#: brainrot/static/brainrot/counter.js:309
+msgid "Pose detector paused:"
+msgstr "姿态检测器已暂停："
+
+#: brainrot/static/brainrot/counter.js:317
+msgid "Requesting camera permission…"
+msgstr "正在请求摄像头权限……"
+
+#: brainrot/static/brainrot/counter.js:330
+msgid "Finishing detector setup…"
+msgstr "正在完成检测器设置……"
+
+#: brainrot/static/brainrot/counter.js:331
+msgid "Pose model ready"
+msgstr "姿态模型已就绪"
+
+#: brainrot/static/brainrot/counter.js:331
+msgid "Finishing pose model preload…"
+msgstr "正在完成姿态模型预加载……"
+
+#: brainrot/static/brainrot/counter.js:345
+msgid "Camera permission worked, but the pose runtime did not load"
+msgstr "摄像头权限已获取，但姿态运行库加载失败"
+
+#: brainrot/static/brainrot/counter.js:348
+msgid "Camera unavailable"
+msgstr "摄像头不可用"
+
+#: brainrot/static/brainrot/counter.js:349
+msgid ""
+"Could not start the camera. Use HTTPS, allow camera access, and try a "
+"current browser."
+msgstr "无法启动摄像头。请使用 HTTPS、允许摄像头访问，并尝试最新版浏览器。"
+
+#: brainrot/static/brainrot/counter.js:519
+msgid "Opponent evidence is still buffering"
+msgstr "对手录像仍在缓冲"
+
+#: brainrot/static/brainrot/counter.js:520
+msgid "Waiting for opponent video…"
+msgstr "正在等待对手视频……"
+
+#: brainrot/static/brainrot/counter.js:526
+msgid "Pose locked — countdown commencing"
+msgstr "姿态已锁定——倒计时开始"
+
+#: brainrot/static/brainrot/counter.js:562
+msgid "Experiment in progress"
+msgstr "实验进行中"
+
+#: brainrot/static/brainrot/counter.js:571
+msgid "Run complete — detector remains local"
+msgstr "本局完成——检测器仍在本地运行"
+
+#: brainrot/static/brainrot/counter.js:584
+msgid "Exactly 67. There will be no further questions."
+msgstr "正好 67。无需进一步提问。"
+
+#: brainrot/static/brainrot/counter.js:586
+msgid "The 67 barrier has been disturbed."
+msgstr "67 屏障已被扰动。"
+
+#: brainrot/static/brainrot/counter.js:587
+msgid "The Institute recommends more arm-based research."
+msgstr "研究所建议继续开展手臂驱动型研究。"
+
+#: brainrot/static/brainrot/counter.js:614
+msgid "Recording discarded. Nothing was uploaded."
+msgstr "录像已丢弃，没有上传任何内容。"
+
+#: brainrot/static/brainrot/counter.js:638
+msgid "Detector is still loading…"
+msgstr "检测器仍在加载……"
+
+#: brainrot/static/brainrot/counter.js:665
+msgid "Uploading public evidence after the timer has safely stopped…"
+msgstr "计时已安全停止，正在上传公开视频证据……"
+
+#: brainrot/static/brainrot/typing.js:108
+msgid "Result copied. No leaderboard was harmed."
+msgstr "结果已复制，没有排行榜受到伤害。"
+
+#: brainrot/static/brainrot/typing.js:138
+msgid "Statistically significant brainrot."
+msgstr "统计学显著的脑腐蚀。"
+
+#: brainrot/static/brainrot/typing.js:139
+msgid "Exactly 67 WPM. The prophecy has cleared peer review."
+msgstr "恰好 67 WPM。预言已通过同行评审。"
+
+#: brainrot/static/brainrot/typing.js:140
+msgid "Exactly 61 WPM. Close enough to be culturally important."
+msgstr "恰好 61 WPM，已经足够具有文化意义。"
+
+#: brainrot/static/brainrot/typing.js:141
+msgid "67% accuracy. Incorrect in precisely the correct way."
+msgstr "准确率恰好 67%，以完全正确的方式打错了。"
+
+#: brainrot/static/brainrot/typing.js:142
+msgid "67 groups survived contact with the keyboard."
+msgstr "67 组内容成功与键盘接触并存活。"
+
+#: brainrot/static/brainrot/hof_detail.js:26
+msgid "Full result copied! The 6️⃣7️⃣ evidence is ready for deployment."
+msgstr "完整结果已复制！6️⃣7️⃣ 证据可以出动了。"
+
+#: brainrot/static/brainrot/hof_detail.js:29
+msgid "Automatic copy failed. Select the message and copy it manually."
+msgstr "自动复制失败，请选中信息后手动复制。"
+
+#: brainrot/static/brainrot/hof_detail.js:31
+msgid "Copy share message"
+msgstr "复制分享信息"
+
+#: brainrot/static/brainrot/hof_detail.js:38
+msgid "Result launched into the world! 🚀"
+msgstr "结果已经发射到世界上！🚀"
+
+#~ msgid "61/67 Lab"
+#~ msgstr "61/67 实验室"
+
+#~ msgid "My 67 Hall of Fame"
+#~ msgstr "我的 67 名人堂"
+
+#~ msgid "Public"
+#~ msgstr "公开"
+
+#~ msgid "Private"
+#~ msgstr "私有"
+
+#~ msgid "Make private"
+#~ msgstr "设为私有"
+
+#~ msgid "Publish"
+#~ msgstr "公开发布"
+
+#~ msgid "Delete this Hall of Fame entry and its video permanently?"
+#~ msgstr "永久删除这条名人堂记录及其视频？"
+
+#~ msgid "Delete"
+#~ msgstr "删除"
+
+#~ msgid "Research division"
+#~ msgstr "研究部"
+
+#~ msgid "SYNCHRONISED HUMAN PERFORMANCE TRIAL · 20 SECONDS"
+#~ msgstr "同步人体表现试验 · 20 秒"
+
+#~ msgid ""
+#~ "%(name)s made %(score)s 6️⃣7️⃣ moves in 20 seconds. Their video will play "
+#~ "beside yours."
+#~ msgstr ""
+#~ "%(name)s 在 20 秒内完成了 %(score)s 次 6️⃣7️⃣ 动作。他们的视频会与你同步播放。"
+
+#~ msgid "POSE KINETICS LAB · 20 SECOND PROTOCOL"
+#~ msgstr "姿态动力学实验室 · 20 秒协议"
+
+#~ msgid ""
+#~ "Move your arms up and down in the 6–7 pattern. Make as many counted moves "
+#~ "as you can in 20 seconds."
+#~ msgstr "按 6–7 模式上下摆动双臂，在 20 秒内完成尽可能多的有效动作。"
+
+#~ msgid "PUBLIC VIDEO LEADERBOARD"
+#~ msgstr "公开视频排行榜"
+
+#~ msgid "HALL OF FAME"
+#~ msgstr "名人堂"
+
+#~ msgid "Watch runs · preview videos · challenge scores"
+#~ msgstr "观看记录 · 预览视频 · 挑战分数"
+
+#~ msgid "Manage all submitted runs"
+#~ msgstr "管理全部投稿"
+
+#~ msgid "Manage my submitted runs"
+#~ msgstr "管理我的投稿"
+
+#~ msgid "Camera privacy:"
+#~ msgstr "摄像头隐私："
+
+#~ msgid ""
+#~ "Pose detection and recording run in this browser. Every run is recorded "
+#~ "locally from the countdown, but nothing uploads unless you choose to "
+#~ "submit it. Submitting publishes the video for everyone to watch; "
+#~ "resetting or closing discards it."
+#~ msgstr ""
+#~ "姿态检测和录像都在本浏览器内运行。每局会从倒计时开始在本地录制，但只有你主"
+#~ "动提交才会上传。提交后视频会公开供所有人观看；重置或关闭页面会丢弃录像。"
+
+#~ msgid "Recorded event timeline ready"
+#~ msgstr "原始计数时间线已就绪"
+
+#~ msgid "Legacy run · estimated count pace"
+#~ msgstr "旧记录 · 使用估算计数节奏"
+
+#~ msgid "Camera is currently doing nothing."
+#~ msgstr "摄像头目前什么也没干。"
+
+#~ msgid "RECORDING LOCALLY"
+#~ msgstr "正在本地录像"
+
+#~ msgid "6️⃣7️⃣ moves counted"
+#~ msgstr "已计 6️⃣7️⃣ 动作"
+
+#~ msgid "time remaining"
+#~ msgstr "剩余时间"
+
+#~ msgid "score to beat"
+#~ msgstr "目标分数"
+
+#~ msgid "View HOF entry"
+#~ msgstr "查看名人堂记录"
+
+#~ msgid "Enable camera"
+#~ msgstr "启用摄像头"
+
+#~ msgid ""
+#~ "I'm ready starts a local recording with the live count burned into the "
+#~ "video. Submitting remains your decision."
+#~ msgstr ""
+#~ "点击“我准备好了”会开始本地录像，并把实时计数写入视频。是否提交仍由你决定。"
+
+#~ msgid "Run this foolish experiment again"
+#~ msgstr "再做一次这项愚蠢实验"
+
+#~ msgid "PEER-REVIEWED BY YOURSELF"
+#~ msgstr "由你本人完成同行评审"
+
+#~ msgid "6️⃣7️⃣ moves in 20 seconds"
+#~ msgstr "次 6️⃣7️⃣ 动作 / 20 秒"
+
+#~ msgid "A result has occurred."
+#~ msgstr "一个结果发生了。"
+
+#~ msgid ""
+#~ "The recording remains local unless you submit it below. The downloaded "
+#~ "and uploaded video includes the live 67 count. Closing or resetting "
+#~ "discards it."
+#~ msgstr ""
+#~ "除非你在下方提交，否则录像只保留在本地。下载和上传的视频都会包含实时 67 计"
+#~ "数；关闭或重置会丢弃录像。"
+
+#~ msgid "Download counted video"
+#~ msgstr "下载带计数的视频"
+
+#~ msgid "Anonymous display name"
+#~ msgstr "匿名显示名称"
+
+#~ msgid ""
+#~ "Guest runs are labelled “guest” and cannot impersonate registered "
+#~ "usernames. Guest submissions have no self-service privacy or delete "
+#~ "controls; contact me with the public HOF link for changes."
+#~ msgstr ""
+#~ "访客记录会标注“guest”，且不能冒充已注册用户名。访客投稿无法自行切换隐私或"
+#~ "删除；如需修改，请把公开名人堂链接发给我。"
+
+#~ msgid "Log in before another run"
+#~ msgstr "下局开始前登录"
+
+#~ msgid "if you want ownership controls."
+#~ msgstr "即可使用所有者管理功能。"
+
+#~ msgid ""
+#~ "Submitting as <strong>%(username)s</strong>. New submissions are public, "
+#~ "but you can later make the run private or delete it from My HOF."
+#~ msgstr ""
+#~ "将以 <strong>%(username)s</strong> 的身份提交。新投稿默认公开，之后可在“我"
+#~ "的名人堂”中设为私有或删除。"
+
+#~ msgid ""
+#~ "Anonymous submission is temporarily unavailable because the production "
+#~ "human-verification gate is not configured."
+#~ msgstr "生产环境的人机验证尚未配置，匿名投稿暂时不可用。"
+
+#~ msgid "Submit to Hall of Fame"
+#~ msgstr "提交到名人堂"
+
+#~ msgid "Discard recording"
+#~ msgstr "丢弃录像"
+
+#~ msgid "Log in to submit this run"
+#~ msgstr "登录后提交本局"
+
+#~ msgid "Close"
+#~ msgstr "关闭"
+
+#~ msgid "PUBLICATION CONSENT"
+#~ msgstr "公开发布确认"
+
+#~ msgid "Your video will be public"
+#~ msgstr "你的视频将会公开"
+
+#~ msgid ""
+#~ "Submitting publishes this recording to the 67 Hall of Fame. Anyone can "
+#~ "watch, download and share it."
+#~ msgstr "提交后，这段录像会发布到 67 名人堂。任何人都可以观看、下载和分享。"
+
+#~ msgid ""
+#~ "Because you are logged in, you can make it private or delete it later "
+#~ "from My HOF."
+#~ msgstr "你已经登录，因此之后可以在“我的名人堂”中将其设为私有或删除。"
+
+#~ msgid ""
+#~ "Guest submissions cannot be privately managed or deleted by you later. "
+#~ "Contact the site owner with the HOF link if you need it removed."
+#~ msgstr ""
+#~ "访客投稿之后无法由你自行设为私有或删除。如需移除，请将名人堂链接发给站长。"
+
+#~ msgid "I understand that my video will be published for anyone to watch."
+#~ msgstr "我已知晓我的视频会被公开，任何人都可以观看。"
+
+#~ msgid "Not now"
+#~ msgstr "暂不提交"
+
+#~ msgid "Publish this video"
+#~ msgstr "公开发布此视频"
+
+#~ msgid "67 Hall of Fame"
+#~ msgstr "67 名人堂"
+
+#~ msgid "67 Counter"
+#~ msgstr "67 计数器"
+
+#~ msgid "Manage HOF"
+#~ msgstr "管理名人堂"
+
+#~ msgid "My HOF"
+#~ msgstr "我的名人堂"
+
+#~ msgid "All experiments"
+#~ msgstr "全部实验"
+
+#~ msgid "PUBLIC 20-SECOND VIDEO LEADERBOARD"
+#~ msgstr "公开 20 秒视频排行榜"
+
+#~ msgid ""
+#~ "See who made the most 6️⃣7️⃣ moves in 20 seconds, watch each run, then "
+#~ "challenge it yourself. Guest names are visibly labelled and cannot copy "
+#~ "registered usernames."
+#~ msgstr ""
+#~ "看看谁能在 20 秒内完成最多的 6️⃣7️⃣ 动作，观看每局录像，再亲自发起挑战。访客名"
+#~ "称会明确标注，且不能冒充注册用户。"
+
+#~ msgid "made %(score)s 6️⃣7️⃣ moves in 20 seconds · %(date)s"
+#~ msgstr "在 20 秒内完成 %(score)s 次 6️⃣7️⃣ 动作 · %(date)s"
+
+#~ msgid "moves"
+#~ msgstr "次动作"
+
+#~ msgid "Full details"
+#~ msgstr "完整详情"
+
+#~ msgid "Challenge this run"
+#~ msgstr "挑战这局"
+
+#~ msgid "Watch video preview"
+#~ msgstr "观看视频预览"
+
+#~ msgid "%(name)s made %(score)s 6️⃣7️⃣ moves in 20 seconds."
+#~ msgstr "%(name)s 在 20 秒内完成了 %(score)s 次 6️⃣7️⃣ 动作。"
+
+#~ msgid ""
+#~ "Open the detail page to share this run, download it, or start a "
+#~ "synchronized challenge."
+#~ msgstr "打开详情页即可分享、下载录像或开始同步挑战。"
+
+#~ msgid "Open full run"
+#~ msgstr "打开完整记录"
+
+#~ msgid "Download video"
+#~ msgstr "下载视频"
+
+#~ msgid "No legends yet."
+#~ msgstr "目前还没有神人。"
+
+#~ msgid "The scientific community has uploaded absolutely nothing."
+#~ msgstr "科研界目前什么也没上传。"
+
+#~ msgid "Submit the first specimen"
+#~ msgstr "提交第一份样本"
+
+#~ msgid "Hall of Fame"
+#~ msgstr "名人堂"
+
+#~ msgid "ARCHIVED HUMAN PERFORMANCE SPECIMEN #%(id)s"
+#~ msgstr "已归档人体表现样本 #%(id)s"
+
+#~ msgid "%(duration)s seconds"
+#~ msgstr "%(duration)s 秒"
+
+#~ msgid "PUBLIC REPLICATION MATERIAL"
+#~ msgstr "公开复现实验材料"
+
+#~ msgid "PRIVATE OWNER VIEW"
+#~ msgstr "私有所有者视图"
+
+#~ msgid "Share this run"
+#~ msgstr "分享这局"
+
+#~ msgid "Private run"
+#~ msgstr "私有记录"
+
+#~ msgid ""
+#~ "Only you and site superusers can open this page or video. Publish it to "
+#~ "restore its Hall of Fame listing and share link."
+#~ msgstr ""
+#~ "只有你和网站超级用户可以打开此页面和视频。重新公开后，它才会恢复在名人堂中"
+#~ "的展示和分享链接。"
+
+#~ msgid "This is your permanent Hall of Fame link. Deploy it responsibly."
+#~ msgstr "这是你的永久名人堂链接。请负责任地传播。"
+
+#~ msgid ""
+#~ "This is a guest submission and has no self-service access. To request "
+#~ "privacy changes or removal, contact the site owner and include this "
+#~ "page's URL."
+#~ msgstr ""
+#~ "这是访客投稿，无法自行管理。如需更改隐私或删除，请联系站长并附上本页链接。"
+
+#~ msgid ""
+#~ "Distribute this evidence to researchers, rivals and confused relatives."
+#~ msgstr "把这份证据分发给研究员、对手和一脸困惑的亲戚。"
+
+#~ msgid "Institute of 61/67 Studies"
+#~ msgstr "61/67 研究所"
+
+#~ msgid "ICAiJY INSTITUTE OF NUMERICAL CULTURE"
+#~ msgstr "ICAiJY 数字文化研究所"
+
+#~ msgid "61 / 67 Research Division"
+#~ msgstr "61 / 67 研究部"
+
+#~ msgid "Two controlled experiments. No useful findings are expected."
+#~ msgstr "两项受控实验。预计不会产生任何有用成果。"
+
+#~ msgid ""
+#~ "Watch how many 6️⃣7️⃣ moves people made in 20 seconds, share a run, or "
+#~ "challenge its score."
+#~ msgstr "观看其他人在 20 秒内完成了多少次 6️⃣7️⃣ 动作，分享记录，或挑战其分数。"
+
+#~ msgid "Enter the archive"
+#~ msgstr "进入档案馆"
+
+#~ msgid "EXPERIMENT 01"
+#~ msgstr "实验 01"
+
+#~ msgid "Local pose tracking, a camera, and approximately zero dignity."
+#~ msgstr "本地姿态追踪、一台摄像头，以及约等于零的尊严。"
+
+#~ msgid "Begin"
+#~ msgstr "开始"
+
+#~ msgid "EXPERIMENT 02"
+#~ msgstr "实验 02"
+
+#~ msgid "61 / 67 Typing Test"
+#~ msgstr "61 / 67 打字测试"
+
+#~ msgid "Modern typing science, stripped of every unnecessary character."
+#~ msgstr "现代打字科学，删除了所有不必要的字符。"
+
+#~ msgid "Type"
+#~ msgstr "开始打字"
+
+#~ msgid "Public Hall of Fame"
+#~ msgstr "公开名人堂"
+
+#~ msgid "New run"
+#~ msgstr "开始新局"
+
+#~ msgid "SUPERUSER HALL OF FAME CONTROL"
+#~ msgstr "超级用户 · 名人堂控制台"
+
+#~ msgid "PERSONAL ARM-ACTIVITY RECORDS"
+#~ msgstr "个人手臂活动记录"
+
+#~ msgid "You can change visibility or delete any registered or guest run."
+#~ msgstr "你可以修改或删除任何注册用户或访客的记录。"
+
+#~ msgid ""
+#~ "Your runs can be public or private. Deleting one removes both its listing "
+#~ "and video file."
+#~ msgstr "你的记录可以公开或私有。删除会同时移除榜单记录和视频文件。"
+
+#~ msgid "Entry and recording deleted. The evidence has left the building."
+#~ msgstr "记录和录像已删除，证据已经离开大楼。"
+
+#~ msgid "Visibility updated."
+#~ msgstr "公开状态已更新。"
+
+#~ msgid "View"
+#~ msgstr "查看"
+
+#~ msgid "Download"
+#~ msgstr "下载"
+
+#~ msgid "No owned specimens yet."
+#~ msgstr "你还没有自己的样本。"
+
+#~ msgid ""
+#~ "Anonymous submissions cannot be retroactively attached to this account."
+#~ msgstr "匿名投稿无法事后绑定到此账号。"
+
+#~ msgid "Create an unnecessarily documented run"
+#~ msgstr "创建一局记录得毫无必要的实验"
+
+#~ msgid "Backspace has been administratively disabled."
+#~ msgstr "退格键已被行政禁用。"
+
+#~ msgid "BINARY CULTURAL LITERACY ASSESSMENT"
+#~ msgstr "二元文化素养评估"
+
+#~ msgid "duration"
+#~ msgstr "时长"
+
+#~ msgid "time"
+#~ msgstr "时间"
+
+#~ msgid "wpm"
+#~ msgstr "WPM"
+
+#~ msgid "accuracy"
+#~ msgstr "准确率"
+
+#~ msgid "click here, then type only 6, 1 and 7"
+#~ msgstr "点击此处，然后只输入 6、1 和 7"
+
+#~ msgid "Restart typing test"
+#~ msgstr "重新开始打字测试"
+
+#~ msgid "restart"
+#~ msgstr "重新开始"
+
+#~ msgid "LABORATORY OUTPUT"
+#~ msgstr "实验室输出"
+
+#~ msgid "characters"
+#~ msgstr "字符"
+
+#~ msgid "groups"
+#~ msgstr "组数"
+
+#~ msgid "61 count"
+#~ msgstr "61 数量"
+
+#~ msgid "67 count"
+#~ msgstr "67 数量"

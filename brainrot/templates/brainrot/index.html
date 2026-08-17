@@ -1,42 +1,42 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Institute of 61/67 Studies{% endblock %}
+{% block title %}{% translate "Institute of 61/67 Studies" %}{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.9">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260817.1">
 <main class="br-page">
   <section class="br-hero">
-    <span class="br-kicker">ICAiJY INSTITUTE OF NUMERICAL CULTURE</span>
-    <h1>61 / 67 Research Division</h1>
-    <p>Two controlled experiments. No useful findings are expected.</p>
+    <span class="br-kicker">{% translate "ICAiJY INSTITUTE OF NUMERICAL CULTURE" %}</span>
+    <h1>{% translate "61 / 67 Research Division" %}</h1>
+    <p>{% translate "Two controlled experiments. No useful findings are expected." %}</p>
   </section>
   <a class="br-hof-banner" href="{% url 'brainrot:hall_of_fame' %}">
     <div>
-      <span class="br-kicker">PUBLIC 20-SECOND VIDEO LEADERBOARD</span>
-      <h2>67 Hall of Fame</h2>
-      <p>Watch how many 6️⃣7️⃣ moves people made in 20 seconds, share a run, or challenge its score.</p>
+      <span class="br-kicker">{% translate "PUBLIC 20-SECOND VIDEO LEADERBOARD" %}</span>
+      <h2>{% translate "67 Hall of Fame" %}</h2>
+      <p>{% translate "Watch how many 6️⃣7️⃣ moves people made in 20 seconds, share a run, or challenge its score." %}</p>
     </div>
-    <strong>Enter the archive →</strong>
+    <strong>{% translate "Enter the archive" %} →</strong>
   </a>
   <section class="br-game-grid" aria-label="Experiments">
     <a class="br-game-card br-counter-card" href="{% url 'brainrot:counter' %}">
       <span class="br-card-number">67</span>
       <div>
-        <span class="br-kicker">EXPERIMENT 01</span>
-        <h2>67 Counter</h2>
-        <p>Local pose tracking, a camera, and approximately zero dignity.</p>
+        <span class="br-kicker">{% translate "EXPERIMENT 01" %}</span>
+        <h2>{% translate "67 Counter" %}</h2>
+        <p>{% translate "Local pose tracking, a camera, and approximately zero dignity." %}</p>
       </div>
-      <span class="br-card-arrow">Begin →</span>
+      <span class="br-card-arrow">{% translate "Begin" %} →</span>
     </a>
     <a class="br-game-card br-typing-card" href="{% url 'brainrot:typing_test' %}">
       <span class="br-card-number">61</span>
       <div>
-        <span class="br-kicker">EXPERIMENT 02</span>
-        <h2>61 / 67 Typing Test</h2>
-        <p>Modern typing science, stripped of every unnecessary character.</p>
+        <span class="br-kicker">{% translate "EXPERIMENT 02" %}</span>
+        <h2>{% translate "61 / 67 Typing Test" %}</h2>
+        <p>{% translate "Modern typing science, stripped of every unnecessary character." %}</p>
       </div>
-      <span class="br-card-arrow">Type →</span>
+      <span class="br-card-arrow">{% translate "Type" %} →</span>
     </a>
   </section>
 </main>

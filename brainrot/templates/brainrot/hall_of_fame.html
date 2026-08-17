@@ -1,24 +1,23 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}67 Hall of Fame{% endblock %}
+{% block title %}{% translate "67 Hall of Fame" %}{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.9">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260817.1">
 <main class="br-page hall-page">
   <header class="br-toolbar">
-    <a href="{% url 'brainrot:counter' %}">← 67 Counter</a>
+    <a href="{% url 'brainrot:counter' %}">← {% translate "67 Counter" %}</a>
     {% if request.user.is_authenticated %}
-    <a href="{% url 'brainrot:my_hall_of_fame' %}">My HOF</a>
+    <a href="{% url 'brainrot:my_hall_of_fame' %}">{% if request.user.is_superuser %}{% translate "Manage HOF" %}{% else %}{% translate "My HOF" %}{% endif %}</a>
     {% else %}
-    <a href="{% url 'brainrot:index' %}">All experiments</a>
+    <a href="{% url 'brainrot:index' %}">{% translate "All experiments" %}</a>
     {% endif %}
   </header>
   <section class="hall-heading">
-    <span class="br-kicker">PUBLIC 20-SECOND VIDEO LEADERBOARD</span>
-    <h1>67 Hall of Fame</h1>
-    <p>See who made the most 6️⃣7️⃣ moves in 20 seconds, watch each run, then challenge it yourself.
-      Guest names are visibly labelled and cannot copy registered usernames.</p>
+    <span class="br-kicker">{% translate "PUBLIC 20-SECOND VIDEO LEADERBOARD" %}</span>
+    <h1>{% translate "67 Hall of Fame" %}</h1>
+    <p>{% translate "See who made the most 6️⃣7️⃣ moves in 20 seconds, watch each run, then challenge it yourself. Guest names are visibly labelled and cannot copy registered usernames." %}</p>
   </section>
 
   <section class="hall-list">
@@ -27,34 +26,35 @@
       <span class="hall-rank">#{{ forloop.counter }}</span>
       <div class="hall-person">
         <strong>{{ entry.public_name }}</strong>
-        <span>made {{ entry.score }} 6️⃣7️⃣ moves in 20 seconds · {{ entry.created_at|date:'j M Y' }}</span>
+        <span>{% blocktranslate with score=entry.score date=entry.created_at|date:'j M Y' %}made {{ score }} 6️⃣7️⃣ moves in 20 seconds · {{ date }}{% endblocktranslate %}</span>
       </div>
-      <strong class="hall-score">{{ entry.score }}<small>moves</small></strong>
+      <strong class="hall-score">{{ entry.score }}<small>{% translate "moves" %}</small></strong>
       <div class="hall-actions">
-        <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">Full details</a>
-        <a href="{% url 'brainrot:challenge' entry.id %}">Challenge this run</a>
+        <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "Full details" %}</a>
+        <a href="{% url 'brainrot:challenge' entry.id %}">{% translate "Challenge this run" %}</a>
       </div>
       {% url 'brainrot:hall_of_fame_video' entry.id as preview_url %}
       <details class="hall-preview">
-        <summary>Watch video preview</summary>
+        <summary>{% translate "Watch video preview" %}</summary>
         <div class="hall-preview-body">
           <video controls preload="none" playsinline src="{{ preview_url }}"></video>
           <div>
-            <strong>{{ entry.public_name }} made {{ entry.score }} 6️⃣7️⃣ moves in 20 seconds.</strong>
-            <span>Open the detail page to share this run, download it, or start a synchronized challenge.</span>
+            <strong>{% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds.{% endblocktranslate %}</strong>
+            <span>{% translate "Open the detail page to share this run, download it, or start a synchronized challenge." %}</span>
             <div class="hall-preview-links">
-              <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">Open full run →</a>
-              <a href="{{ preview_url }}?download=1">Download video</a>
+              <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "Open full run" %} →</a>
+              <a href="{{ preview_url }}?download=1">{% translate "Download video" %}</a>
             </div>
           </div>
         </div>
       </details>
+      {% if request.user.is_superuser %}{% include 'brainrot/_entry_controls.html' %}{% endif %}
     </article>
     {% empty %}
     <div class="empty-hall">
-      <strong>No legends yet.</strong>
-      <p>The scientific community has uploaded absolutely nothing.</p>
-      <a href="{% url 'brainrot:counter' %}" class="br-primary br-button-link">Submit the first specimen</a>
+      <strong>{% translate "No legends yet." %}</strong>
+      <p>{% translate "The scientific community has uploaded absolutely nothing." %}</p>
+      <a href="{% url 'brainrot:counter' %}" class="br-primary br-button-link">{% translate "Submit the first specimen" %}</a>
     </div>
     {% endfor %}
   </section>
