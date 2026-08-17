@@ -25,11 +25,17 @@ class BrainrotPageTests(TestCase):
         self.assertEqual(legacy.status_code, 301)
         self.assertEqual(legacy['Location'], '/67/')
 
+        index = self.client.get('/67/')
+        self.assertContains(index, '/67/counter/?mode=six_seven')
+        self.assertContains(index, '/67/counter/?mode=leg_claps')
+        self.assertContains(index, 'Tung Tung Leg Claps')
+
     @override_settings(DEBUG=True)
-    def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
+    def test_counter_uses_shared_runtime_and_has_share_box(self):
         response = self.client.get('/67/counter/')
-        self.assertContains(response, 'brainrot.css?v=20260817.2')
-        self.assertContains(response, 'counter.js?v=20260817.2')
+        self.assertContains(response, 'brainrot/counter_bootstrap.css')
+        self.assertContains(response, 'brainrot/counter.js')
+        self.assertNotContains(response, '?v=20260817.2')
         self.assertContains(response, 'id="counter-share-text"')
         self.assertContains(response, 'id="copy-counter-share"')
         self.assertContains(response, 'id="download-recording"')
@@ -44,9 +50,7 @@ class BrainrotPageTests(TestCase):
         self.assertContains(response, 'id="start-run" disabled hidden')
         self.assertContains(response, 'id="counter-hof-portal"')
         self.assertContains(response, 'PUBLIC VIDEO LEADERBOARD')
-        self.assertContains(response, 'type="button" data-counter-mode="six_seven"')
-        self.assertContains(response, 'type="button" data-counter-mode="leg_claps"')
-        self.assertNotContains(response, 'hof-nav-link')
+        self.assertNotContains(response, 'data-counter-mode=')
         self.assertNotContains(response, 'Log in to submit this run')
 
         script_path = finders.find('brainrot/counter.js')
@@ -59,7 +63,7 @@ class BrainrotPageTests(TestCase):
         self.assertIn("new URL('/67/counter/', window.location.origin)", script)
         self.assertIn('preloadPoseRuntime();', script)
         self.assertLess(script.index('preloadPoseRuntime();'), script.index("enableButton.addEventListener('click'"))
-        self.assertIn("from './gesture_engine.js?v=20260817.2'", script)
+        self.assertIn("from './gesture_engine.js'", script)
         self.assertIn('let currentMode =', script)
         self.assertIn('createGestureTracker(currentMode)', script)
         self.assertIn('const GAME_SECONDS = 20;', script)
@@ -76,6 +80,8 @@ class BrainrotPageTests(TestCase):
         self.assertIn("form.append('game_mode', currentMode);", script)
         self.assertIn('drawRecordingHud();', script)
         self.assertIn("'67 COUNT'", script)
+        self.assertIn("hudBrand: 'icaijy.com'", script)
+        self.assertNotIn('ICAiJY', script)
         self.assertIn("const rawResponse = await response.text();", script)
         self.assertIn('payload = JSON.parse(rawResponse);', script)
         self.assertNotIn('await response.json()', script)
@@ -88,15 +94,22 @@ class BrainrotPageTests(TestCase):
         self.assertIsNotNone(engine_path)
         engine = Path(engine_path).read_text(encoding='utf-8')
         self.assertIn("LEG_CLAPS: 'leg_claps'", engine)
-        self.assertIn('[23, 24, 25, 26, 27, 28]', engine)
-        self.assertIn('this.readyForClose = false;', engine)
+        self.assertIn('[23, 24, 25, 26]', engine)
+        self.assertIn('LEG_CLAP_CLOSE_RATIO = 0.42', engine)
+        self.assertIn('LEG_CLAP_REOPEN_RATIO = 0.62', engine)
+        self.assertNotIn('stableSinceOpen', engine)
 
-    def test_counter_mode_switch_is_server_rendered_and_invalid_mode_falls_back(self):
+    def test_counter_modes_are_separate_entries_and_invalid_mode_falls_back(self):
         leg_claps = self.client.get('/67/counter/?mode=leg_claps')
         self.assertContains(leg_claps, 'data-game-mode="leg_claps"')
-        self.assertContains(leg_claps, 'TUNG TUNG LEG CLAPS')
-        self.assertContains(leg_claps, 'data-counter-mode="leg_claps" class="active"')
+        self.assertContains(leg_claps, 'Tung Tung Leg Claps')
+        self.assertContains(leg_claps, '酸黄瓜舞计数')
         self.assertContains(leg_claps, 'leg claps counted')
+        self.assertNotContains(leg_claps, 'data-counter-mode=')
+
+        six_seven = self.client.get('/67/counter/?mode=six_seven')
+        self.assertContains(six_seven, 'data-game-mode="six_seven"')
+        self.assertContains(six_seven, '67 Counter')
 
         fallback = self.client.get('/67/counter/?mode=not-a-real-experiment')
         self.assertContains(fallback, 'data-game-mode="six_seven"')
