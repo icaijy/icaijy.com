@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
 {% load static i18n %}
 
-{% block title %}{% translate "Institute of 61/67 Studies" %}{% endblock %}
+{% block title %}67 Games{% endblock %}
 
 {% block content %}
 <main class="container py-4 py-md-5">
   <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4 mb-md-5">
     <div>
-      <div class="text-secondary small text-uppercase fw-semibold mb-2">{% translate "ICAiJY INSTITUTE OF NUMERICAL CULTURE" %}</div>
-      <h1 class="display-5 fw-bold mb-2">{% translate "61 / 67 Research Division" %}</h1>
-      <p class="lead text-secondary mb-0">Choose a scientifically unnecessary experiment.</p>
+      <div class="text-secondary small text-uppercase fw-semibold mb-2">icaijy.com</div>
+      <h1 class="display-5 fw-bold mb-2">67 Games</h1>
+      <p class="lead text-secondary mb-0">Pick a game and start a 20-second run.</p>
     </div>
     <a class="btn btn-outline-dark" href="{% url 'brainrot:hall_of_fame' %}">
-      <i class="fa-solid fa-ranking-star me-1"></i> {% translate "Pose Hall of Fame" %}
+      <i class="fa-solid fa-ranking-star me-1"></i> {% translate "Hall of Fame" %}
     </a>
   </div>
 
@@ -38,8 +38,7 @@
             <span class="badge text-bg-success">20 s · camera</span>
             <span class="display-6 fw-bold text-success">TT</span>
           </div>
-          <h2 class="h3 fw-bold mb-1">{% translate "Tung Tung Leg Claps" %}</h2>
-          <div class="small text-secondary mb-3">酸黄瓜舞计数</div>
+          <h2 class="h3 fw-bold mb-3">{% translate "Tung Tung Leg Claps" %}</h2>
           <p class="text-secondary flex-grow-1 mb-4">{% translate "Count each time Tung Tung's knees swing inward from a clearly open position. The knees must open again before another clap." %}</p>
           <span class="fw-semibold text-success">{% translate "Begin" %} →</span>
         </div>
@@ -54,7 +53,7 @@
             <span class="display-6 fw-bold text-secondary">61</span>
           </div>
           <h2 class="h3 fw-bold">{% translate "61 / 67 Typing Test" %}</h2>
-          <p class="text-secondary flex-grow-1 mb-4">{% translate "Modern typing science, stripped of every unnecessary character." %}</p>
+          <p class="text-secondary flex-grow-1 mb-4">Type 61 and 67 as quickly and accurately as you can.</p>
           <span class="fw-semibold text-secondary">{% translate "Type" %} →</span>
         </div>
       </a>

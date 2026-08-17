@@ -29,6 +29,8 @@ class BrainrotPageTests(TestCase):
         self.assertContains(index, '/67/counter/?mode=six_seven')
         self.assertContains(index, '/67/counter/?mode=leg_claps')
         self.assertContains(index, 'Tung Tung Leg Claps')
+        self.assertNotContains(index, '酸黄瓜舞计数')
+        self.assertNotContains(index, 'INSTITUTE OF NUMERICAL CULTURE')
 
     @override_settings(DEBUG=True)
     def test_counter_uses_shared_runtime_and_has_share_box(self):
@@ -49,7 +51,9 @@ class BrainrotPageTests(TestCase):
         self.assertContains(response, 'id="hof-display-name"')
         self.assertContains(response, 'id="start-run" disabled hidden')
         self.assertContains(response, 'id="counter-hof-portal"')
-        self.assertContains(response, 'PUBLIC VIDEO LEADERBOARD')
+        self.assertContains(response, 'VIDEO LEADERBOARD')
+        self.assertNotContains(response, 'PUBLIC VIDEO LEADERBOARD')
+        self.assertNotContains(response, 'Run this foolish experiment again')
         self.assertNotContains(response, 'data-counter-mode=')
         self.assertNotContains(response, 'Log in to submit this run')
 
@@ -67,7 +71,8 @@ class BrainrotPageTests(TestCase):
         self.assertIn('let currentMode =', script)
         self.assertIn('createGestureTracker(currentMode)', script)
         self.assertIn('const GAME_SECONDS = 20;', script)
-        self.assertIn('if (!running || now >= endTime || !sufficientlyVisible(landmarks)) return;', script)
+        self.assertIn('if (!running || now >= endTime) return;', script)
+        self.assertNotIn('if (!running || now >= endTime || !sufficientlyVisible(landmarks)) return;', script)
         self.assertIn('gestureTracker.reset();', script)
         self.assertIn('setModeControlsDisabled(true);', script)
         self.assertIn('const blob = await stopRecording();', script)
@@ -82,6 +87,9 @@ class BrainrotPageTests(TestCase):
         self.assertIn("'67 COUNT'", script)
         self.assertIn("hudBrand: 'icaijy.com'", script)
         self.assertNotIn('ICAiJY', script)
+        self.assertNotIn('酸黄瓜舞计数', script)
+        self.assertNotIn('pickle remains motionless', script)
+        self.assertNotIn('Institute recommends', script)
         self.assertIn("const rawResponse = await response.text();", script)
         self.assertIn('payload = JSON.parse(rawResponse);', script)
         self.assertNotIn('await response.json()', script)
@@ -95,15 +103,16 @@ class BrainrotPageTests(TestCase):
         engine = Path(engine_path).read_text(encoding='utf-8')
         self.assertIn("LEG_CLAPS: 'leg_claps'", engine)
         self.assertIn('[23, 24, 25, 26]', engine)
-        self.assertIn('LEG_CLAP_CLOSE_RATIO = 0.42', engine)
-        self.assertIn('LEG_CLAP_REOPEN_RATIO = 0.62', engine)
+        self.assertIn('LEG_CLAP_CLOSE_RATIO = 1.20', engine)
+        self.assertIn('LEG_CLAP_REOPEN_RATIO = 1.35', engine)
+        self.assertNotIn('LEG_CLAP_STABLE_FRAMES', engine)
         self.assertNotIn('stableSinceOpen', engine)
 
     def test_counter_modes_are_separate_entries_and_invalid_mode_falls_back(self):
         leg_claps = self.client.get('/67/counter/?mode=leg_claps')
         self.assertContains(leg_claps, 'data-game-mode="leg_claps"')
         self.assertContains(leg_claps, 'Tung Tung Leg Claps')
-        self.assertContains(leg_claps, '酸黄瓜舞计数')
+        self.assertNotContains(leg_claps, '酸黄瓜舞计数')
         self.assertContains(leg_claps, 'leg claps counted')
         self.assertNotContains(leg_claps, 'data-counter-mode=')
 
@@ -116,7 +125,7 @@ class BrainrotPageTests(TestCase):
 
     def test_brainrot_pages_have_chinese_translation(self):
         response = self.client.get('/67/', HTTP_ACCEPT_LANGUAGE='zh-hans')
-        self.assertContains(response, '61 / 67 研究部')
+        self.assertContains(response, '酸黄瓜舞计数')
         counter = self.client.get('/67/counter/', HTTP_ACCEPT_LANGUAGE='zh-hans')
         self.assertContains(counter, '启用摄像头')
         self.assertContains(counter, '你的视频将会公开')

@@ -43,42 +43,42 @@ test('the existing 67 direction-change rule is preserved', () => {
   assert.equal(tracker.observe(sixSevenPose(0.70, 0.30), 400), true);
 });
 
-test('a leg clap counts close once and requires a clear reopen before re-arming', () => {
+test('a leg clap counts when knee gap returns to about hip width', () => {
   const tracker = createGestureTracker(GAME_MODES.LEG_CLAPS);
 
-  // hip width is .20, so .14 knee gap = .70 (open) and .07 = .35 (closed).
-  assert.equal(tracker.observe(legPose(0.14), 100), false);
-  assert.equal(tracker.observe(legPose(0.14), 133), false);
-  assert.equal(tracker.observe(legPose(0.07), 200), false);
-  assert.equal(tracker.observe(legPose(0.07), 233), true);
+  // Hip width is .20. An open .30 gap is 1.50x hip width; a .22 inward gap is 1.10x.
+  assert.equal(tracker.observe(legPose(0.30), 100), false);
+  assert.equal(tracker.observe(legPose(0.22), 133), true);
 
-  // Staying closed cannot farm counts.
-  assert.equal(tracker.observe(legPose(0.06), 266), false);
-  assert.equal(tracker.observe(legPose(0.07), 299), false);
+  // Staying inward cannot farm counts.
+  assert.equal(tracker.observe(legPose(0.20), 166), false);
+  assert.equal(tracker.observe(legPose(0.23), 199), false);
 
-  // A partial opening inside the hysteresis band is not enough.
-  assert.equal(tracker.observe(legPose(0.11), 332), false);
-  assert.equal(tracker.observe(legPose(0.07), 365), false);
+  // A partial opening inside the hysteresis band is not enough to re-arm.
+  assert.equal(tracker.observe(legPose(0.25), 232), false);
+  assert.equal(tracker.observe(legPose(0.21), 265), false);
 
-  // Reopen for two frames, then another close can count.
-  assert.equal(tracker.observe(legPose(0.14), 400), false);
-  assert.equal(tracker.observe(legPose(0.14), 433), false);
-  assert.equal(tracker.observe(legPose(0.07), 466), false);
-  assert.equal(tracker.observe(legPose(0.07), 499), true);
+  // A clearly wider knee gap re-arms immediately for the next inward swing.
+  assert.equal(tracker.observe(legPose(0.29), 298), false);
+  assert.equal(tracker.observe(legPose(0.21), 331), true);
 });
 
-test('starting closed never counts until an open pose has armed the tracker', () => {
+test('starting inward never counts until a clearly open pose has armed the tracker', () => {
   const tracker = createGestureTracker(GAME_MODES.LEG_CLAPS);
-  assert.equal(tracker.observe(legPose(0.06), 100), false);
-  assert.equal(tracker.observe(legPose(0.06), 133), false);
-  assert.equal(tracker.observe(legPose(0.14), 166), false);
-  assert.equal(tracker.observe(legPose(0.14), 199), false);
-  assert.equal(tracker.observe(legPose(0.07), 232), false);
-  assert.equal(tracker.observe(legPose(0.07), 265), true);
+  assert.equal(tracker.observe(legPose(0.20), 100), false);
+  assert.equal(tracker.observe(legPose(0.22), 133), false);
+  assert.equal(tracker.observe(legPose(0.30), 166), false);
+  assert.equal(tracker.observe(legPose(0.23), 199), true);
+});
+
+test('a slightly wider-than-hip knee gap still counts as inward', () => {
+  const tracker = createGestureTracker(GAME_MODES.LEG_CLAPS);
+  assert.equal(tracker.observe(legPose(0.30), 100), false);
+  assert.equal(tracker.observe(legPose(0.23), 133), true);
 });
 
 test('leg-clap readiness only requires hips and knees, not feet', () => {
-  const pose = legPose(0.14, { ankleVisible: false });
+  const pose = legPose(0.30, { ankleVisible: false });
   assert.equal(landmarksAreVisible(GAME_MODES.LEG_CLAPS, pose), true);
   pose[25].visibility = 0.1;
   assert.equal(landmarksAreVisible(GAME_MODES.LEG_CLAPS, pose), false);
@@ -86,11 +86,14 @@ test('leg-clap readiness only requires hips and knees, not feet', () => {
 
 test('losing knee tracking disarms the current leg-clap cycle', () => {
   const tracker = createGestureTracker(GAME_MODES.LEG_CLAPS);
-  assert.equal(tracker.observe(legPose(0.14), 100), false);
-  assert.equal(tracker.observe(legPose(0.14), 133), false);
-  const lost = legPose(0.07);
+  assert.equal(tracker.observe(legPose(0.30), 100), false);
+
+  const lost = legPose(0.22);
   lost[25].visibility = 0.1;
-  assert.equal(tracker.observe(lost, 166), false);
-  assert.equal(tracker.observe(legPose(0.07), 199), false);
-  assert.equal(tracker.observe(legPose(0.07), 232), false);
+  assert.equal(tracker.observe(lost, 133), false);
+
+  // Reappearing inward is not enough; a new open pose is required.
+  assert.equal(tracker.observe(legPose(0.22), 166), false);
+  assert.equal(tracker.observe(legPose(0.30), 199), false);
+  assert.equal(tracker.observe(legPose(0.22), 232), true);
 });

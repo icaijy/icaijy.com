@@ -33,7 +33,7 @@
   </div>
 
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:index' %}">← {% translate "Research division" %}</a>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:index' %}">← 67 Games</a>
     <a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:hall_of_fame' %}?mode={{ game_mode }}">
       <i class="fa-solid fa-ranking-star me-1"></i> {% translate "Hall of Fame" %}
     </a>
@@ -51,9 +51,8 @@
         {% endif %}
       </p>
     {% else %}
-      <span class="badge {% if game_mode == 'leg_claps' %}text-bg-success{% else %}text-bg-primary{% endif %} mode-badge mb-2">20 seconds · pose counter</span>
+      <span class="badge {% if game_mode == 'leg_claps' %}text-bg-success{% else %}text-bg-primary{% endif %} mode-badge mb-2">20 seconds · camera</span>
       <h1 class="display-5 mb-2" id="counter-title">{% if game_mode == 'leg_claps' %}{% translate "Tung Tung Leg Claps" %}{% else %}67 Counter{% endif %}</h1>
-      {% if game_mode == 'leg_claps' %}<div class="text-secondary fw-semibold mb-2">酸黄瓜舞计数</div>{% endif %}
       <p class="lead text-secondary mb-0" id="counter-description">{% if game_mode == 'leg_claps' %}{% translate "Count each time Tung Tung's knees swing inward from a clearly open position. The knees must open again before another clap." %}{% else %}{% translate "Move your arms up and down in the 6–7 pattern. Make as many counted moves as you can in 20 seconds." %}{% endif %}</p>
     {% endif %}
   </header>
@@ -91,7 +90,7 @@
               <canvas id="pose-overlay"></canvas>
               <div class="camera-placeholder" id="camera-placeholder">
                 <span class="counter-placeholder-mark" id="counter-placeholder-mark">{% if game_mode == 'leg_claps' %}TT{% else %}67{% endif %}</span>
-                <span>{% translate "Camera is currently doing nothing." %}</span>
+                <span>Camera off</span>
               </div>
               <div class="countdown" id="countdown" aria-live="assertive"></div>
               <div class="live-pill" id="live-pill" hidden>● {% translate "RECORDING LOCALLY" %}</div>
@@ -125,16 +124,16 @@
         <div class="d-grid gap-2">
           <button class="btn btn-primary" id="enable-camera">{% translate "Enable camera" %}</button>
           <button class="btn btn-primary" id="start-run" disabled hidden>{% translate "Detector is still loading…" %}</button>
-          <button class="btn btn-outline-secondary" id="reset-run" hidden>{% translate "Run this foolish experiment again" %}</button>
+          <button class="btn btn-outline-secondary" id="reset-run" hidden>Try again</button>
         </div>
-        <p class="small text-secondary mt-3 mb-0">{% translate "I'm ready starts a local recording with the live count burned into the video. Submitting remains your decision." %}</p>
+        <p class="small text-secondary mt-3 mb-0">The run is recorded locally with the live count on the video. Nothing uploads unless you submit it.</p>
         <p class="counter-error text-danger small mt-2 mb-0" id="counter-error" role="alert"></p>
       </section>
 
       <a class="hof-card d-flex align-items-center gap-3 p-3 text-decoration-none text-body" id="counter-hof-portal" href="{% url 'brainrot:hall_of_fame' %}?mode={{ game_mode }}">
         <span class="hof-mark" id="counter-hof-mark">{% if game_mode == 'leg_claps' %}TT{% else %}67{% endif %}</span>
         <span>
-          <small class="text-secondary d-block">{% translate "PUBLIC VIDEO LEADERBOARD" %}</small>
+          <small class="text-secondary d-block">VIDEO LEADERBOARD</small>
           <strong>{% translate "Hall of Fame" %} →</strong>
         </span>
       </a>
@@ -148,7 +147,7 @@
     <div class="mb-4">
       <div class="text-secondary small text-uppercase fw-semibold">RESULT</div>
       <h2 class="h3 mt-1 mb-2"><span id="result-score">0</span> <span id="result-unit">{% if game_mode == 'leg_claps' %}{% translate "leg claps in 20 seconds" %}{% else %}{% translate "6️⃣7️⃣ moves in 20 seconds" %}{% endif %}</span></h2>
-      <p class="mb-0" id="result-copy">{% translate "A result has occurred." %}</p>
+      <p class="mb-0" id="result-copy">Run complete.</p>
     </div>
 
     <div class="recording-review mb-4" id="recording-review" hidden>
@@ -201,7 +200,7 @@
     <button class="publication-modal-close" type="button" data-close-publication-modal aria-label="{% translate 'Close' %}">×</button>
     <div class="text-secondary small text-uppercase fw-semibold mb-2">{% translate "PUBLICATION CONSENT" %}</div>
     <h2 class="h4" id="publication-modal-title">{% translate "Your video will be public" %}</h2>
-    <p>{% translate "Submitting publishes this recording to the 67 Hall of Fame. Anyone can watch, download and share it." %}</p>
+    <p>Submitting publishes this recording to the Hall of Fame. Anyone can watch, download and share it.</p>
     {% if request.user.is_authenticated %}
       <p class="small text-secondary">{% translate "Because you are logged in, you can make it private or delete it later from My HOF." %}</p>
     {% else %}

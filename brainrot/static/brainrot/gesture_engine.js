@@ -70,12 +70,12 @@ class SixSevenTracker {
   }
 }
 
-// These are intentionally boring, easy-to-tune thresholds rather than an
-// attempt to infer whether feet/hips stayed perfectly fixed. kneeRatio is the
-// horizontal knee gap divided by horizontal hip width.
-const LEG_CLAP_CLOSE_RATIO = 0.42;
-const LEG_CLAP_REOPEN_RATIO = 0.62;
-const LEG_CLAP_STABLE_FRAMES = 2;
+// For this dance, the knees are roughly one hip-width apart at the inward
+// point. Opening the knees makes that horizontal gap clearly wider than the
+// hips. The gap between these thresholds is deliberate hysteresis so one pose
+// cannot repeatedly count from small landmark jitter.
+const LEG_CLAP_CLOSE_RATIO = 1.20;
+const LEG_CLAP_REOPEN_RATIO = 1.35;
 
 class LegClapTracker {
   constructor() {
@@ -84,8 +84,6 @@ class LegClapTracker {
 
   reset() {
     this.armed = false;
-    this.openFrames = 0;
-    this.closedFrames = 0;
   }
 
   kneeRatio(landmarks) {
@@ -99,10 +97,8 @@ class LegClapTracker {
 
   observe(landmarks) {
     if (!landmarksAreVisible(GAME_MODES.LEG_CLAPS, landmarks)) {
-      this.openFrames = 0;
-      this.closedFrames = 0;
       // Require a fresh visible open pose after tracking is lost. This avoids
-      // counting a person merely re-entering the frame with their knees closed.
+      // counting a person merely re-entering the frame at the inward point.
       this.armed = false;
       return false;
     }
@@ -110,28 +106,13 @@ class LegClapTracker {
     const ratio = this.kneeRatio(landmarks);
 
     if (ratio >= LEG_CLAP_REOPEN_RATIO) {
-      this.closedFrames = 0;
-      this.openFrames += 1;
-      if (this.openFrames >= LEG_CLAP_STABLE_FRAMES) this.armed = true;
+      this.armed = true;
       return false;
     }
 
-    this.openFrames = 0;
-    if (ratio > LEG_CLAP_CLOSE_RATIO) {
-      this.closedFrames = 0;
-      return false;
-    }
-
-    if (!this.armed) {
-      this.closedFrames = 0;
-      return false;
-    }
-
-    this.closedFrames += 1;
-    if (this.closedFrames < LEG_CLAP_STABLE_FRAMES) return false;
+    if (ratio > LEG_CLAP_CLOSE_RATIO || !this.armed) return false;
 
     this.armed = false;
-    this.closedFrames = 0;
     return true;
   }
 }
