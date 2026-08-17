@@ -1,3 +1,10 @@
+import {
+  GAME_MODES,
+  OVERLAY_GEOMETRY,
+  createGestureTracker,
+  landmarksAreVisible,
+} from './gesture_engine.js?v=20260817.2';
+
 const app = document.getElementById('counter-app');
 if (app) {
   const tr = (message) => typeof gettext === 'function' ? gettext(message) : message;
@@ -36,6 +43,14 @@ if (app) {
   const rivalVideo = document.getElementById('rival-video');
   const rivalScoreEl = document.getElementById('rival-score');
   const rivalTimelineNode = document.getElementById('rival-event-timeline');
+  const counterTitle = document.getElementById('counter-title');
+  const counterDescription = document.getElementById('counter-description');
+  const scoreLabel = document.getElementById('score-label');
+  const resultUnit = document.getElementById('result-unit');
+  const placeholderMark = document.getElementById('counter-placeholder-mark');
+  const hallMark = document.getElementById('counter-hof-mark');
+  const hallPortal = document.getElementById('counter-hof-portal');
+  const modeButtons = [...document.querySelectorAll('[data-counter-mode]')];
 
   const GAME_SECONDS = 20;
   const COUNTDOWN_STEP_MS = 1000;
@@ -46,6 +61,11 @@ if (app) {
   const rivalTimeline = rivalTimelineNode ? JSON.parse(rivalTimelineNode.textContent) : [];
   const rivalName = app.dataset.rivalName || '';
   const rivalFinalScore = Number(app.dataset.rivalScore || 0);
+  let currentMode = Object.values(GAME_MODES).includes(app.dataset.gameMode)
+    ? app.dataset.gameMode
+    : GAME_MODES.SIX_SEVEN;
+  let gestureTracker = createGestureTracker(currentMode);
+  let activeModeConfig = null;
   let stream = null;
   let landmarker = null;
   let runtimePromise = null;
@@ -63,8 +83,6 @@ if (app) {
   let runStartedAt = 0;
   let rivalTimelineIndex = 0;
   let rivalReady = !rivalVideo;
-  let lastZone = 0;
-  let lastCountAt = 0;
   let recorder = null;
   let recordingStream = null;
   let recordingCanvas = null;
@@ -161,17 +179,90 @@ if (app) {
     return match ? decodeURIComponent(match[1]) : '';
   }
 
+  function modeNode(prefix, field) {
+    return document.getElementById(`${prefix}-${field}`)?.textContent.trim() || '';
+  }
+
+  function modeConfig(mode = currentMode) {
+    const prefix = mode === GAME_MODES.LEG_CLAPS ? 'leg-claps' : 'six-seven';
+    return {
+      title: modeNode(prefix, 'title'),
+      description: modeNode(prefix, 'description'),
+      scoreLabel: modeNode(prefix, 'score-label'),
+      resultUnit: modeNode(prefix, 'result-unit'),
+      mark: modeNode(prefix, 'placeholder'),
+      hudLabel: mode === GAME_MODES.LEG_CLAPS ? 'LEG CLAPS' : '67 COUNT',
+      hudBrand: mode === GAME_MODES.LEG_CLAPS ? 'ICAiJY · TUNG TUNG' : 'ICAiJY · SIX SEVEN',
+      downloadSlug: mode === GAME_MODES.LEG_CLAPS ? 'tung-tung-leg-claps' : '67-run',
+    };
+  }
+
+  function armedStatus() {
+    return currentMode === GAME_MODES.LEG_CLAPS
+      ? tr('Armed — keep hips, knees and ankles visible')
+      : tr('Armed — step back until shoulders and wrists are visible');
+  }
+
+  function updateModeUI({ updateUrl = true } = {}) {
+    const config = modeConfig();
+    activeModeConfig = config;
+    app.dataset.gameMode = currentMode;
+    if (counterTitle) counterTitle.textContent = config.title;
+    if (counterDescription) counterDescription.textContent = config.description;
+    scoreLabel.textContent = config.scoreLabel;
+    resultUnit.textContent = config.resultUnit;
+    placeholderMark.textContent = config.mark;
+    hallMark.textContent = config.mark;
+    modeButtons.forEach((button) => {
+      const active = button.dataset.counterMode === currentMode;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    const hallUrl = new URL(app.dataset.hallUrl, window.location.origin);
+    hallUrl.searchParams.set('mode', currentMode);
+    hallPortal.href = hallUrl.href;
+    if (updateUrl && app.dataset.modeLocked !== 'true') {
+      const pageUrl = new URL(window.location.href);
+      pageUrl.searchParams.set('mode', currentMode);
+      window.history.replaceState({}, '', pageUrl);
+    }
+  }
+
+  function switchMode(mode) {
+    if (!Object.values(GAME_MODES).includes(mode) || mode === currentMode) return;
+    if (running || countdownActive || armed || app.dataset.modeLocked === 'true') return;
+    if (!resultCard.hidden || recordingBlob) resetRun();
+    currentMode = mode;
+    gestureTracker = createGestureTracker(currentMode);
+    readyFrames = 0;
+    poseReady = false;
+    updateModeUI();
+    if (stream) setStatus(tr('Detector ready — step into frame'), 'busy');
+    showError('');
+  }
+
+  function setModeControlsDisabled(disabled) {
+    modeButtons.forEach((button) => { button.disabled = disabled; });
+  }
+
   function shareableResult() {
+    const isLegClaps = currentMode === GAME_MODES.LEG_CLAPS;
     const headline = rivalName
-      ? `I made ${score} 6️⃣7️⃣ moves in 20 seconds against ${rivalName}'s ${rivalFinalScore}.`
-      : score === 67
-        ? 'I made exactly 67 6️⃣7️⃣ moves in 20 seconds. Peer review is complete. 🧪'
-        : `I made ${score} 6️⃣7️⃣ moves in 20 seconds.`;
+      ? isLegClaps
+        ? `I made ${score} Tung Tung Leg Claps in 20 seconds against ${rivalName}'s ${rivalFinalScore}.`
+        : `I made ${score} 6️⃣7️⃣ moves in 20 seconds against ${rivalName}'s ${rivalFinalScore}.`
+      : isLegClaps
+        ? `I made ${score} Tung Tung Leg Claps in 20 seconds. The knees have submitted their findings. 🥒`
+        : score === 67
+          ? 'I made exactly 67 6️⃣7️⃣ moves in 20 seconds. Peer review is complete. 🧪'
+          : `I made ${score} 6️⃣7️⃣ moves in 20 seconds.`;
     const blocks = score > 0
       ? `${'🟩'.repeat(Math.min(score, 67))}${score > 67 ? ` +${score - 67}` : ''}`
       : '⬜';
-    const url = rivalName ? window.location.href : new URL('/67/counter/', window.location.origin).href;
-    return `${headline}\n${blocks}\nSIX SEVEN\nWatch the run or try to beat it.\n${url}`;
+    const pageUrl = rivalName ? new URL(window.location.href) : new URL('/67/counter/', window.location.origin);
+    pageUrl.searchParams.set('mode', currentMode);
+    const experiment = isLegClaps ? 'TUNG TUNG LEG CLAPS · 酸黄瓜舞计数' : 'SIX SEVEN';
+    return `${headline}\n${blocks}\n${experiment}\nWatch the run or try to beat it.\n${pageUrl.href}`;
   }
 
   async function copyShareResult() {
@@ -215,13 +306,12 @@ if (app) {
     context.clearRect(0, 0, width, height);
     if (!landmarks) return;
 
-    const pointIds = [11, 12, 13, 14, 15, 16];
-    const links = [[11, 13], [13, 15], [12, 14], [14, 16], [11, 12], [15, 16]];
+    const geometry = OVERLAY_GEOMETRY[currentMode];
     context.lineWidth = Math.max(3, width / 180);
     context.strokeStyle = '#d8ff62';
     context.fillStyle = '#ffffff';
     context.lineCap = 'round';
-    for (const [from, to] of links) {
+    for (const [from, to] of geometry.links) {
       const a = landmarks[from];
       const b = landmarks[to];
       context.beginPath();
@@ -229,7 +319,7 @@ if (app) {
       context.lineTo(b.x * width, b.y * height);
       context.stroke();
     }
-    for (const id of pointIds) {
+    for (const id of geometry.points) {
       const point = landmarks[id];
       context.beginPath();
       context.arc(point.x * width, point.y * height, Math.max(4, width / 120), 0, Math.PI * 2);
@@ -238,38 +328,18 @@ if (app) {
   }
 
   function sufficientlyVisible(landmarks) {
-    if (!landmarks) return false;
-    // Elbows improve the overlay but do not participate in the counter. A
-    // briefly uncertain elbow should not discard an otherwise usable frame.
-    return [11, 12, 15, 16].every((id) => {
-      const point = landmarks[id];
-      return point && (point.visibility ?? 1) > 0.45 && point.x > 0.02 && point.x < 0.98 && point.y > 0.02 && point.y < 0.98;
-    });
+    return landmarksAreVisible(currentMode, landmarks);
   }
 
   function observeGesture(landmarks, now) {
-    if (!running || !sufficientlyVisible(landmarks)) return;
-    const leftWrist = landmarks[15];
-    const rightWrist = landmarks[16];
-    const leftShoulder = landmarks[11];
-    const rightShoulder = landmarks[12];
-    const shoulderWidth = Math.max(
-      Math.hypot(leftShoulder.x - rightShoulder.x, leftShoulder.y - rightShoulder.y),
-      0.1,
-    );
-    const normalisedDifference = (leftWrist.y - rightWrist.y) / shoulderWidth;
-    const zone = normalisedDifference > 0.20 ? 1 : normalisedDifference < -0.20 ? -1 : 0;
-    if (zone === 0) return;
-    if (lastZone === 0) {
-      lastZone = zone;
-      return;
-    }
-    if (zone !== lastZone && now - lastCountAt > 90) {
+    // The detector and timer use separate animation-frame loops. Enforce the
+    // deadline here too so a detector frame cannot sneak in after 20 seconds
+    // but before the timer loop has rendered the finished state.
+    if (!running || now >= endTime || !sufficientlyVisible(landmarks)) return;
+    if (gestureTracker.observe(landmarks, now)) {
       score += 1;
       scoreEl.textContent = score;
       eventTimeline.push(Number(Math.max(0, (now - runStartedAt) / 1000).toFixed(3)));
-      lastZone = zone;
-      lastCountAt = now;
     }
   }
 
@@ -290,7 +360,7 @@ if (app) {
             if (poseReady) {
               beginRun();
             } else {
-              setStatus(tr('Armed — step back until shoulders and wrists are visible'), 'busy');
+              setStatus(armedStatus(), 'busy');
               startButton.textContent = tr('Waiting for your pose…');
             }
           } else if (poseReady) {
@@ -409,7 +479,7 @@ if (app) {
     recordingContext.fillText(String(score), padding * 1.55, padding * 1.15);
     recordingContext.fillStyle = '#ffffff';
     recordingContext.font = `800 ${labelSize}px Inter, Arial, sans-serif`;
-    recordingContext.fillText('67 COUNT', padding * 1.55, padding * 1.15 + scoreSize);
+    recordingContext.fillText(activeModeConfig.hudLabel, padding * 1.55, padding * 1.15 + scoreSize);
 
     recordingContext.textAlign = 'right';
     recordingContext.fillStyle = 'rgba(15, 23, 42, .76)';
@@ -434,7 +504,7 @@ if (app) {
     recordingContext.fillRect(padding, height - padding - labelSize * 2.1, labelSize * 9.2, labelSize * 2.1);
     recordingContext.fillStyle = '#ffffff';
     recordingContext.font = `800 ${labelSize}px Inter, Arial, sans-serif`;
-    recordingContext.fillText('ICAiJY · SIX SEVEN', padding * 1.45, height - padding - labelSize * .55);
+    recordingContext.fillText(activeModeConfig.hudBrand, padding * 1.45, height - padding - labelSize * .55);
     recordingContext.restore();
   }
 
@@ -504,12 +574,12 @@ if (app) {
       rivalVideo.pause();
       if (rivalVideo.readyState) rivalVideo.currentTime = 0;
     }
-    lastZone = 0;
-    lastCountAt = 0;
+    gestureTracker.reset();
     scoreEl.textContent = '0';
     timeEl.textContent = GAME_SECONDS.toFixed(1);
     armed = true;
-    setStatus(tr('Armed — step back until shoulders and wrists are visible'), 'busy');
+    setModeControlsDisabled(true);
+    setStatus(armedStatus(), 'busy');
     if (poseReady) beginRun();
   }
 
@@ -539,6 +609,7 @@ if (app) {
       }
       showError(error.message);
       countdownActive = false;
+      setModeControlsDisabled(false);
       startButton.hidden = false;
       startButton.disabled = false;
       startButton.textContent = READY_LABEL;
@@ -572,6 +643,7 @@ if (app) {
     rivalVideo?.pause();
     if (rivalScoreEl) rivalScoreEl.textContent = rivalFinalScore;
     const blob = await stopRecording();
+    setModeControlsDisabled(false);
 
     resultScore.textContent = score;
     resultCopy.textContent = rivalName
@@ -580,11 +652,15 @@ if (app) {
         : score === rivalFinalScore
           ? `A draw with ${rivalName}. Statistically annoying.`
           : `${rivalName} remains ahead by ${rivalFinalScore - score}. Replication is encouraged.`
-      : score === 67
-        ? tr('Exactly 67. There will be no further questions.')
-        : score > 67
-          ? tr('The 67 barrier has been disturbed.')
-          : tr('The Institute recommends more arm-based research.');
+      : currentMode === GAME_MODES.LEG_CLAPS
+        ? score > 0
+          ? tr('The knees opened, closed and produced a statistically usable result.')
+          : tr('No inward knee events were observed. The pickle remains motionless.')
+        : score === 67
+          ? tr('Exactly 67. There will be no further questions.')
+          : score > 67
+            ? tr('The 67 barrier has been disturbed.')
+            : tr('The Institute recommends more arm-based research.');
     shareText.value = shareableResult();
     copyShareStatus.textContent = '';
     resultCard.hidden = false;
@@ -594,7 +670,8 @@ if (app) {
       recordingUrl = URL.createObjectURL(blob);
       recordingPreview.src = recordingUrl;
       recordingDownload.href = recordingUrl;
-      recordingDownload.download = blob.type === 'video/mp4' ? '67-run-counted.mp4' : '67-run-counted.webm';
+      const extension = blob.type === 'video/mp4' ? 'mp4' : 'webm';
+      recordingDownload.download = `${activeModeConfig.downloadSlug}-counted.${extension}`;
       recordingDownload.hidden = false;
     }
     startButton.hidden = true;
@@ -620,6 +697,7 @@ if (app) {
     countdownActive = false;
     score = 0;
     eventTimeline = [];
+    gestureTracker.reset();
     runStartedAt = 0;
     rivalTimelineIndex = 0;
     if (rivalScoreEl) rivalScoreEl.textContent = '0';
@@ -633,6 +711,7 @@ if (app) {
     shareText.value = '';
     copyShareStatus.textContent = '';
     resetButton.hidden = true;
+    setModeControlsDisabled(false);
     startButton.hidden = false;
     startButton.disabled = !landmarker;
     startButton.textContent = landmarker ? READY_LABEL : tr('Detector is still loading…');
@@ -654,10 +733,11 @@ if (app) {
     const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]')?.value || '';
     const extension = recordingBlob.type === 'video/mp4' ? 'mp4' : 'webm';
     const form = new FormData();
+    form.append('game_mode', currentMode);
     form.append('score', String(score));
     form.append('event_timeline', JSON.stringify(eventTimeline));
     form.append('publication_consent', 'yes');
-    form.append('video', recordingBlob, `67-run.${extension}`);
+    form.append('video', recordingBlob, `${activeModeConfig.downloadSlug}.${extension}`);
     if (displayNameInput) form.append('display_name', displayNameInput.value);
     if (turnstileResponse) form.append('cf-turnstile-response', turnstileResponse);
 
@@ -710,7 +790,11 @@ if (app) {
     document.body.classList.remove('publication-modal-open');
   }
 
+  updateModeUI({ updateUrl: false });
   preloadPoseRuntime();
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => switchMode(button.dataset.counterMode));
+  });
   enableButton.addEventListener('click', initialiseDetector);
   startButton.addEventListener('click', armRun);
   resetButton.addEventListener('click', resetRun);

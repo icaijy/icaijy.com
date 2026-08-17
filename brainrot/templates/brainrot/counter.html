@@ -1,41 +1,71 @@
 {% extends 'base.html' %}
 {% load static i18n %}
 
-{% block title %}67 Counter{% endblock %}
+{% block title %}{% if game_mode == 'leg_claps' %}{% translate "Tung Tung Leg Claps" %}{% else %}67 Counter{% endif %}{% endblock %}
 
 {% block content %}
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/vision_bundle.mjs" crossorigin>
 <link rel="preload" href="https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task" as="fetch" crossorigin>
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260817.1">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260817.2">
 {% if turnstile_enabled %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}
 
 <main class="br-page counter-page" id="counter-app"
       data-submit-url="{% url 'brainrot:submit_hall_of_fame' %}"
       data-hall-url="{% url 'brainrot:hall_of_fame' %}"
       data-max-upload-mb="{{ max_upload_mb }}"
+      data-game-mode="{{ game_mode }}"
+      data-mode-locked="{% if rival %}true{% else %}false{% endif %}"
       {% if rival %}data-rival-name="{{ rival.public_name }}" data-rival-score="{{ rival.score }}"{% endif %}>
   <header class="br-toolbar">
     <a href="{% url 'brainrot:index' %}">← {% translate "Research division" %}</a>
   </header>
+
+  <div class="counter-mode-copy" hidden>
+    <span id="six-seven-title">SIX SEVEN</span>
+    <span id="leg-claps-title">{% translate "TUNG TUNG LEG CLAPS" %}</span>
+    <span id="six-seven-description">{% translate "Move your arms up and down in the 6–7 pattern. Make as many counted moves as you can in 20 seconds." %}</span>
+    <span id="leg-claps-description">{% translate "Count each time Tung Tung's knees swing inward from a clearly open position. The knees must open again before another clap." %}</span>
+    <span id="six-seven-score-label">{% translate "6️⃣7️⃣ moves counted" %}</span>
+    <span id="leg-claps-score-label">{% translate "leg claps counted" %}</span>
+    <span id="six-seven-result-unit">{% translate "6️⃣7️⃣ moves in 20 seconds" %}</span>
+    <span id="leg-claps-result-unit">{% translate "leg claps in 20 seconds" %}</span>
+    <span id="six-seven-placeholder">67</span>
+    <span id="leg-claps-placeholder">TT</span>
+  </div>
+
+  {% if not rival %}
+  <nav class="counter-mode-switcher" aria-label="{% translate 'Counter mode' %}">
+    <button type="button" data-counter-mode="six_seven" class="{% if game_mode == 'six_seven' %}active{% endif %}">
+      <strong>67 Counter</strong>
+      <small>{% translate "arm pattern" %}</small>
+    </button>
+    <button type="button" data-counter-mode="leg_claps" class="{% if game_mode == 'leg_claps' %}active{% endif %}">
+      <strong>{% translate "Tung Tung Leg Claps" %}</strong>
+      <small>{% translate "酸黄瓜舞计数" %}</small>
+    </button>
+  </nav>
+  {% else %}
+  <div class="counter-mode-locked">{% translate "Challenge mode:" %} <strong>{{ rival.get_game_mode_display }}</strong></div>
+  {% endif %}
 
   <section class="counter-hero">
     <div class="counter-intro">
       {% if rival %}
       <span class="br-kicker">{% translate "SYNCHRONISED HUMAN PERFORMANCE TRIAL · 20 SECONDS" %}</span>
       <h1>YOU vs {{ rival.public_name }}</h1>
-      <p>{% blocktranslate with name=rival.public_name score=rival.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds. Their video will play beside yours.{% endblocktranslate %}</p>
+      <p>{% if game_mode == 'leg_claps' %}{% blocktranslate with name=rival.public_name score=rival.score %}{{ name }} made {{ score }} Tung Tung Leg Claps in 20 seconds. Their video will play beside yours.{% endblocktranslate %}{% else %}{% blocktranslate with name=rival.public_name score=rival.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds. Their video will play beside yours.{% endblocktranslate %}{% endif %}</p>
       {% else %}
       <span class="br-kicker">{% translate "POSE KINETICS LAB · 20 SECOND PROTOCOL" %}</span>
-      <h1>SIX SEVEN</h1>
-      <p>{% translate "Move your arms up and down in the 6–7 pattern. Make as many counted moves as you can in 20 seconds." %}</p>
+      <h1 id="counter-title">{% if game_mode == 'leg_claps' %}{% translate "TUNG TUNG LEG CLAPS" %}{% else %}SIX SEVEN{% endif %}</h1>
+      <p id="counter-description">{% if game_mode == 'leg_claps' %}{% translate "Count each time Tung Tung's knees swing inward from a clearly open position. The knees must open again before another clap." %}{% else %}{% translate "Move your arms up and down in the 6–7 pattern. Make as many counted moves as you can in 20 seconds." %}{% endif %}</p>
       {% endif %}
     </div>
     <div class="counter-hof-column">
-      <a class="counter-hof-portal" id="counter-hof-portal" href="{% url 'brainrot:hall_of_fame' %}">
+      <a class="counter-hof-portal" id="counter-hof-portal" href="{% url 'brainrot:hall_of_fame' %}?mode={{ game_mode }}">
         <span class="counter-hof-eyebrow">{% translate "PUBLIC VIDEO LEADERBOARD" %}</span>
-        <span class="counter-hof-mark">67</span>
+        <span class="counter-hof-mark" id="counter-hof-mark">{% if game_mode == 'leg_claps' %}TT{% else %}67{% endif %}</span>
         <strong>{% translate "HALL OF FAME" %}</strong>
         <small>{% translate "Watch runs · preview videos · challenge scores" %} <b>→</b></small>
       </a>
@@ -72,7 +102,7 @@
         <video id="camera" playsinline muted></video>
         <canvas id="pose-overlay"></canvas>
         <div class="camera-placeholder" id="camera-placeholder">
-          <span class="placeholder-orbit">67</span>
+          <span class="placeholder-orbit" id="counter-placeholder-mark">{% if game_mode == 'leg_claps' %}TT{% else %}67{% endif %}</span>
           <p>{% translate "Camera is currently doing nothing." %}</p>
         </div>
         <div class="countdown" id="countdown" aria-live="assertive"></div>
@@ -87,7 +117,7 @@
 
     <aside class="counter-panel">
       <div class="score-block">
-        <span>{% translate "6️⃣7️⃣ moves counted" %}</span>
+        <span id="score-label">{% if game_mode == 'leg_claps' %}{% translate "leg claps counted" %}{% else %}{% translate "6️⃣7️⃣ moves counted" %}{% endif %}</span>
         <strong id="score">0</strong>
       </div>
       <div class="timer-block"><span>{% translate "time remaining" %}</span><strong id="counter-time">20.0</strong></div>
@@ -110,12 +140,12 @@
   <section class="result-card" id="counter-result" hidden>
     <div>
       <span class="br-kicker">{% translate "PEER-REVIEWED BY YOURSELF" %}</span>
-      <h2><span id="result-score">0</span> {% translate "6️⃣7️⃣ moves in 20 seconds" %}</h2>
+      <h2><span id="result-score">0</span> <span id="result-unit">{% if game_mode == 'leg_claps' %}{% translate "leg claps in 20 seconds" %}{% else %}{% translate "6️⃣7️⃣ moves in 20 seconds" %}{% endif %}</span></h2>
       <p id="result-copy">{% translate "A result has occurred." %}</p>
     </div>
     <div class="recording-review" id="recording-review" hidden>
       <video id="recording-preview" controls playsinline></video>
-      <p>{% translate "The recording remains local unless you submit it below. The downloaded and uploaded video includes the live 67 count. Closing or resetting discards it." %}</p>
+      <p>{% translate "The recording remains local unless you submit it below. The downloaded and uploaded video includes the live count. Closing or resetting discards it." %}</p>
       <a class="br-secondary br-button-link recording-download" id="download-recording" hidden>{% translate "Download counted video" %}</a>
       {% if not request.user.is_authenticated and anonymous_submission_available %}
         <label class="anonymous-name-field" for="hof-display-name">
@@ -141,7 +171,7 @@
     </div>
     <div class="counter-share" id="counter-share">
       <h3>🎉 {% translate "Share your result!" %}</h3>
-      <textarea id="counter-share-text" rows="6" readonly aria-label="Shareable 67 Counter result"></textarea>
+      <textarea id="counter-share-text" rows="6" readonly aria-label="Shareable counter result"></textarea>
       <button class="br-secondary" id="copy-counter-share" type="button">{% translate "Copy to clipboard" %}</button>
       <p class="subtle" id="copy-counter-status" role="status" aria-live="polite"></p>
     </div>
@@ -177,5 +207,5 @@
 
 {# Keep this version in step with counter.js so browsers cannot retain a broken runtime URL. #}
 <script src="{% url 'brainrot:javascript_catalog' %}"></script>
-<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260817.1"></script>
+<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260817.2"></script>
 {% endblock %}

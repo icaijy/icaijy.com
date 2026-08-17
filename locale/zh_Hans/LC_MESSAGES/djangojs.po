@@ -1,141 +1,156 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-17 14:00+0800\n"
+"POT-Creation-Date: 2026-08-17 14:37+0800\n"
 "Language: zh_Hans\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: brainrot/static/brainrot/counter.js:44
+#: brainrot/static/brainrot/counter.js:59
 msgid "I'm ready — record locally"
 msgstr "我准备好了——开始本地录像"
 
-#: brainrot/static/brainrot/counter.js:137
+#: brainrot/static/brainrot/counter.js:155
 msgid "Preloading pose model — camera remains off"
 msgstr "正在预加载姿态模型——摄像头仍关闭"
 
-#: brainrot/static/brainrot/counter.js:139
+#: brainrot/static/brainrot/counter.js:157
 msgid "Pose model ready — camera remains off"
 msgstr "姿态模型已就绪——摄像头仍关闭"
 
-#: brainrot/static/brainrot/counter.js:141
+#: brainrot/static/brainrot/counter.js:159
 msgid "Pose model preload paused — camera remains off"
 msgstr "姿态模型预加载暂停——摄像头仍关闭"
 
-#: brainrot/static/brainrot/counter.js:187
+#: brainrot/static/brainrot/counter.js:202
+msgid "Armed — keep hips, knees and ankles visible"
+msgstr "已待命——请确保髋部、双膝和双踝都在画面内"
+
+#: brainrot/static/brainrot/counter.js:203
+msgid "Armed — step back until shoulders and wrists are visible"
+msgstr "已待命——请后退，确保双肩和双腕可见"
+
+#: brainrot/static/brainrot/counter.js:240
+msgid "Detector ready — step into frame"
+msgstr "检测器已就绪——请进入画面"
+
+#: brainrot/static/brainrot/counter.js:274
 #: brainrot/static/brainrot/typing.js:107
-#: brainrot/static/brainrot/hof_detail.js:25
+#: brainrot/static/brainrot/hof_detail.js:30
 msgid "Copied! 🎉"
 msgstr "已复制！🎉"
 
-#: brainrot/static/brainrot/counter.js:188
+#: brainrot/static/brainrot/counter.js:275
 msgid "Result copied. Scientific distribution may begin."
 msgstr "结果已复制，可以开始科学传播。"
 
-#: brainrot/static/brainrot/counter.js:190
+#: brainrot/static/brainrot/counter.js:277
 #: brainrot/static/brainrot/typing.js:110
 msgid "Automatic copy failed. Select the text and copy it manually."
 msgstr "自动复制失败，请选中文字手动复制。"
 
-#: brainrot/static/brainrot/counter.js:193
+#: brainrot/static/brainrot/counter.js:280
 #: brainrot/static/brainrot/typing.js:112
 msgid "Copy to clipboard"
 msgstr "复制到剪贴板"
 
-#: brainrot/static/brainrot/counter.js:293
-#: brainrot/static/brainrot/counter.js:512
-msgid "Armed — step back until shoulders and wrists are visible"
-msgstr "已待命——请后退，确保双肩和双腕可见"
-
-#: brainrot/static/brainrot/counter.js:294
-#: brainrot/static/brainrot/counter.js:497
+#: brainrot/static/brainrot/counter.js:357
+#: brainrot/static/brainrot/counter.js:560
 msgid "Waiting for your pose…"
 msgstr "正在等待检测到你的姿态……"
 
-#: brainrot/static/brainrot/counter.js:299
+#: brainrot/static/brainrot/counter.js:362
 msgid "Pose detected — click I'm ready, then take your position"
 msgstr "已检测到姿态——点击“我准备好了”，然后站好位置"
 
-#: brainrot/static/brainrot/counter.js:304
+#: brainrot/static/brainrot/counter.js:367
 msgid "Detector ready — click I'm ready, then step into frame"
 msgstr "检测器已就绪——点击“我准备好了”，然后进入画面"
 
-#: brainrot/static/brainrot/counter.js:309
+#: brainrot/static/brainrot/counter.js:372
 msgid "Pose detector paused:"
 msgstr "姿态检测器已暂停："
 
-#: brainrot/static/brainrot/counter.js:317
+#: brainrot/static/brainrot/counter.js:380
 msgid "Requesting camera permission…"
 msgstr "正在请求摄像头权限……"
 
-#: brainrot/static/brainrot/counter.js:330
+#: brainrot/static/brainrot/counter.js:393
 msgid "Finishing detector setup…"
 msgstr "正在完成检测器设置……"
 
-#: brainrot/static/brainrot/counter.js:331
+#: brainrot/static/brainrot/counter.js:394
 msgid "Pose model ready"
 msgstr "姿态模型已就绪"
 
-#: brainrot/static/brainrot/counter.js:331
+#: brainrot/static/brainrot/counter.js:394
 msgid "Finishing pose model preload…"
 msgstr "正在完成姿态模型预加载……"
 
-#: brainrot/static/brainrot/counter.js:345
+#: brainrot/static/brainrot/counter.js:408
 msgid "Camera permission worked, but the pose runtime did not load"
 msgstr "摄像头权限已获取，但姿态运行库加载失败"
 
-#: brainrot/static/brainrot/counter.js:348
+#: brainrot/static/brainrot/counter.js:411
 msgid "Camera unavailable"
 msgstr "摄像头不可用"
 
-#: brainrot/static/brainrot/counter.js:349
+#: brainrot/static/brainrot/counter.js:412
 msgid ""
 "Could not start the camera. Use HTTPS, allow camera access, and try a "
 "current browser."
 msgstr "无法启动摄像头。请使用 HTTPS、允许摄像头访问，并尝试最新版浏览器。"
 
-#: brainrot/static/brainrot/counter.js:519
+#: brainrot/static/brainrot/counter.js:581
 msgid "Opponent evidence is still buffering"
 msgstr "对手录像仍在缓冲"
 
-#: brainrot/static/brainrot/counter.js:520
+#: brainrot/static/brainrot/counter.js:582
 msgid "Waiting for opponent video…"
 msgstr "正在等待对手视频……"
 
-#: brainrot/static/brainrot/counter.js:526
+#: brainrot/static/brainrot/counter.js:588
 msgid "Pose locked — countdown commencing"
 msgstr "姿态已锁定——倒计时开始"
 
-#: brainrot/static/brainrot/counter.js:562
+#: brainrot/static/brainrot/counter.js:624
 msgid "Experiment in progress"
 msgstr "实验进行中"
 
-#: brainrot/static/brainrot/counter.js:571
+#: brainrot/static/brainrot/counter.js:633
 msgid "Run complete — detector remains local"
 msgstr "本局完成——检测器仍在本地运行"
 
-#: brainrot/static/brainrot/counter.js:584
+#: brainrot/static/brainrot/counter.js:647
+msgid "The knees opened, closed and produced a statistically usable result."
+msgstr "双膝完成了打开与合拢，并产出了一份统计学上勉强可用的结果。"
+
+#: brainrot/static/brainrot/counter.js:648
+msgid "No inward knee events were observed. The pickle remains motionless."
+msgstr "未观察到双膝向内事件。酸黄瓜保持静止。"
+
+#: brainrot/static/brainrot/counter.js:650
 msgid "Exactly 67. There will be no further questions."
 msgstr "正好 67。无需进一步提问。"
 
-#: brainrot/static/brainrot/counter.js:586
+#: brainrot/static/brainrot/counter.js:652
 msgid "The 67 barrier has been disturbed."
 msgstr "67 屏障已被扰动。"
 
-#: brainrot/static/brainrot/counter.js:587
+#: brainrot/static/brainrot/counter.js:653
 msgid "The Institute recommends more arm-based research."
 msgstr "研究所建议继续开展手臂驱动型研究。"
 
-#: brainrot/static/brainrot/counter.js:614
+#: brainrot/static/brainrot/counter.js:681
 msgid "Recording discarded. Nothing was uploaded."
 msgstr "录像已丢弃，没有上传任何内容。"
 
-#: brainrot/static/brainrot/counter.js:638
+#: brainrot/static/brainrot/counter.js:706
 msgid "Detector is still loading…"
 msgstr "检测器仍在加载……"
 
-#: brainrot/static/brainrot/counter.js:665
+#: brainrot/static/brainrot/counter.js:734
 msgid "Uploading public evidence after the timer has safely stopped…"
 msgstr "计时已安全停止，正在上传公开视频证据……"
 
@@ -163,19 +178,23 @@ msgstr "准确率恰好 67%，以完全正确的方式打错了。"
 msgid "67 groups survived contact with the keyboard."
 msgstr "67 组内容成功与键盘接触并存活。"
 
-#: brainrot/static/brainrot/hof_detail.js:26
+#: brainrot/static/brainrot/hof_detail.js:32
+msgid "Full result copied! The knee evidence is ready for deployment."
+msgstr "完整结果已复制！膝盖证据可以出动了。"
+
+#: brainrot/static/brainrot/hof_detail.js:33
 msgid "Full result copied! The 6️⃣7️⃣ evidence is ready for deployment."
 msgstr "完整结果已复制！6️⃣7️⃣ 证据可以出动了。"
 
-#: brainrot/static/brainrot/hof_detail.js:29
+#: brainrot/static/brainrot/hof_detail.js:36
 msgid "Automatic copy failed. Select the message and copy it manually."
 msgstr "自动复制失败，请选中信息后手动复制。"
 
-#: brainrot/static/brainrot/hof_detail.js:31
+#: brainrot/static/brainrot/hof_detail.js:38
 msgid "Copy share message"
 msgstr "复制分享信息"
 
-#: brainrot/static/brainrot/hof_detail.js:38
+#: brainrot/static/brainrot/hof_detail.js:45
 msgid "Result launched into the world! 🚀"
 msgstr "结果已经发射到世界上！🚀"
 

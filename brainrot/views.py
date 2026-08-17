@@ -29,13 +29,20 @@ def index(request):
     return render(request, 'brainrot/index.html')
 
 
-def _counter_context(rival=None):
+def _normalise_game_mode(raw_mode):
+    if raw_mode in HallOfFameEntry.GameMode.values:
+        return raw_mode
+    return HallOfFameEntry.GameMode.SIX_SEVEN
+
+
+def _counter_context(rival=None, game_mode=HallOfFameEntry.GameMode.SIX_SEVEN):
     context = {
         'turnstile_enabled': settings.TURNSTILE_ENABLED,
         'turnstile_site_key': settings.TURNSTILE_SITE_KEY,
         'max_upload_mb': settings.HOF_MAX_UPLOAD_BYTES // (1024 * 1024),
         'anonymous_submission_available': settings.TURNSTILE_ENABLED or settings.DEBUG,
         'rival': rival,
+        'game_mode': game_mode,
     }
     if rival is not None:
         timeline = rival.event_timeline
@@ -51,7 +58,8 @@ def _counter_context(rival=None):
 
 @ensure_csrf_cookie
 def counter(request):
-    return render(request, 'brainrot/counter.html', _counter_context())
+    game_mode = _normalise_game_mode(request.GET.get('mode'))
+    return render(request, 'brainrot/counter.html', _counter_context(game_mode=game_mode))
 
 
 def typing_test(request):
@@ -59,10 +67,15 @@ def typing_test(request):
 
 
 def hall_of_fame(request):
+    game_mode = _normalise_game_mode(request.GET.get('mode'))
     entries = HallOfFameEntry.objects.filter(
+        game_mode=game_mode,
         visibility=HallOfFameEntry.Visibility.PUBLIC,
     ).select_related('user')[:67]
-    return render(request, 'brainrot/hall_of_fame.html', {'entries': entries})
+    return render(request, 'brainrot/hall_of_fame.html', {
+        'entries': entries,
+        'game_mode': game_mode,
+    })
 
 
 @login_required
@@ -95,7 +108,8 @@ def hall_of_fame_detail(request, entry_id):
 
 @ensure_csrf_cookie
 def challenge(request, entry_id):
-    return render(request, 'brainrot/counter.html', _counter_context(_public_hall_entry(entry_id)))
+    rival = _public_hall_entry(entry_id)
+    return render(request, 'brainrot/counter.html', _counter_context(rival, rival.game_mode))
 
 
 def _validated_event_timeline(raw_timeline, score):
@@ -214,6 +228,10 @@ def submit_hall_of_fame(request):
     if score < 0 or score > 500:
         return JsonResponse({'error': 'Score is outside the scientifically plausible range.'}, status=400)
 
+    game_mode = request.POST.get('game_mode') or HallOfFameEntry.GameMode.SIX_SEVEN
+    if game_mode not in HallOfFameEntry.GameMode.values:
+        return JsonResponse({'error': _('Invalid counter mode.')}, status=400)
+
     try:
         display_name = '' if owner else _anonymous_display_name(request.POST.get('display_name', ''))
     except ValidationError as exc:
@@ -236,6 +254,7 @@ def submit_hall_of_fame(request):
         entry = HallOfFameEntry(
             user=owner,
             display_name=display_name,
+            game_mode=game_mode,
             score=score,
             mime_type=inspected.mime_type,
             duration_seconds=inspected.duration_seconds,
@@ -314,7 +333,8 @@ def hall_of_fame_video(request, entry_id):
     response = FileResponse(entry.video.open('rb'), content_type=entry.mime_type)
     response['Content-Length'] = entry.video.size
     disposition = 'attachment' if request.GET.get('download') == '1' else 'inline'
-    response['Content-Disposition'] = f'{disposition}; filename="67-run-{entry.pk}.{entry.video.name.rsplit(".", 1)[-1]}"'
+    mode_slug = 'leg-claps' if entry.game_mode == HallOfFameEntry.GameMode.LEG_CLAPS else '67'
+    response['Content-Disposition'] = f'{disposition}; filename="{mode_slug}-run-{entry.pk}.{entry.video.name.rsplit(".", 1)[-1]}"'
     response['X-Content-Type-Options'] = 'nosniff'
     response['Cache-Control'] = 'private, max-age=300'
     return response

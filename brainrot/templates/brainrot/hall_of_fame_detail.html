@@ -1,16 +1,17 @@
 {% extends 'base.html' %}
 {% load static i18n %}
 
-{% block title %}{{ entry.public_name }} — 67 Hall of Fame{% endblock %}
+{% block title %}{{ entry.public_name }} — {% if entry.game_mode == 'leg_claps' %}{% translate "Tung Tung Leg Claps Hall of Fame" %}{% else %}{% translate "67 Hall of Fame" %}{% endif %}{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260817.1">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260817.2">
 <main class="br-page hall-detail-page" id="hof-detail"
       data-entry-url="{{ request.build_absolute_uri }}"
       data-username="{{ entry.public_name }}"
-      data-score="{{ entry.score }}">
+      data-score="{{ entry.score }}"
+      data-game-mode="{{ entry.game_mode }}">
   <header class="br-toolbar">
-    <a href="{% url 'brainrot:hall_of_fame' %}">← {% translate "Hall of Fame" %}</a>
+    <a href="{% url 'brainrot:hall_of_fame' %}?mode={{ entry.game_mode }}">← {% translate "Hall of Fame" %}</a>
     <a href="{% url 'brainrot:index' %}">{% translate "All experiments" %}</a>
   </header>
 
@@ -18,8 +19,9 @@
     <span class="br-kicker">{% blocktranslate with id=entry.id %}ARCHIVED HUMAN PERFORMANCE SPECIMEN #{{ id }}{% endblocktranslate %}</span>
     <h1>{{ entry.score }}</h1>
     <div>
-      <strong>{% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds.{% endblocktranslate %}</strong>
+      <strong>{% if entry.game_mode == 'leg_claps' %}{% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} Tung Tung Leg Claps in 20 seconds.{% endblocktranslate %}{% else %}{% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds.{% endblocktranslate %}{% endif %}</strong>
       <span>{{ entry.created_at|date:'j M Y · H:i' }} · {% blocktranslate with duration=entry.duration_seconds|floatformat:2 %}{{ duration }} seconds{% endblocktranslate %}</span>
+      <span class="game-mode-badge game-mode-{{ entry.game_mode }}">{{ entry.get_game_mode_display }}</span>
       <span class="visibility-badge visibility-{{ entry.visibility }}">{{ entry.get_visibility_display }}</span>
     </div>
   </section>
@@ -60,6 +62,6 @@
 </main>
 {% if entry.visibility == 'public' %}
 <script src="{% url 'brainrot:javascript_catalog' %}"></script>
-<script src="{% static 'brainrot/hof_detail.js' %}?v=20260817.1" defer></script>
+<script src="{% static 'brainrot/hof_detail.js' %}?v=20260817.2" defer></script>
 {% endif %}
 {% endblock %}
