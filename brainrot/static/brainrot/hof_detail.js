@@ -1,5 +1,6 @@
 const detail = document.getElementById('hof-detail');
 if (detail) {
+  const tr = (message) => typeof gettext === 'function' ? gettext(message) : message;
   const shareText = document.getElementById('hof-share-text');
   const shareButton = document.getElementById('share-hof');
   const copyButton = document.getElementById('copy-hof-link');
@@ -21,20 +22,20 @@ if (detail) {
         shareText.setSelectionRange(0, shareText.value.length);
         if (!document.execCommand('copy')) throw new Error('Copy command was rejected.');
       }
-      copyButton.textContent = 'Copied! 🎉';
-      status.textContent = 'Full result copied! The 6️⃣7️⃣ evidence is ready for deployment.';
+      copyButton.textContent = tr('Copied! 🎉');
+      status.textContent = tr('Full result copied! The 6️⃣7️⃣ evidence is ready for deployment.');
     } catch (error) {
       shareText.select();
-      status.textContent = 'Automatic copy failed. Select the message and copy it manually.';
+      status.textContent = tr('Automatic copy failed. Select the message and copy it manually.');
     }
-    window.setTimeout(() => { copyButton.textContent = 'Copy share message'; }, 1500);
+    window.setTimeout(() => { copyButton.textContent = tr('Copy share message'); }, 1500);
   }
 
   shareButton.addEventListener('click', async () => {
     if (navigator.share) {
       try {
         await navigator.share({ title: '67 Hall of Fame', text });
-        status.textContent = 'Result launched into the world! 🚀';
+        status.textContent = tr('Result launched into the world! 🚀');
         return;
       } catch (error) {
         if (error.name === 'AbortError') return;

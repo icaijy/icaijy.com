@@ -1,7 +1,8 @@
 {% load static %}
 {% load i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
 <!DOCTYPE html>
-<html>
+<html lang="{{ CURRENT_LANGUAGE }}">
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
@@ -64,7 +65,7 @@
               <a class="nav-link" href="/orac-leaderboards"><i class="fa-solid fa-ranking-star"></i> ORAC LB</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'brainrot:index' %}"><i class="fa-solid fa-flask"></i> 61/67 Lab</a>
+              <a class="nav-link" href="{% url 'brainrot:index' %}"><i class="fa-solid fa-flask"></i> {% translate "61/67 Lab" %}</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="/oj"><i class="fa-solid fa-box-archive"></i> {% trans 'OJ' %}</a>
@@ -102,7 +103,7 @@
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                 {% if request.user.is_authenticated %}
                   <li>
-                    <a class="dropdown-item" href="{% url 'brainrot:my_hall_of_fame' %}">My 67 Hall of Fame</a>
+                    <a class="dropdown-item" href="{% url 'brainrot:my_hall_of_fame' %}">{% translate "My 67 Hall of Fame" %}</a>
                   </li>
                   <li>
                     <a class="dropdown-item" href="{% url 'logout' %}">{% trans 'Logout' %}</a>

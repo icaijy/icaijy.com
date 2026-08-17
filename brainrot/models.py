@@ -12,10 +12,9 @@ def hall_of_fame_upload_path(instance, filename):
 
 
 class HallOfFameEntry(models.Model):
-    class State(models.TextChoices):
-        PENDING = 'pending', 'Pending review'
-        APPROVED = 'approved', 'Approved'
-        REJECTED = 'rejected', 'Rejected'
+    class Visibility(models.TextChoices):
+        PUBLIC = 'public', 'Public'
+        PRIVATE = 'private', 'Private'
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -33,19 +32,22 @@ class HallOfFameEntry(models.Model):
     mime_type = models.CharField(max_length=32)
     duration_seconds = models.FloatField()
     event_timeline = models.JSONField(default=list, blank=True)
-    state = models.CharField(max_length=12, choices=State.choices, default=State.PENDING)
+    visibility = models.CharField(
+        max_length=12,
+        choices=Visibility.choices,
+        default=Visibility.PRIVATE,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
-    reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ('-score', 'created_at')
         indexes = [
-            models.Index(fields=('state', '-score', 'created_at'), name='hof_public_rank_idx'),
+            models.Index(fields=('visibility', '-score', 'created_at'), name='hof_public_rank_idx'),
             models.Index(fields=('user', '-created_at'), name='hof_user_rate_idx'),
         ]
 
     def __str__(self):
-        return f'{self.public_name}: {self.score} ({self.state})'
+        return f'{self.public_name}: {self.score} ({self.visibility})'
 
     @property
     def public_name(self):

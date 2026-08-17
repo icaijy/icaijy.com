@@ -28,19 +28,22 @@ class BrainrotPageTests(TestCase):
     @override_settings(DEBUG=True)
     def test_counter_uses_cache_busted_runtime_and_has_share_box(self):
         response = self.client.get('/67/counter/')
-        self.assertContains(response, 'brainrot.css?v=20260814.9')
-        self.assertContains(response, 'counter.js?v=20260814.14')
+        self.assertContains(response, 'brainrot.css?v=20260817.1')
+        self.assertContains(response, 'counter.js?v=20260817.1')
         self.assertContains(response, 'id="counter-share-text"')
         self.assertContains(response, 'id="copy-counter-share"')
         self.assertContains(response, 'id="download-recording"')
         self.assertNotContains(response, 'Run classification')
         self.assertNotContains(response, 'Casual Run')
-        self.assertContains(response, 'nothing uploads unless you press Submit to Hall of Fame')
+        self.assertContains(response, 'Submitting publishes the video for everyone to watch')
         self.assertContains(response, 'id="submit-hof"')
+        self.assertContains(response, 'id="publication-modal"')
+        self.assertContains(response, 'id="publication-consent"')
+        self.assertContains(response, 'Anyone can watch, download and share it')
         self.assertContains(response, 'id="hof-display-name"')
         self.assertContains(response, 'id="start-run" disabled hidden')
         self.assertContains(response, 'id="counter-hof-portal"')
-        self.assertContains(response, 'PUBLIC 20-SECOND VIDEO LEADERBOARD')
+        self.assertContains(response, 'PUBLIC VIDEO LEADERBOARD')
         self.assertNotContains(response, 'hof-nav-link')
         self.assertNotContains(response, 'Log in to submit this run')
 
@@ -63,6 +66,9 @@ class BrainrotPageTests(TestCase):
         self.assertNotIn('recorder = new MediaRecorder(stream', script)
         self.assertIn("form.append('event_timeline', JSON.stringify(eventTimeline));", script)
         self.assertIn("form.append('display_name', displayNameInput.value);", script)
+        self.assertIn("form.append('publication_consent', 'yes');", script)
+        self.assertIn('drawRecordingHud();', script)
+        self.assertIn("'67 COUNT'", script)
         self.assertIn("const rawResponse = await response.text();", script)
         self.assertIn('payload = JSON.parse(rawResponse);', script)
         self.assertNotIn('await response.json()', script)
@@ -70,6 +76,13 @@ class BrainrotPageTests(TestCase):
         self.assertIn("delegate: preferCpu ? 'CPU' : 'GPU'", script)
         self.assertIn('I made ${score} 6️⃣7️⃣ moves in 20 seconds.', script)
         self.assertLess(script.index('enableButton.hidden = true;'), script.index('await initialisePoseRuntime();', script.index('async function initialiseDetector')))
+
+    def test_brainrot_pages_have_chinese_translation(self):
+        response = self.client.get('/67/', HTTP_ACCEPT_LANGUAGE='zh-hans')
+        self.assertContains(response, '61 / 67 研究部')
+        counter = self.client.get('/67/counter/', HTTP_ACCEPT_LANGUAGE='zh-hans')
+        self.assertContains(counter, '启用摄像头')
+        self.assertContains(counter, '你的视频将会公开')
 
 
 class HallOfFamePageTests(TestCase):
@@ -82,7 +95,7 @@ class HallOfFamePageTests(TestCase):
             mime_type='video/webm',
             duration_seconds=23.25,
             event_timeline=[1.2, 4.5, 9.67],
-            state=HallOfFameEntry.State.APPROVED,
+            visibility=HallOfFameEntry.Visibility.PUBLIC,
         )
 
     def test_detail_page_is_shareable_and_linked_from_leaderboard(self):
@@ -93,7 +106,7 @@ class HallOfFamePageTests(TestCase):
         self.assertContains(response, 'Copy share message')
         self.assertContains(response, f'/67/challenge/{self.entry.id}/')
         self.assertContains(response, 'swan-scientist made 3 6️⃣7️⃣ moves in 20 seconds.')
-        self.assertContains(response, 'hof_detail.js?v=20260814.3')
+        self.assertContains(response, 'hof_detail.js?v=20260817.1')
 
         leaderboard = self.client.get('/67/hall-of-fame/')
         self.assertContains(leaderboard, detail_path)
@@ -126,8 +139,8 @@ class HallOfFamePageTests(TestCase):
         self.assertContains(response, 'Legacy run · estimated count pace')
 
     def test_non_public_entry_has_no_detail_or_challenge(self):
-        self.entry.state = HallOfFameEntry.State.REJECTED
-        self.entry.save(update_fields=['state'])
+        self.entry.visibility = HallOfFameEntry.Visibility.PRIVATE
+        self.entry.save(update_fields=['visibility'])
         self.assertEqual(self.client.get(f'/67/hall-of-fame/{self.entry.id}/').status_code, 404)
         self.assertEqual(self.client.get(f'/67/challenge/{self.entry.id}/').status_code, 404)
 
@@ -139,7 +152,7 @@ class HallOfFamePageTests(TestCase):
             video='hall_of_fame/anonymous.webm',
             mime_type='video/webm',
             duration_seconds=23,
-            state=HallOfFameEntry.State.APPROVED,
+            visibility=HallOfFameEntry.Visibility.PUBLIC,
         )
         detail = self.client.get(f'/67/hall-of-fame/{anonymous.id}/')
         self.assertContains(detail, 'Nameless Researcher')
@@ -217,7 +230,7 @@ class VideoValidationTests(TestCase):
 
     def test_typing_result_has_share_box_and_url(self):
         response = self.client.get('/67/typing/')
-        self.assertContains(response, 'typing.js?v=20260814.4')
+        self.assertContains(response, 'typing.js?v=20260817.1')
         self.assertContains(response, 'id="typing-share-text"')
         self.assertContains(response, 'id="copy-typing-share"')
 
@@ -244,6 +257,23 @@ class HallOfFameSubmissionTests(TestCase):
         self.assertEqual(response.status_code, 503)
         self.assertEqual(HallOfFameUploadAttempt.objects.count(), 0)
 
+    def test_upload_requires_explicit_publication_consent(self):
+        self.client.login(username='scientist', password='test-password-67')
+        response = self.client.post('/67/submit/', {'score': 67})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('confirm', response.json()['error'])
+        self.assertEqual(HallOfFameEntry.objects.count(), 0)
+
+    def test_publication_consent_error_is_localized(self):
+        self.client.login(username='scientist', password='test-password-67')
+        response = self.client.post(
+            '/67/submit/',
+            {'score': 67},
+            HTTP_ACCEPT_LANGUAGE='zh-hans',
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('公开发布', response.json()['error'])
+
     @patch('brainrot.views.validate_hall_of_fame_video')
     def test_anonymous_upload_is_published_and_rate_limited_by_client(self, validate):
         validate.return_value = ValidatedVideo('video/webm', 'webm', 23.0)
@@ -252,6 +282,7 @@ class HallOfFameSubmissionTests(TestCase):
             'score': 3,
             'display_name': '  Anonymous   Swan  67 ',
             'event_timeline': json.dumps([1.2, 4.5, 9.67]),
+            'publication_consent': 'yes',
             'video': video,
         }, REMOTE_ADDR='203.0.113.67')
         self.assertEqual(response.status_code, 201)
@@ -273,6 +304,7 @@ class HallOfFameSubmissionTests(TestCase):
             'score': 1,
             'display_name': 'ＳＣＩＥＮＴＩＳＴ',
             'event_timeline': '[1.0]',
+            'publication_consent': 'yes',
         })
         self.assertEqual(response.status_code, 400)
         self.assertIn('registered user', response.json()['error'])
@@ -283,6 +315,7 @@ class HallOfFameSubmissionTests(TestCase):
             'score': 1,
             'display_name': 'ＡＤＭＩＮ',
             'event_timeline': '[1.0]',
+            'publication_consent': 'yes',
         })
         self.assertEqual(response.status_code, 400)
         self.assertIn('reserved site role', response.json()['error'])
@@ -295,13 +328,14 @@ class HallOfFameSubmissionTests(TestCase):
         response = self.client.post('/67/submit/', {
             'score': 3,
             'event_timeline': json.dumps([1.2, 4.5, 9.67]),
+            'publication_consent': 'yes',
             'video': video,
         })
         self.assertEqual(response.status_code, 201)
         entry = HallOfFameEntry.objects.get()
         self.assertEqual(entry.user, self.user)
         self.assertEqual(entry.display_name, '')
-        self.assertEqual(entry.state, HallOfFameEntry.State.APPROVED)
+        self.assertEqual(entry.visibility, HallOfFameEntry.Visibility.PUBLIC)
         self.assertEqual(entry.event_timeline, [1.2, 4.5, 9.67])
         self.assertEqual(response.json()['entry_url'], f'/67/hall-of-fame/{entry.id}/')
         self.assertIn(entry, self.client.get('/67/hall-of-fame/').context['entries'])
@@ -311,7 +345,7 @@ class HallOfFameSubmissionTests(TestCase):
         self.assertEqual(response.status_code, 429)
         self.assertEqual(HallOfFameEntry.objects.count(), 1)
 
-    def test_pending_video_is_private_then_public_after_approval(self):
+    def test_private_video_is_owner_only_then_public(self):
         entry = HallOfFameEntry.objects.create(
             user=self.user,
             score=61,
@@ -325,8 +359,8 @@ class HallOfFameSubmissionTests(TestCase):
         self.client.login(username='scientist', password='test-password-67')
         self.assertEqual(self.client.get(path).status_code, 200)
         self.client.logout()
-        entry.state = HallOfFameEntry.State.APPROVED
-        entry.save(update_fields=['state'])
+        entry.visibility = HallOfFameEntry.Visibility.PUBLIC
+        entry.save(update_fields=['visibility'])
         self.assertEqual(self.client.get(path).status_code, 200)
 
         download = self.client.get(f'{path}?download=1')
@@ -341,13 +375,18 @@ class HallOfFameOwnershipTests(TestCase):
         self.override.enable()
         self.owner = get_user_model().objects.create_user('owner', password='owner-password-67')
         self.other = get_user_model().objects.create_user('other', password='other-password-67')
+        self.superuser = get_user_model().objects.create_superuser(
+            'super-67',
+            password='super-password-67',
+            email='super@example.com',
+        )
         self.entry = HallOfFameEntry.objects.create(
             user=self.owner,
             score=67,
             video=SimpleUploadedFile('owned.webm', b'owned evidence', content_type='video/webm'),
             mime_type='video/webm',
             duration_seconds=23,
-            state=HallOfFameEntry.State.APPROVED,
+            visibility=HallOfFameEntry.Visibility.PUBLIC,
         )
         self.anonymous = HallOfFameEntry.objects.create(
             display_name='No Account',
@@ -355,7 +394,7 @@ class HallOfFameOwnershipTests(TestCase):
             video=SimpleUploadedFile('anonymous.webm', b'anonymous evidence', content_type='video/webm'),
             mime_type='video/webm',
             duration_seconds=23,
-            state=HallOfFameEntry.State.APPROVED,
+            visibility=HallOfFameEntry.Visibility.PUBLIC,
         )
 
     def tearDown(self):
@@ -373,7 +412,8 @@ class HallOfFameOwnershipTests(TestCase):
         self.assertContains(response, f'/67/hall-of-fame/{self.entry.id}/delete/')
 
         detail = self.client.get(f'/67/hall-of-fame/{self.entry.id}/')
-        self.assertContains(detail, 'Delete my entry &amp; video')
+        self.assertContains(detail, 'Make private')
+        self.assertContains(detail, '>Delete<')
 
     def test_owner_can_delete_entry_and_video(self):
         video_name = self.entry.video.name
@@ -384,6 +424,14 @@ class HallOfFameOwnershipTests(TestCase):
         self.assertRedirects(response, '/67/hall-of-fame/mine/?deleted=1')
         self.assertFalse(HallOfFameEntry.objects.filter(pk=self.entry.id).exists())
         self.assertFalse(self.entry.video.storage.exists(video_name))
+
+    def test_delete_control_returns_to_management_instead_of_deleted_detail(self):
+        self.client.login(username='owner', password='owner-password-67')
+        detail = self.client.get(f'/67/hall-of-fame/{self.entry.id}/')
+        self.assertContains(
+            detail,
+            'name="next" value="/67/hall-of-fame/mine/?deleted=1"',
+        )
 
     def test_other_user_and_anonymous_request_cannot_delete(self):
         delete_url = f'/67/hall-of-fame/{self.entry.id}/delete/'
@@ -402,3 +450,55 @@ class HallOfFameOwnershipTests(TestCase):
             self.client.post(f'/67/hall-of-fame/{self.anonymous.id}/delete/').status_code,
             404,
         )
+
+    def test_owner_can_make_entry_private_and_public_again(self):
+        self.client.login(username='owner', password='owner-password-67')
+        url = f'/67/hall-of-fame/{self.entry.id}/visibility/'
+        response = self.client.post(url, {'visibility': 'private'})
+        self.assertRedirects(response, '/67/hall-of-fame/mine/?updated=1')
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.visibility, HallOfFameEntry.Visibility.PRIVATE)
+        leaderboard = self.client.get('/67/hall-of-fame/')
+        self.assertNotIn(self.entry, leaderboard.context['entries'])
+        self.assertEqual(self.client.get(f'/67/hall-of-fame/{self.entry.id}/').status_code, 200)
+
+        self.client.logout()
+        self.assertEqual(self.client.get(f'/67/hall-of-fame/{self.entry.id}/').status_code, 404)
+        self.client.login(username='owner', password='owner-password-67')
+        self.client.post(url, {'visibility': 'public'})
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.visibility, HallOfFameEntry.Visibility.PUBLIC)
+
+    def test_other_user_cannot_change_visibility(self):
+        self.client.login(username='other', password='other-password-67')
+        response = self.client.post(
+            f'/67/hall-of-fame/{self.entry.id}/visibility/',
+            {'visibility': 'private'},
+        )
+        self.assertEqual(response.status_code, 404)
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.visibility, HallOfFameEntry.Visibility.PUBLIC)
+
+    def test_superuser_can_manage_every_entry_in_site_ui(self):
+        self.anonymous.visibility = HallOfFameEntry.Visibility.PRIVATE
+        self.anonymous.save(update_fields=['visibility'])
+        self.client.login(username='super-67', password='super-password-67')
+
+        management = self.client.get('/67/hall-of-fame/mine/')
+        self.assertContains(management, 'SUPERUSER HALL OF FAME CONTROL')
+        self.assertContains(management, 'No Account')
+        self.assertContains(management, f'/67/hall-of-fame/{self.anonymous.id}/visibility/')
+        self.assertEqual(self.client.get(f'/67/hall-of-fame/{self.anonymous.id}/').status_code, 200)
+        self.assertEqual(self.client.get(f'/67/hall-of-fame/{self.anonymous.id}/video/').status_code, 200)
+
+        response = self.client.post(
+            f'/67/hall-of-fame/{self.anonymous.id}/visibility/',
+            {'visibility': 'public'},
+        )
+        self.assertRedirects(response, '/67/hall-of-fame/mine/?updated=1')
+        self.anonymous.refresh_from_db()
+        self.assertEqual(self.anonymous.visibility, HallOfFameEntry.Visibility.PUBLIC)
+
+        response = self.client.post(f'/67/hall-of-fame/{self.anonymous.id}/delete/')
+        self.assertRedirects(response, '/67/hall-of-fame/mine/?deleted=1')
+        self.assertFalse(HallOfFameEntry.objects.filter(pk=self.anonymous.id).exists())

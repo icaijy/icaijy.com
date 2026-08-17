@@ -1,222 +1,1003 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-08 17:31+1000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
-"MIME-Version: 1.0\n"
+"POT-Creation-Date: 2026-08-17 15:57+1000\n"
+"Language: zh_Hans\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: .\myblog\settings.py:123
-msgid "Chinese"
-msgstr "中文"
-
-#: .\myblog\settings.py:124
-msgid "English"
-msgstr "英文"
-
-msgid "Henry"
-msgstr "君逸"
-
-msgid "Welcome"
-msgstr "欢迎"
-
-msgid "Welcome to My Homepage"
-msgstr "欢迎来到我的首页"
-
-msgid "This is the homepage of my website."
-msgstr "这是我的网站的主页"
-
-msgid "blog"
-msgstr "博客"
-
-msgid "Nothing is here but my "
-msgstr "网站正在建设中，目前只有"
-
-msgid "Henry - Home"
-msgstr "首页 - 君逸的个人网站"
-
-msgid "Blog"
-msgstr "博客"
-
-msgid "About"
-msgstr "关于"
-
-msgid "Welcome to my Blog"
-msgstr "欢迎来到我的博客"
-
+#: blog/templates/blog/post_detail.html:5 blog/templates/blog/post_list.html:4
 msgid "Henry's Website"
 msgstr "君逸的个人网站"
 
-msgid "Read"
-msgstr "阅读"
-
-msgid "Views:"
-msgstr "阅读量："
-
-msgid "Modified on:"
-msgstr "修改于："
-
+#: blog/templates/blog/post_detail.html:17
 msgid "Created on:"
 msgstr "创建于："
 
-msgid "Homepage - Henry's Website"
-msgstr "首页 - 君逸的个人网站"
+#: blog/templates/blog/post_detail.html:19
+msgid "Modified on:"
+msgstr "修改于："
 
-msgid "Language"
-msgstr "语言"
+#: blog/templates/blog/post_detail.html:21
+msgid "Views:"
+msgstr "阅读量："
 
-msgid "and"
-msgstr "还有"
+#: blog/templates/blog/post_list.html:4 templates/base.html:62
+msgid "Blog"
+msgstr "博客"
 
-msgid "Double_Slash"
-msgstr "双斜杠"
+#: blog/templates/blog/post_list.html:6
+msgid "Welcome to my Blog"
+msgstr "欢迎来到我的博客"
 
-msgid "Matthewwww"
-msgstr "马修修修修"
+#: blog/templates/blog/post_list.html:16
+msgid "Read"
+msgstr "阅读"
 
-msgid "Ghetto"
-msgstr "贫民窟"
+#: brainrot/templates/brainrot/_entry_controls.html:6
+msgid "Public"
+msgstr "公开"
 
-msgid "lion"
-msgstr "狮子🦁"
+#: brainrot/templates/brainrot/_entry_controls.html:6
+msgid "Private"
+msgstr "私有"
 
-msgid "Lithanium"
-msgstr "锂"
+#: brainrot/templates/brainrot/_entry_controls.html:13
+msgid "Make private"
+msgstr "设为私有"
 
-msgid "user"
-msgstr "用户"
+#: brainrot/templates/brainrot/_entry_controls.html:16
+msgid "Publish"
+msgstr "公开发布"
 
-msgid "dusky"
-msgstr "昏暗"
+#: brainrot/templates/brainrot/_entry_controls.html:19
+msgid "Delete this Hall of Fame entry and its video permanently?"
+msgstr "永久删除这条名人堂记录及其视频？"
 
-msgid "henryho2"
-msgstr "亨利ho2"
+#: brainrot/templates/brainrot/_entry_controls.html:24
+msgid "Delete"
+msgstr "删除"
 
-msgid "reechee"
-msgstr "里li奇qi"
+#: brainrot/templates/brainrot/counter.html:20
+#: brainrot/templates/brainrot/typing.html:10
+msgid "Research division"
+msgstr "研究部"
 
-msgid "WenDidIAsk"
-msgstr "我啥时候问了？"
+#: brainrot/templates/brainrot/counter.html:26
+msgid "SYNCHRONISED HUMAN PERFORMANCE TRIAL · 20 SECONDS"
+msgstr "同步人体表现试验 · 20 秒"
 
-msgid "jenny"
-msgstr "珍妮"
+#: brainrot/templates/brainrot/counter.html:28
+#, python-format
+msgid ""
+"%(name)s made %(score)s 6️⃣7️⃣ moves in 20 seconds. Their video will play beside "
+"yours."
+msgstr ""
+"%(name)s 在 20 秒内完成了 %(score)s 次 6️⃣7️⃣ 动作。他们的视频会与你同步播放。"
 
-msgid "Sirhc_47"
-msgstr "斯里克_47"
+#: brainrot/templates/brainrot/counter.html:30
+msgid "POSE KINETICS LAB · 20 SECOND PROTOCOL"
+msgstr "姿态动力学实验室 · 20 秒协议"
 
-msgid "justin_g_20"
-msgstr "justin，回蒙古"
+#: brainrot/templates/brainrot/counter.html:32
+msgid ""
+"Move your arms up and down in the 6–7 pattern. Make as many counted moves as "
+"you can in 20 seconds."
+msgstr "按 6–7 模式上下摆动双臂，在 20 秒内完成尽可能多的有效动作。"
 
-msgid "lsjo"
-msgstr "lsjo"
+#: brainrot/templates/brainrot/counter.html:37
+msgid "PUBLIC VIDEO LEADERBOARD"
+msgstr "公开视频排行榜"
 
-msgid "finehaveanormalusername"
-msgstr "算了给你个正常的用户名"
+#: brainrot/templates/brainrot/counter.html:39
+msgid "HALL OF FAME"
+msgstr "名人堂"
 
-msgid "newai"
-msgstr "新AI"
+#: brainrot/templates/brainrot/counter.html:40
+msgid "Watch runs · preview videos · challenge scores"
+msgstr "观看记录 · 预览视频 · 挑战分数"
 
-msgid "anson"
-msgstr "安森"
+#: brainrot/templates/brainrot/counter.html:43
+msgid "Manage all submitted runs"
+msgstr "管理全部投稿"
 
-msgid "quollcucumber"
-msgstr "袋鼬黄瓜"
+#: brainrot/templates/brainrot/counter.html:43
+msgid "Manage my submitted runs"
+msgstr "管理我的投稿"
 
-msgid "steveyxz"
-msgstr "史蒂夫yxz"
+#: brainrot/templates/brainrot/counter.html:49
+msgid "Camera privacy:"
+msgstr "摄像头隐私："
 
-msgid "BigD"
-msgstr "大D"
+#: brainrot/templates/brainrot/counter.html:49
+msgid ""
+"Pose detection and recording run in this browser. Every run is recorded "
+"locally from the countdown, but nothing uploads unless you choose to submit "
+"it. Submitting publishes the video for everyone to watch; resetting or "
+"closing discards it."
+msgstr ""
+"姿态检测和录像都在本浏览器内运行。每局会从倒计时开始在本地录制，但只有你主动"
+"提交才会上传。提交后视频会公开供所有人观看；重置或关闭页面会丢弃录像。"
 
-msgid "chchn2507"
-msgstr "chchn2507"
+#: brainrot/templates/brainrot/counter.html:66
+msgid "Recorded event timeline ready"
+msgstr "原始计数时间线已就绪"
 
-msgid "OoogaDooga"
-msgstr "哦哦噶嘟嘟噶"
+#: brainrot/templates/brainrot/counter.html:66
+msgid "Legacy run · estimated count pace"
+msgstr "旧记录 · 使用估算计数节奏"
 
-msgid "icaijy"
-msgstr "牢菜"
+#: brainrot/templates/brainrot/counter.html:76
+msgid "Camera is currently doing nothing."
+msgstr "摄像头目前什么也没干。"
 
-msgid "Philip_cpp"
-msgstr "菲利普c加加"
+#: brainrot/templates/brainrot/counter.html:79
+msgid "RECORDING LOCALLY"
+msgstr "正在本地录像"
 
-msgid "amongus_pvp"
-msgstr "我们一起pvp"
+#: brainrot/templates/brainrot/counter.html:83
+msgid "Preloading pose model — camera remains off"
+msgstr "正在预加载姿态模型——摄像头仍关闭"
 
-msgid "warren_huang"
-msgstr "warren黄"
+#: brainrot/templates/brainrot/counter.html:90
+msgid "6️⃣7️⃣ moves counted"
+msgstr "已计 6️⃣7️⃣ 动作"
 
-msgid "PeaceOfCake"
-msgstr "一片蛋糕"
+#: brainrot/templates/brainrot/counter.html:93
+msgid "time remaining"
+msgstr "剩余时间"
 
-msgid "mrmagic2020"
-msgstr "魔法先生2020"
+#: brainrot/templates/brainrot/counter.html:96
+msgid "score to beat"
+msgstr "目标分数"
 
-msgid "ifndef_INDEED_TIS_TRUE_HPP_"
-msgstr "ifndef_INDEED_TIS_TRUE_HPP_"
+#: brainrot/templates/brainrot/counter.html:98
+msgid "View HOF entry"
+msgstr "查看名人堂记录"
 
-msgid "Zimo_Yoyo"
-msgstr "子墨-悠悠"
+#: brainrot/templates/brainrot/counter.html:102
+msgid "Enable camera"
+msgstr "启用摄像头"
 
+#: brainrot/templates/brainrot/counter.html:103
+msgid "Detector is still loading…"
+msgstr "检测器仍在加载……"
 
-msgid "RainFox"
-msgstr "雨狐"
+#: brainrot/templates/brainrot/counter.html:104
+msgid ""
+"I'm ready starts a local recording with the live count burned into the "
+"video. Submitting remains your decision."
+msgstr ""
+"点击“我准备好了”会开始本地录像，并把实时计数写入视频。是否提交仍由你决定。"
 
-msgid "Check out my"
-msgstr "看看我的"
+#: brainrot/templates/brainrot/counter.html:105
+msgid "Run this foolish experiment again"
+msgstr "再做一次这项愚蠢实验"
 
-msgid "or the"
-msgstr "或者"
+#: brainrot/templates/brainrot/counter.html:112
+msgid "PEER-REVIEWED BY YOURSELF"
+msgstr "由你本人完成同行评审"
 
-msgid "or try the"
-msgstr "或试试"
+#: brainrot/templates/brainrot/counter.html:113
+msgid "6️⃣7️⃣ moves in 20 seconds"
+msgstr "次 6️⃣7️⃣ 动作 / 20 秒"
 
-msgid "Go to speedrun page!!"
-msgstr "去速通！！"
+#: brainrot/templates/brainrot/counter.html:114
+msgid "A result has occurred."
+msgstr "一个结果发生了。"
 
-msgid "Practice Mode"
-msgstr "练习模式"
+#: brainrot/templates/brainrot/counter.html:118
+msgid ""
+"The recording remains local unless you submit it below. The downloaded and "
+"uploaded video includes the live 67 count. Closing or resetting discards it."
+msgstr ""
+"除非你在下方提交，否则录像只保留在本地。下载和上传的视频都会包含实时 67 计"
+"数；关闭或重置会丢弃录像。"
 
-msgid "Back to Practice Mode"
-msgstr "返回练习模式"
+#: brainrot/templates/brainrot/counter.html:119
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:32
+msgid "Download counted video"
+msgstr "下载带计数的视频"
 
-msgid "Speedrun Editor(copy&paste are banned)"
-msgstr "速通编辑器（禁用粘贴）"
+#: brainrot/templates/brainrot/counter.html:122
+msgid "Anonymous display name"
+msgstr "匿名显示名称"
 
-msgid "Summit"
-msgstr "提交"
+#: brainrot/templates/brainrot/counter.html:125
+msgid ""
+"Guest runs are labelled “guest” and cannot impersonate registered usernames. "
+"Guest submissions have no self-service privacy or delete controls; contact "
+"me with the public HOF link for changes."
+msgstr ""
+"访客记录会标注“guest”，且不能冒充已注册用户名。访客投稿无法自行切换隐私或删"
+"除；如需修改，请把公开名人堂链接发给我。"
 
-msgid "Submitted at"
-msgstr "提交时间"
+#: brainrot/templates/brainrot/counter.html:126
+msgid "Log in before another run"
+msgstr "下局开始前登录"
 
-msgid "Elapsed Time"
-msgstr "速通用时"
+#: brainrot/templates/brainrot/counter.html:126
+msgid "if you want ownership controls."
+msgstr "即可使用所有者管理功能。"
 
-msgid "Status"
-msgstr "状态"
+#: brainrot/templates/brainrot/counter.html:128
+#, python-format
+msgid ""
+"Submitting as <strong>%(username)s</strong>. New submissions are public, but "
+"you can later make the run private or delete it from My HOF."
+msgstr ""
+"将以 <strong>%(username)s</strong> 的身份提交。新投稿默认公开，之后可在“我的"
+"名人堂”中设为私有或删除。"
 
-msgid "Return to Problem"
-msgstr "返回题目"
+#: brainrot/templates/brainrot/counter.html:130
+msgid ""
+"Anonymous submission is temporarily unavailable because the production human-"
+"verification gate is not configured."
+msgstr "生产环境的人机验证尚未配置，匿名投稿暂时不可用。"
 
+#: brainrot/templates/brainrot/counter.html:134
+msgid "Submit to Hall of Fame"
+msgstr "提交到名人堂"
+
+#: brainrot/templates/brainrot/counter.html:135
+#: brainrot/templates/brainrot/counter.html:138
+msgid "Discard recording"
+msgstr "丢弃录像"
+
+#: brainrot/templates/brainrot/counter.html:137
+msgid "Log in to submit this run"
+msgstr "登录后提交本局"
+
+#: brainrot/templates/brainrot/counter.html:143
+#: brainrot/templates/brainrot/typing.html:52
 msgid "Share your result!"
 msgstr "分享您的结果！"
 
+#: brainrot/templates/brainrot/counter.html:145
+#: brainrot/templates/brainrot/typing.html:54
+msgid "Copy to clipboard"
+msgstr "复制到剪贴板"
+
+#: brainrot/templates/brainrot/counter.html:154
+msgid "Close"
+msgstr "关闭"
+
+#: brainrot/templates/brainrot/counter.html:155
+msgid "PUBLICATION CONSENT"
+msgstr "公开发布确认"
+
+#: brainrot/templates/brainrot/counter.html:156
+msgid "Your video will be public"
+msgstr "你的视频将会公开"
+
+#: brainrot/templates/brainrot/counter.html:157
+msgid ""
+"Submitting publishes this recording to the 67 Hall of Fame. Anyone can "
+"watch, download and share it."
+msgstr "提交后，这段录像会发布到 67 名人堂。任何人都可以观看、下载和分享。"
+
+#: brainrot/templates/brainrot/counter.html:159
+msgid ""
+"Because you are logged in, you can make it private or delete it later from "
+"My HOF."
+msgstr "你已经登录，因此之后可以在“我的名人堂”中将其设为私有或删除。"
+
+#: brainrot/templates/brainrot/counter.html:161
+msgid ""
+"Guest submissions cannot be privately managed or deleted by you later. "
+"Contact the site owner with the HOF link if you need it removed."
+msgstr ""
+"访客投稿之后无法由你自行设为私有或删除。如需移除，请将名人堂链接发给站长。"
+
+#: brainrot/templates/brainrot/counter.html:165
+msgid "I understand that my video will be published for anyone to watch."
+msgstr "我已知晓我的视频会被公开，任何人都可以观看。"
+
+#: brainrot/templates/brainrot/counter.html:168
+msgid "Not now"
+msgstr "暂不提交"
+
+#: brainrot/templates/brainrot/counter.html:169
+msgid "Publish this video"
+msgstr "公开发布此视频"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:4
+#: brainrot/templates/brainrot/hall_of_fame.html:19
+#: brainrot/templates/brainrot/index.html:17
+msgid "67 Hall of Fame"
+msgstr "67 名人堂"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:10
+#: brainrot/templates/brainrot/index.html:27
+msgid "67 Counter"
+msgstr "67 计数器"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:12
+#: brainrot/templates/brainrot/my_hall_of_fame.html:16
+msgid "Manage HOF"
+msgstr "管理名人堂"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:12
+#: brainrot/templates/brainrot/my_hall_of_fame.html:16
+msgid "My HOF"
+msgstr "我的名人堂"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:14
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:14
+msgid "All experiments"
+msgstr "全部实验"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:18
+#: brainrot/templates/brainrot/index.html:16
+msgid "PUBLIC 20-SECOND VIDEO LEADERBOARD"
+msgstr "公开 20 秒视频排行榜"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:20
+msgid ""
+"See who made the most 6️⃣7️⃣ moves in 20 seconds, watch each run, then challenge "
+"it yourself. Guest names are visibly labelled and cannot copy registered "
+"usernames."
+msgstr ""
+"看看谁能在 20 秒内完成最多的 6️⃣7️⃣ 动作，观看每局录像，再亲自发起挑战。访客名称"
+"会明确标注，且不能冒充注册用户。"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:29
+#, python-format
+msgid "made %(score)s 6️⃣7️⃣ moves in 20 seconds · %(date)s"
+msgstr "在 20 秒内完成 %(score)s 次 6️⃣7️⃣ 动作 · %(date)s"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:31
+msgid "moves"
+msgstr "次动作"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:33
+msgid "Full details"
+msgstr "完整详情"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:34
+msgid "Challenge this run"
+msgstr "挑战这局"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:38
+msgid "Watch video preview"
+msgstr "观看视频预览"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:42
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:21
+#, python-format
+msgid "%(name)s made %(score)s 6️⃣7️⃣ moves in 20 seconds."
+msgstr "%(name)s 在 20 秒内完成了 %(score)s 次 6️⃣7️⃣ 动作。"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:43
+msgid ""
+"Open the detail page to share this run, download it, or start a synchronized "
+"challenge."
+msgstr "打开详情页即可分享、下载录像或开始同步挑战。"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:45
+msgid "Open full run"
+msgstr "打开完整记录"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:46
+msgid "Download video"
+msgstr "下载视频"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:55
+msgid "No legends yet."
+msgstr "目前还没有神人。"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:56
+msgid "The scientific community has uploaded absolutely nothing."
+msgstr "科研界目前什么也没上传。"
+
+#: brainrot/templates/brainrot/hall_of_fame.html:57
+msgid "Submit the first specimen"
+msgstr "提交第一份样本"
+
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:13
+msgid "Hall of Fame"
+msgstr "名人堂"
+
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:18
+#, python-format
+msgid "ARCHIVED HUMAN PERFORMANCE SPECIMEN #%(id)s"
+msgstr "已归档人体表现样本 #%(id)s"
+
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:22
+#: brainrot/templates/brainrot/my_hall_of_fame.html:32
+#, python-format
+msgid "%(duration)s seconds"
+msgstr "%(duration)s 秒"
+
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:34
+#, fuzzy
+#| msgid "Challenge this run"
+msgid "Challenge this specimen"
+msgstr "挑战这局"
+
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:40
+msgid "PUBLIC REPLICATION MATERIAL"
+msgstr "公开复现实验材料"
+
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:40
+msgid "PRIVATE OWNER VIEW"
+msgstr "私有所有者视图"
+
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:41
+msgid "Share this run"
+msgstr "分享这局"
+
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:41
+msgid "Private run"
+msgstr "私有记录"
+
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:43
+msgid ""
+"Only you and site superusers can open this page or video. Publish it to "
+"restore its Hall of Fame listing and share link."
+msgstr ""
+"只有你和网站超级用户可以打开此页面和视频。重新公开后，它才会恢复在名人堂中的"
+"展示和分享链接。"
+
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:45
+msgid "This is your permanent Hall of Fame link. Deploy it responsibly."
+msgstr "这是你的永久名人堂链接。请负责任地传播。"
+
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:47
+msgid ""
+"This is a guest submission and has no self-service access. To request "
+"privacy changes or removal, contact the site owner and include this page's "
+"URL."
+msgstr ""
+"这是访客投稿，无法自行管理。如需更改隐私或删除，请联系站长并附上本页链接。"
+
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:49
+msgid "Distribute this evidence to researchers, rivals and confused relatives."
+msgstr "把这份证据分发给研究员、对手和一脸困惑的亲戚。"
+
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:53
+msgid "Share result!"
+msgstr "分享您的结果！"
+
+#: brainrot/templates/brainrot/hall_of_fame_detail.html:54
+msgid "Copy share message"
+msgstr "复制分享信息"
+
+#: brainrot/templates/brainrot/index.html:4
+msgid "Institute of 61/67 Studies"
+msgstr "61/67 研究所"
+
+#: brainrot/templates/brainrot/index.html:10
+msgid "ICAiJY INSTITUTE OF NUMERICAL CULTURE"
+msgstr "ICAiJY 数字文化研究所"
+
+#: brainrot/templates/brainrot/index.html:11
+msgid "61 / 67 Research Division"
+msgstr "61 / 67 研究部"
+
+#: brainrot/templates/brainrot/index.html:12
+msgid "Two controlled experiments. No useful findings are expected."
+msgstr "两项受控实验。预计不会产生任何有用成果。"
+
+#: brainrot/templates/brainrot/index.html:18
+msgid ""
+"Watch how many 6️⃣7️⃣ moves people made in 20 seconds, share a run, or challenge "
+"its score."
+msgstr "观看其他人在 20 秒内完成了多少次 6️⃣7️⃣ 动作，分享记录，或挑战其分数。"
+
+#: brainrot/templates/brainrot/index.html:20
+msgid "Enter the archive"
+msgstr "进入档案馆"
+
+#: brainrot/templates/brainrot/index.html:26
+msgid "EXPERIMENT 01"
+msgstr "实验 01"
+
+#: brainrot/templates/brainrot/index.html:28
+msgid "Local pose tracking, a camera, and approximately zero dignity."
+msgstr "本地姿态追踪、一台摄像头，以及约等于零的尊严。"
+
+#: brainrot/templates/brainrot/index.html:30
+msgid "Begin"
+msgstr "开始"
+
+#: brainrot/templates/brainrot/index.html:35
+msgid "EXPERIMENT 02"
+msgstr "实验 02"
+
+#: brainrot/templates/brainrot/index.html:36
+#: brainrot/templates/brainrot/typing.html:16
+msgid "61 / 67 Typing Test"
+msgstr "61 / 67 打字测试"
+
+#: brainrot/templates/brainrot/index.html:37
+msgid "Modern typing science, stripped of every unnecessary character."
+msgstr "现代打字科学，删除了所有不必要的字符。"
+
+#: brainrot/templates/brainrot/index.html:39
+msgid "Type"
+msgstr "开始打字"
+
+#: brainrot/templates/brainrot/my_hall_of_fame.html:10
+msgid "Public Hall of Fame"
+msgstr "公开名人堂"
+
+#: brainrot/templates/brainrot/my_hall_of_fame.html:11
+msgid "New run"
+msgstr "开始新局"
+
+#: brainrot/templates/brainrot/my_hall_of_fame.html:15
+msgid "SUPERUSER HALL OF FAME CONTROL"
+msgstr "超级用户 · 名人堂控制台"
+
+#: brainrot/templates/brainrot/my_hall_of_fame.html:15
+msgid "PERSONAL ARM-ACTIVITY RECORDS"
+msgstr "个人手臂活动记录"
+
+#: brainrot/templates/brainrot/my_hall_of_fame.html:17
+msgid "You can change visibility or delete any registered or guest run."
+msgstr "你可以修改或删除任何注册用户或访客的记录。"
+
+#: brainrot/templates/brainrot/my_hall_of_fame.html:17
+msgid ""
+"Your runs can be public or private. Deleting one removes both its listing "
+"and video file."
+msgstr "你的记录可以公开或私有。删除会同时移除榜单记录和视频文件。"
+
+#: brainrot/templates/brainrot/my_hall_of_fame.html:21
+msgid "Entry and recording deleted. The evidence has left the building."
+msgstr "记录和录像已删除，证据已经离开大楼。"
+
+#: brainrot/templates/brainrot/my_hall_of_fame.html:23
+msgid "Visibility updated."
+msgstr "公开状态已更新。"
+
+#: brainrot/templates/brainrot/my_hall_of_fame.html:36
+msgid "View"
+msgstr "查看"
+
+#: brainrot/templates/brainrot/my_hall_of_fame.html:37
+msgid "Download"
+msgstr "下载"
+
+#: brainrot/templates/brainrot/my_hall_of_fame.html:43
+msgid "No owned specimens yet."
+msgstr "你还没有自己的样本。"
+
+#: brainrot/templates/brainrot/my_hall_of_fame.html:44
+msgid "Anonymous submissions cannot be retroactively attached to this account."
+msgstr "匿名投稿无法事后绑定到此账号。"
+
+#: brainrot/templates/brainrot/my_hall_of_fame.html:45
+msgid "Create an unnecessarily documented run"
+msgstr "创建一局记录得毫无必要的实验"
+
+#: brainrot/templates/brainrot/typing.html:11
+msgid "Backspace has been administratively disabled."
+msgstr "退格键已被行政禁用。"
+
+#: brainrot/templates/brainrot/typing.html:15
+msgid "BINARY CULTURAL LITERACY ASSESSMENT"
+msgstr "二元文化素养评估"
+
+#: brainrot/templates/brainrot/typing.html:20
+msgid "duration"
+msgstr "时长"
+
+#: brainrot/templates/brainrot/typing.html:28
+msgid "time"
+msgstr "时间"
+
+#: brainrot/templates/brainrot/typing.html:29
+msgid "wpm"
+msgstr "WPM"
+
+#: brainrot/templates/brainrot/typing.html:30
+#: brainrot/templates/brainrot/typing.html:45
+msgid "accuracy"
+msgstr "准确率"
+
+#: brainrot/templates/brainrot/typing.html:35
+msgid "click here, then type only 6, 1 and 7"
+msgstr "点击此处，然后只输入 6、1 和 7"
+
+#: brainrot/templates/brainrot/typing.html:38
+msgid "Restart typing test"
+msgstr "重新开始打字测试"
+
+#: brainrot/templates/brainrot/typing.html:38
+msgid "restart"
+msgstr "重新开始"
+
+#: brainrot/templates/brainrot/typing.html:41
+msgid "LABORATORY OUTPUT"
+msgstr "实验室输出"
+
+#: brainrot/templates/brainrot/typing.html:42
+msgid "Statistically significant brainrot."
+msgstr "统计学显著的脑腐蚀。"
+
+#: brainrot/templates/brainrot/typing.html:46
+msgid "characters"
+msgstr "字符"
+
+#: brainrot/templates/brainrot/typing.html:47
+msgid "groups"
+msgstr "组数"
+
+#: brainrot/templates/brainrot/typing.html:48
+msgid "61 count"
+msgstr "61 数量"
+
+#: brainrot/templates/brainrot/typing.html:49
+msgid "67 count"
+msgstr "67 数量"
+
+#: brainrot/views.py:90
+msgid "This Hall of Fame entry is private."
+msgstr "这条名人堂记录当前不公开。"
+
+#: brainrot/views.py:207
+msgid "You must confirm that this video will be published for anyone to watch."
+msgstr "你必须确认该视频将公开发布，任何人都可以观看。"
+
+#: brainrot/views.py:255
+msgid "Published to the Hall of Fame. You can manage it from My HOF."
+msgstr "已发布到名人堂。你可以在“我的 HOF”中管理它。"
+
+#: brainrot/views.py:257
+msgid ""
+"Published as a guest. To remove it later, send the public link to the site "
+"owner."
+msgstr "已以访客身份发布。如需日后删除，请把公开链接发给站长。"
+
+#: brainrot/views.py:269 brainrot/views.py:295
+msgid "You cannot manage this entry."
+msgstr "你无权管理这条记录。"
+
+#: brainrot/views.py:298
+msgid "Invalid visibility."
+msgstr "公开状态无效。"
+
+#: brainrot/views.py:312
+msgid "Recording is not public."
+msgstr "该录像当前不公开。"
+
+#: homepage/templates/homepage/index.html:4
+msgid "Homepage - Henry's Website"
+msgstr "首页 - 君逸的个人网站"
+
+#: homepage/templates/homepage/index.html:142
+msgid "Welcome to My Homepage"
+msgstr "欢迎来到我的首页"
+
+#: homepage/templates/homepage/index.html:143
+msgid ""
+"Projects, questionable experiments, and an archive of competitive-"
+"programming history."
+msgstr ""
+
+#: homepage/templates/homepage/index.html:147
+msgid "Check out my"
+msgstr "看看我的"
+
+#: homepage/templates/homepage/index.html:148
+msgid "blog"
+msgstr "博客"
+
+#: homepage/templates/homepage/index.html:150
+msgid "or"
+msgstr ""
+
+#: homepage/templates/homepage/index.html:164
+msgid "Henry's Blog"
+msgstr ""
+
+#: homepage/templates/homepage/index.html:175
+msgid "ORAC2 Analytics"
+msgstr ""
+
+#: homepage/templates/homepage/index.html:178
+msgid "Speed Online Judge"
+msgstr ""
+
+#: homepage/templates/homepage/login.html:4
+msgid "Login - Henry's Website"
+msgstr "首页 - 君逸的个人网站"
+
+#: homepage/templates/homepage/login.html:8
+#: homepage/templates/homepage/login.html:26 templates/base.html:113
+msgid "Login"
+msgstr ""
+
+#: homepage/templates/homepage/login.html:19
+msgid "Username"
+msgstr ""
+
+#: homepage/templates/homepage/login.html:23
+msgid "Password"
+msgstr ""
+
+#: homepage/templates/homepage/login.html:30
+msgid "Don't have an account?"
+msgstr ""
+
+#: homepage/templates/homepage/login.html:30 templates/base.html:116
+msgid "Register"
+msgstr ""
+
+#: oj/templates/oj/problem_detail.html:5
+#: oj/templates/oj/submission_detail.html:5 templates/base.html:71
+msgid "OJ"
+msgstr ""
+
+#: oj/templates/oj/problem_detail.html:12
+msgid "Go to Speedrun"
+msgstr "去速通！！"
+
+#: oj/templates/oj/problem_detail.html:15
+#: oj/templates/oj/problem_speedrun.html:17
+msgid "View Leaderboard"
+msgstr ""
+
+#: oj/templates/oj/problem_detail.html:24
+#: oj/templates/oj/problem_speedrun.html:56
+msgid "Time Limit:"
+msgstr ""
+
+#: oj/templates/oj/problem_detail.html:26
+#: oj/templates/oj/problem_speedrun.html:58
+msgid "Memory Limit:"
+msgstr ""
+
+#: oj/templates/oj/problem_detail.html:34
+msgid "Practice Mode"
+msgstr "练习模式"
+
+#: oj/templates/oj/problem_detail.html:38
+#: oj/templates/oj/problem_speedrun.html:29
+msgid "Tip:"
+msgstr ""
+
+#: oj/templates/oj/problem_detail.html:38
+#: oj/templates/oj/problem_speedrun.html:29
+msgid "Press Ctrl + Enter (or ⌘ + Enter on Mac) to submit your code instantly."
+msgstr ""
+
+#: oj/templates/oj/problem_detail.html:48
+#: oj/templates/oj/problem_speedrun.html:39
+msgid "Submit"
+msgstr "提交时间"
+
+#: oj/templates/oj/problem_leaderboard.html:5
+#: oj/templates/oj/problem_leaderboard.html:9
+msgid "Leaderboard"
+msgstr ""
+
+#: oj/templates/oj/problem_leaderboard.html:12
+#: oj/templates/oj/problem_speedrun.html:14
+msgid "Back to Practice Mode"
+msgstr "返回练习模式"
+
+#: oj/templates/oj/problem_leaderboard.html:15
+msgid "Back to Speedrun Mode"
+msgstr "返回练习模式"
+
+#: oj/templates/oj/problem_leaderboard.html:22
+msgid "C++ Top 15"
+msgstr ""
+
+#: oj/templates/oj/problem_leaderboard.html:32
+#: oj/templates/oj/problem_leaderboard.html:51
+msgid "No AC submissions yet 😎"
+msgstr ""
+
+#: oj/templates/oj/problem_leaderboard.html:41
+msgid "Python Top 15"
+msgstr ""
+
+#: oj/templates/oj/problem_list.html:6
+msgid "Problem List"
+msgstr ""
+
+#: oj/templates/oj/problem_list.html:15
+msgid "Time"
+msgstr ""
+
+#: oj/templates/oj/problem_list.html:15
+msgid "Memory"
+msgstr ""
+
+#: oj/templates/oj/problem_list.html:19
+msgid "No problems available"
+msgstr ""
+
+#: oj/templates/oj/problem_speedrun.html:5
+msgid "Speedrun"
+msgstr ""
+
+#: oj/templates/oj/problem_speedrun.html:10
+msgid "Speedrun Mode"
+msgstr ""
+
+#: oj/templates/oj/problem_speedrun.html:24
+msgid "Speedrun Editor(copy&paste are banned)"
+msgstr "速通编辑器（禁用粘贴）"
+
+#: oj/templates/oj/submission_detail.html:15
+msgid "Return to Problem"
+msgstr "返回题目"
+
+#: oj/templates/oj/submission_detail.html:21
+msgid "User:"
+msgstr ""
+
+#: oj/templates/oj/submission_detail.html:22
+msgid "Language:"
+msgstr "语言"
+
+#: oj/templates/oj/submission_detail.html:23
+msgid "Submitted at:"
+msgstr "提交时间"
+
+#: oj/templates/oj/submission_detail.html:25
+msgid "Elapsed Time:"
+msgstr "速通用时"
+
+#: oj/templates/oj/submission_detail.html:27
+msgid "Keys per Minute (KPM):"
+msgstr ""
+
+#: oj/templates/oj/submission_detail.html:34
+msgid "Status:"
+msgstr "状态"
+
+#: oj/templates/oj/submission_detail.html:78
+msgid "Judging..."
+msgstr ""
+
+#: oj/templates/oj/submission_detail.html:85
 msgid "Source code"
 msgstr "源码"
 
-msgid "Test Case Results"
-msgstr "测试结果"
+#: orac_tracker/templates/leaderboard/index.html:5
+msgid "ORAC Leaderboards - Henry's Website"
+msgstr "首页 - 君逸的个人网站"
 
+#: orac_tracker/templates/leaderboard/index.html:35
+#: orac_tracker/templates/leaderboard/index.html:48
+#: orac_tracker/templates/leaderboard/index.html:61
+#: orac_tracker/templates/leaderboard/index.html:74
+#, python-format
+msgid "%(username)s"
+msgstr ""
 
+#: templates/base.html:57
+msgid "Henry - Home"
+msgstr "首页 - 君逸的个人网站"
+
+#: templates/base.html:68
+msgid "61/67 Lab"
+msgstr "61/67 实验室"
+
+#: templates/base.html:74
+msgid "About"
+msgstr "关于"
+
+#: templates/base.html:80
+msgid "Language"
+msgstr "语言"
+
+#: templates/base.html:100
+msgid "Account"
+msgstr ""
+
+#: templates/base.html:106
+msgid "My 67 Hall of Fame"
+msgstr "我的 67 名人堂"
+
+#: templates/base.html:109
+msgid "Logout"
+msgstr ""
+
+#~ msgid "I'm ready — record locally"
+#~ msgstr "我准备好了——开始本地录像"
+
+#~ msgid "Pose model ready — camera remains off"
+#~ msgstr "姿态模型已就绪——摄像头仍关闭"
+
+#~ msgid "Pose model preload paused — camera remains off"
+#~ msgstr "姿态模型预加载暂停——摄像头仍关闭"
+
+#~ msgid "Copied! 🎉"
+#~ msgstr "已复制！🎉"
+
+#~ msgid "Result copied. Scientific distribution may begin."
+#~ msgstr "结果已复制，可以开始科学传播。"
+
+#~ msgid "Automatic copy failed. Select the text and copy it manually."
+#~ msgstr "自动复制失败，请选中文字手动复制。"
+
+#~ msgid "Armed — step back until shoulders and wrists are visible"
+#~ msgstr "已待命——请后退，确保双肩和双腕可见"
+
+#~ msgid "Waiting for your pose…"
+#~ msgstr "正在等待检测到你的姿态……"
+
+#~ msgid "Pose detected — click I'm ready, then take your position"
+#~ msgstr "已检测到姿态——点击“我准备好了”，然后站好位置"
+
+#~ msgid "Detector ready — click I'm ready, then step into frame"
+#~ msgstr "检测器已就绪——点击“我准备好了”，然后进入画面"
+
+#~ msgid "Pose detector paused:"
+#~ msgstr "姿态检测器已暂停："
+
+#~ msgid "Requesting camera permission…"
+#~ msgstr "正在请求摄像头权限……"
+
+#~ msgid "Finishing detector setup…"
+#~ msgstr "正在完成检测器设置……"
+
+#~ msgid "Pose model ready"
+#~ msgstr "姿态模型已就绪"
+
+#~ msgid "Finishing pose model preload…"
+#~ msgstr "正在完成姿态模型预加载……"
+
+#~ msgid "Camera permission worked, but the pose runtime did not load"
+#~ msgstr "摄像头权限已获取，但姿态运行库加载失败"
+
+#~ msgid "Camera unavailable"
+#~ msgstr "摄像头不可用"
+
+#~ msgid ""
+#~ "Could not start the camera. Use HTTPS, allow camera access, and try a "
+#~ "current browser."
+#~ msgstr "无法启动摄像头。请使用 HTTPS、允许摄像头访问，并尝试最新版浏览器。"
+
+#~ msgid "Opponent evidence is still buffering"
+#~ msgstr "对手录像仍在缓冲"
+
+#~ msgid "Waiting for opponent video…"
+#~ msgstr "正在等待对手视频……"
+
+#~ msgid "Pose locked — countdown commencing"
+#~ msgstr "姿态已锁定——倒计时开始"
+
+#~ msgid "Experiment in progress"
+#~ msgstr "实验进行中"
+
+#~ msgid "Run complete — detector remains local"
+#~ msgstr "本局完成——检测器仍在本地运行"
+
+#~ msgid "Recording discarded. Nothing was uploaded."
+#~ msgstr "录像已丢弃，没有上传任何内容。"
+
+#~ msgid "Uploading public evidence after the timer has safely stopped…"
+#~ msgstr "计时已安全停止，正在上传公开视频证据……"
+
+#~ msgid "Result copied. No leaderboard was harmed."
+#~ msgstr "结果已复制，没有排行榜受到伤害。"
+
+#~ msgid "Exactly 67 WPM. The prophecy has cleared peer review."
+#~ msgstr "恰好 67 WPM。预言已通过同行评审。"
+
+#~ msgid "Exactly 61 WPM. Close enough to be culturally important."
+#~ msgstr "恰好 61 WPM，已经足够具有文化意义。"
+
+#~ msgid "67% accuracy. Incorrect in precisely the correct way."
+#~ msgstr "准确率恰好 67%，以完全正确的方式打错了。"
+
+#~ msgid "67 groups survived contact with the keyboard."
+#~ msgstr "67 组内容成功与键盘接触并存活。"
+
+#~ msgid "Full result copied! The 6️⃣7️⃣ evidence is ready for deployment."
+#~ msgstr "完整结果已复制！6️⃣7️⃣ 证据可以出动了。"
+
+#~ msgid "Automatic copy failed. Select the message and copy it manually."
+#~ msgstr "自动复制失败，请选中信息后手动复制。"
+
+#~ msgid "Result launched into the world! 🚀"
+#~ msgstr "结果已经发射到世界上！🚀"

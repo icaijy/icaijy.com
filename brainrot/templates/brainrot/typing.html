@@ -1,23 +1,23 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
 {% block title %}61 / 67 Typing Test{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260814.3">
+<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260817.1">
 <main class="br-page typing-page" id="typing-app">
   <header class="br-toolbar">
-    <a href="{% url 'brainrot:index' %}">← Research division</a>
-    <span>Backspace has been administratively disabled.</span>
+    <a href="{% url 'brainrot:index' %}">← {% translate "Research division" %}</a>
+    <span>{% translate "Backspace has been administratively disabled." %}</span>
   </header>
 
   <section class="typing-heading">
-    <span class="br-kicker">BINARY CULTURAL LITERACY ASSESSMENT</span>
-    <h1>61 / 67 Typing Test</h1>
+    <span class="br-kicker">{% translate "BINARY CULTURAL LITERACY ASSESSMENT" %}</span>
+    <h1>{% translate "61 / 67 Typing Test" %}</h1>
   </section>
 
   <div class="typing-controls" aria-label="Test duration">
-    <span>duration</span>
+    <span>{% translate "duration" %}</span>
     <button data-duration="15">15</button>
     <button data-duration="30" class="active">30</button>
     <button data-duration="60">60</button>
@@ -25,36 +25,37 @@
   </div>
 
   <section class="typing-stats" aria-label="Live typing statistics">
-    <div><span>time</span><strong id="typing-time">30</strong></div>
-    <div><span>wpm</span><strong id="typing-wpm">0</strong></div>
-    <div><span>accuracy</span><strong id="typing-accuracy">100%</strong></div>
+    <div><span>{% translate "time" %}</span><strong id="typing-time">30</strong></div>
+    <div><span>{% translate "wpm" %}</span><strong id="typing-wpm">0</strong></div>
+    <div><span>{% translate "accuracy" %}</span><strong id="typing-accuracy">100%</strong></div>
   </section>
 
   <section class="typing-viewport" id="typing-viewport" tabindex="0" aria-label="Typing target">
     <div class="typing-stream" id="typing-stream"></div>
-    <div class="focus-hint" id="focus-hint">click here, then type only 6, 1 and 7</div>
+    <div class="focus-hint" id="focus-hint">{% translate "click here, then type only 6, 1 and 7" %}</div>
   </section>
 
-  <button class="typing-restart" id="typing-restart" aria-label="Restart typing test">↻ restart</button>
+  <button class="typing-restart" id="typing-restart" aria-label="{% translate 'Restart typing test' %}">↻ {% translate "restart" %}</button>
 
   <section class="typing-result" id="typing-result" hidden>
-    <span class="br-kicker">LABORATORY OUTPUT</span>
-    <h2 id="typing-verdict">Statistically significant brainrot.</h2>
+    <span class="br-kicker">{% translate "LABORATORY OUTPUT" %}</span>
+    <h2 id="typing-verdict">{% translate "Statistically significant brainrot." %}</h2>
     <div class="result-grid">
       <div><span>WPM</span><strong id="result-wpm">0</strong></div>
-      <div><span>accuracy</span><strong id="result-accuracy">0%</strong></div>
-      <div><span>characters</span><strong id="result-characters">0</strong></div>
-      <div><span>groups</span><strong id="result-groups">0</strong></div>
-      <div><span>61 count</span><strong id="result-61">0</strong></div>
-      <div><span>67 count</span><strong id="result-67">0</strong></div>
+      <div><span>{% translate "accuracy" %}</span><strong id="result-accuracy">0%</strong></div>
+      <div><span>{% translate "characters" %}</span><strong id="result-characters">0</strong></div>
+      <div><span>{% translate "groups" %}</span><strong id="result-groups">0</strong></div>
+      <div><span>{% translate "61 count" %}</span><strong id="result-61">0</strong></div>
+      <div><span>{% translate "67 count" %}</span><strong id="result-67">0</strong></div>
     </div>
     <div class="counter-share typing-share">
-      <h3>🎉 Share your result!</h3>
+      <h3>🎉 {% translate "Share your result!" %}</h3>
       <textarea id="typing-share-text" rows="5" readonly aria-label="Shareable typing result"></textarea>
-      <button class="br-secondary" id="copy-typing-share" type="button">Copy to clipboard</button>
+      <button class="br-secondary" id="copy-typing-share" type="button">{% translate "Copy to clipboard" %}</button>
       <p class="subtle" id="copy-typing-status" role="status" aria-live="polite"></p>
     </div>
   </section>
 </main>
-<script src="{% static 'brainrot/typing.js' %}?v=20260814.4" defer></script>
+<script src="{% url 'brainrot:javascript_catalog' %}"></script>
+<script src="{% static 'brainrot/typing.js' %}?v=20260817.1" defer></script>
 {% endblock %}
