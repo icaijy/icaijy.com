@@ -1,3 +1,7 @@
+if (typeof document !== 'undefined') {
+  import('./counter_share_locale.js');
+}
+
 export const GAME_MODES = Object.freeze({
   SIX_SEVEN: 'six_seven',
   LEG_CLAPS: 'leg_claps',
