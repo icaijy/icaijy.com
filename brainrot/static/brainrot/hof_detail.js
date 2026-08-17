@@ -11,11 +11,12 @@ if (detail) {
   const blocks = score > 0
     ? `${'🟩'.repeat(Math.min(score, 20))}${score > 20 ? ` +${score - 20}` : ''}`
     : '⬜';
-  const headline = isLegClaps
+  const fallbackHeadline = isLegClaps
     ? `${detail.dataset.username} made ${score} Tung Tung Leg Claps in 20 seconds! 🥒`
     : `${detail.dataset.username} made ${score} 6️⃣7️⃣ moves in 20 seconds! 🔥`;
-  const experiment = isLegClaps ? 'TUNG TUNG LEG CLAPS · 酸黄瓜舞计数' : 'SIX SEVEN!';
-  const text = `${headline}\n${blocks}\n${experiment}\nWatch the run and try to beat it!\n${url}`;
+  // This sentence is already translated by Django in the visible page copy.
+  const headline = detail.querySelector('.pb-2 .fw-bold')?.textContent.trim() || fallbackHeadline;
+  const text = `${headline}\n${blocks}\n${url}`;
   shareText.value = text;
 
   async function copyShareMessage() {
@@ -41,7 +42,7 @@ if (detail) {
   shareButton.addEventListener('click', async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: isLegClaps ? 'Tung Tung Leg Claps Hall of Fame' : '67 Hall of Fame', text });
+        await navigator.share({ title: document.title, text });
         status.textContent = tr('Result launched into the world! 🚀');
         return;
       } catch (error) {
