@@ -25,14 +25,14 @@ function sixSevenPose(leftWristY, rightWristY) {
   return pose;
 }
 
-function legPose(kneeGap, { ankleShift = 0, hipShift = 0 } = {}) {
+function legPose(kneeGap, { ankleVisible = true } = {}) {
   const pose = blankPose();
-  pose[23] = { x: 0.40 + hipShift, y: 0.46, visibility: 1 };
-  pose[24] = { x: 0.60 + hipShift, y: 0.46, visibility: 1 };
+  pose[23] = { x: 0.40, y: 0.46, visibility: 1 };
+  pose[24] = { x: 0.60, y: 0.46, visibility: 1 };
   pose[25] = { x: 0.50 - kneeGap / 2, y: 0.66, visibility: 1 };
   pose[26] = { x: 0.50 + kneeGap / 2, y: 0.66, visibility: 1 };
-  pose[27] = { x: 0.30 + ankleShift, y: 0.90, visibility: 1 };
-  pose[28] = { x: 0.70 + ankleShift, y: 0.90, visibility: 1 };
+  pose[27] = { x: 0.30, y: 0.90, visibility: ankleVisible ? 1 : 0 };
+  pose[28] = { x: 0.70, y: 0.90, visibility: ankleVisible ? 1 : 0 };
   return pose;
 }
 
@@ -43,30 +43,54 @@ test('the existing 67 direction-change rule is preserved', () => {
   assert.equal(tracker.observe(sixSevenPose(0.70, 0.30), 400), true);
 });
 
-test('a leg clap requires open, inward, then open before another count', () => {
+test('a leg clap counts close once and requires a clear reopen before re-arming', () => {
   const tracker = createGestureTracker(GAME_MODES.LEG_CLAPS);
-  for (const time of [100, 133, 166]) assert.equal(tracker.observe(legPose(0.36), time), false);
-  assert.equal(tracker.observe(legPose(0.16), 220), false);
-  assert.equal(tracker.observe(legPose(0.12), 253), true);
-  assert.equal(tracker.observe(legPose(0.10), 300), false);
-  assert.equal(tracker.observe(legPose(0.12), 360), false);
 
-  for (const time of [420, 453, 486]) assert.equal(tracker.observe(legPose(0.36), time), false);
-  assert.equal(tracker.observe(legPose(0.14), 540), false);
-  assert.equal(tracker.observe(legPose(0.10), 573), true);
+  // hip width is .20, so .14 knee gap = .70 (open) and .07 = .35 (closed).
+  assert.equal(tracker.observe(legPose(0.14), 100), false);
+  assert.equal(tracker.observe(legPose(0.14), 133), false);
+  assert.equal(tracker.observe(legPose(0.07), 200), false);
+  assert.equal(tracker.observe(legPose(0.07), 233), true);
+
+  // Staying closed cannot farm counts.
+  assert.equal(tracker.observe(legPose(0.06), 266), false);
+  assert.equal(tracker.observe(legPose(0.07), 299), false);
+
+  // A partial opening inside the hysteresis band is not enough.
+  assert.equal(tracker.observe(legPose(0.11), 332), false);
+  assert.equal(tracker.observe(legPose(0.07), 365), false);
+
+  // Reopen for two frames, then another close can count.
+  assert.equal(tracker.observe(legPose(0.14), 400), false);
+  assert.equal(tracker.observe(legPose(0.14), 433), false);
+  assert.equal(tracker.observe(legPose(0.07), 466), false);
+  assert.equal(tracker.observe(legPose(0.07), 499), true);
 });
 
-test('starting closed does not count and unstable feet invalidate the cycle', () => {
+test('starting closed never counts until an open pose has armed the tracker', () => {
   const tracker = createGestureTracker(GAME_MODES.LEG_CLAPS);
-  assert.equal(tracker.observe(legPose(0.10), 200), false);
-  assert.equal(tracker.observe(legPose(0.10), 240), false);
-  for (const time of [300, 333, 366]) assert.equal(tracker.observe(legPose(0.36), time), false);
-  assert.equal(tracker.observe(legPose(0.12, { ankleShift: 0.20 }), 420), false);
-  assert.equal(tracker.observe(legPose(0.10, { ankleShift: 0.20 }), 453), false);
+  assert.equal(tracker.observe(legPose(0.06), 100), false);
+  assert.equal(tracker.observe(legPose(0.06), 133), false);
+  assert.equal(tracker.observe(legPose(0.14), 166), false);
+  assert.equal(tracker.observe(legPose(0.14), 199), false);
+  assert.equal(tracker.observe(legPose(0.07), 232), false);
+  assert.equal(tracker.observe(legPose(0.07), 265), true);
 });
 
-test('leg-clap readiness requires hips, knees and ankles', () => {
-  const pose = legPose(0.36);
+test('leg-clap readiness only requires hips and knees, not feet', () => {
+  const pose = legPose(0.14, { ankleVisible: false });
+  assert.equal(landmarksAreVisible(GAME_MODES.LEG_CLAPS, pose), true);
   pose[25].visibility = 0.1;
   assert.equal(landmarksAreVisible(GAME_MODES.LEG_CLAPS, pose), false);
+});
+
+test('losing knee tracking disarms the current leg-clap cycle', () => {
+  const tracker = createGestureTracker(GAME_MODES.LEG_CLAPS);
+  assert.equal(tracker.observe(legPose(0.14), 100), false);
+  assert.equal(tracker.observe(legPose(0.14), 133), false);
+  const lost = legPose(0.07);
+  lost[25].visibility = 0.1;
+  assert.equal(tracker.observe(lost, 166), false);
+  assert.equal(tracker.observe(legPose(0.07), 199), false);
+  assert.equal(tracker.observe(legPose(0.07), 232), false);
 });

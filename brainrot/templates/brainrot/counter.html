@@ -8,23 +8,20 @@
 <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/vision_bundle.mjs" crossorigin>
 <link rel="preload" href="https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task" as="fetch" crossorigin>
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260817.2">
+<link rel="stylesheet" href="{% static 'brainrot/counter_bootstrap.css' %}">
 {% if turnstile_enabled %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}
 
-<main class="br-page counter-page" id="counter-app"
+<main class="container py-4 py-md-5 counter-page" id="counter-app"
       data-submit-url="{% url 'brainrot:submit_hall_of_fame' %}"
       data-hall-url="{% url 'brainrot:hall_of_fame' %}"
       data-max-upload-mb="{{ max_upload_mb }}"
       data-game-mode="{{ game_mode }}"
       data-mode-locked="{% if rival %}true{% else %}false{% endif %}"
       {% if rival %}data-rival-name="{{ rival.public_name }}" data-rival-score="{{ rival.score }}"{% endif %}>
-  <header class="br-toolbar">
-    <a href="{% url 'brainrot:index' %}">← {% translate "Research division" %}</a>
-  </header>
 
   <div class="counter-mode-copy" hidden>
-    <span id="six-seven-title">SIX SEVEN</span>
-    <span id="leg-claps-title">{% translate "TUNG TUNG LEG CLAPS" %}</span>
+    <span id="six-seven-title">67 Counter</span>
+    <span id="leg-claps-title">{% translate "Tung Tung Leg Claps" %}</span>
     <span id="six-seven-description">{% translate "Move your arms up and down in the 6–7 pattern. Make as many counted moves as you can in 20 seconds." %}</span>
     <span id="leg-claps-description">{% translate "Count each time Tung Tung's knees swing inward from a clearly open position. The knees must open again before another clap." %}</span>
     <span id="six-seven-score-label">{% translate "6️⃣7️⃣ moves counted" %}</span>
@@ -35,145 +32,165 @@
     <span id="leg-claps-placeholder">TT</span>
   </div>
 
-  {% if not rival %}
-  <nav class="counter-mode-switcher" aria-label="{% translate 'Counter mode' %}">
-    <button type="button" data-counter-mode="six_seven" class="{% if game_mode == 'six_seven' %}active{% endif %}">
-      <strong>67 Counter</strong>
-      <small>{% translate "arm pattern" %}</small>
-    </button>
-    <button type="button" data-counter-mode="leg_claps" class="{% if game_mode == 'leg_claps' %}active{% endif %}">
-      <strong>{% translate "Tung Tung Leg Claps" %}</strong>
-      <small>{% translate "酸黄瓜舞计数" %}</small>
-    </button>
-  </nav>
-  {% else %}
-  <div class="counter-mode-locked">{% translate "Challenge mode:" %} <strong>{{ rival.get_game_mode_display }}</strong></div>
-  {% endif %}
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:index' %}">← {% translate "Research division" %}</a>
+    <a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:hall_of_fame' %}?mode={{ game_mode }}">
+      <i class="fa-solid fa-ranking-star me-1"></i> {% translate "Hall of Fame" %}
+    </a>
+  </div>
 
-  <section class="counter-hero">
-    <div class="counter-intro">
-      {% if rival %}
-      <span class="br-kicker">{% translate "SYNCHRONISED HUMAN PERFORMANCE TRIAL · 20 SECONDS" %}</span>
-      <h1>YOU vs {{ rival.public_name }}</h1>
-      <p>{% if game_mode == 'leg_claps' %}{% blocktranslate with name=rival.public_name score=rival.score %}{{ name }} made {{ score }} Tung Tung Leg Claps in 20 seconds. Their video will play beside yours.{% endblocktranslate %}{% else %}{% blocktranslate with name=rival.public_name score=rival.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds. Their video will play beside yours.{% endblocktranslate %}{% endif %}</p>
-      {% else %}
-      <span class="br-kicker">{% translate "POSE KINETICS LAB · 20 SECOND PROTOCOL" %}</span>
-      <h1 id="counter-title">{% if game_mode == 'leg_claps' %}{% translate "TUNG TUNG LEG CLAPS" %}{% else %}SIX SEVEN{% endif %}</h1>
-      <p id="counter-description">{% if game_mode == 'leg_claps' %}{% translate "Count each time Tung Tung's knees swing inward from a clearly open position. The knees must open again before another clap." %}{% else %}{% translate "Move your arms up and down in the 6–7 pattern. Make as many counted moves as you can in 20 seconds." %}{% endif %}</p>
-      {% endif %}
+  <header class="counter-heading mb-4">
+    {% if rival %}
+      <span class="badge text-bg-dark mode-badge mb-2">{% translate "Challenge mode:" %} {{ rival.get_game_mode_display }}</span>
+      <h1 class="display-5 mb-2">YOU vs {{ rival.public_name }}</h1>
+      <p class="lead text-secondary mb-0">
+        {% if game_mode == 'leg_claps' %}
+          {% blocktranslate with name=rival.public_name score=rival.score %}{{ name }} made {{ score }} Tung Tung Leg Claps in 20 seconds. Their video will play beside yours.{% endblocktranslate %}
+        {% else %}
+          {% blocktranslate with name=rival.public_name score=rival.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds. Their video will play beside yours.{% endblocktranslate %}
+        {% endif %}
+      </p>
+    {% else %}
+      <span class="badge {% if game_mode == 'leg_claps' %}text-bg-success{% else %}text-bg-primary{% endif %} mode-badge mb-2">20 seconds · pose counter</span>
+      <h1 class="display-5 mb-2" id="counter-title">{% if game_mode == 'leg_claps' %}{% translate "Tung Tung Leg Claps" %}{% else %}67 Counter{% endif %}</h1>
+      {% if game_mode == 'leg_claps' %}<div class="text-secondary fw-semibold mb-2">酸黄瓜舞计数</div>{% endif %}
+      <p class="lead text-secondary mb-0" id="counter-description">{% if game_mode == 'leg_claps' %}{% translate "Count each time Tung Tung's knees swing inward from a clearly open position. The knees must open again before another clap." %}{% else %}{% translate "Move your arms up and down in the 6–7 pattern. Make as many counted moves as you can in 20 seconds." %}{% endif %}</p>
+    {% endif %}
+  </header>
+
+  <div class="alert alert-info py-2 px-3 small" role="note">
+    <strong>{% translate "Camera privacy:" %}</strong>
+    {% translate "Pose detection and recording run in this browser. Every run is recorded locally from the countdown, but nothing uploads unless you choose to submit it. Submitting publishes the video for everyone to watch; resetting or closing discards it." %}
+  </div>
+
+  <div class="row g-4 align-items-start">
+    <div class="{% if rival %}col-12 col-xl-9{% else %}col-12 col-lg-8{% endif %}">
+      <div class="row g-3">
+        {% if rival %}
+        <div class="col-12 col-md-6">
+          <section class="camera-card h-100">
+            <div class="camera-stage rival-stage">
+              <video id="rival-video" muted playsinline preload="auto" src="{% url 'brainrot:hall_of_fame_video' rival.id %}"></video>
+              <div class="rival-score-pill">
+                <span>{{ rival.public_name }}</span>
+                <strong id="rival-score">0</strong>
+              </div>
+            </div>
+            <div class="detector-status ready">
+              <span class="status-dot"></span>
+              <span>{% if rival_timeline_exact %}{% translate "Recorded event timeline ready" %}{% else %}{% translate "Legacy run · estimated count pace" %}{% endif %}</span>
+            </div>
+          </section>
+        </div>
+        {% endif %}
+
+        <div class="{% if rival %}col-12 col-md-6{% else %}col-12{% endif %}">
+          <section class="camera-card">
+            <div class="camera-stage" id="camera-stage">
+              <video id="camera" playsinline muted></video>
+              <canvas id="pose-overlay"></canvas>
+              <div class="camera-placeholder" id="camera-placeholder">
+                <span class="counter-placeholder-mark" id="counter-placeholder-mark">{% if game_mode == 'leg_claps' %}TT{% else %}67{% endif %}</span>
+                <span>{% translate "Camera is currently doing nothing." %}</span>
+              </div>
+              <div class="countdown" id="countdown" aria-live="assertive"></div>
+              <div class="live-pill" id="live-pill" hidden>● {% translate "RECORDING LOCALLY" %}</div>
+            </div>
+            <div class="detector-status" id="detector-status">
+              <span class="status-dot"></span>
+              <span>{% translate "Preloading pose model — camera remains off" %}</span>
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
-    <div class="counter-hof-column">
-      <a class="counter-hof-portal" id="counter-hof-portal" href="{% url 'brainrot:hall_of_fame' %}?mode={{ game_mode }}">
-        <span class="counter-hof-eyebrow">{% translate "PUBLIC VIDEO LEADERBOARD" %}</span>
-        <span class="counter-hof-mark" id="counter-hof-mark">{% if game_mode == 'leg_claps' %}TT{% else %}67{% endif %}</span>
-        <strong>{% translate "HALL OF FAME" %}</strong>
-        <small>{% translate "Watch runs · preview videos · challenge scores" %} <b>→</b></small>
+
+    <aside class="{% if rival %}col-12 col-xl-3{% else %}col-12 col-lg-4{% endif %}">
+      <section class="score-card p-3 p-md-4 mb-3">
+        <div class="text-secondary small text-uppercase fw-semibold" id="score-label">{% if game_mode == 'leg_claps' %}{% translate "leg claps counted" %}{% else %}{% translate "6️⃣7️⃣ moves counted" %}{% endif %}</div>
+        <div class="score-value my-2" id="score">0</div>
+        <div class="d-flex justify-content-between align-items-end border-top pt-3 mb-3">
+          <span class="text-secondary small text-uppercase fw-semibold">{% translate "time remaining" %}</span>
+          <strong class="timer-value" id="counter-time">20.0</strong>
+        </div>
+
+        {% if rival %}
+        <div class="alert alert-light border py-2 px-3 small">
+          <span class="text-secondary">{% translate "score to beat" %}</span>
+          <strong class="float-end">{{ rival.score }}</strong><br>
+          <a href="{% url 'brainrot:hall_of_fame_detail' rival.id %}">{% translate "View HOF entry" %}</a>
+        </div>
+        {% endif %}
+
+        <div class="d-grid gap-2">
+          <button class="btn btn-primary" id="enable-camera">{% translate "Enable camera" %}</button>
+          <button class="btn btn-primary" id="start-run" disabled hidden>{% translate "Detector is still loading…" %}</button>
+          <button class="btn btn-outline-secondary" id="reset-run" hidden>{% translate "Run this foolish experiment again" %}</button>
+        </div>
+        <p class="small text-secondary mt-3 mb-0">{% translate "I'm ready starts a local recording with the live count burned into the video. Submitting remains your decision." %}</p>
+        <p class="counter-error text-danger small mt-2 mb-0" id="counter-error" role="alert"></p>
+      </section>
+
+      <a class="hof-card d-flex align-items-center gap-3 p-3 text-decoration-none text-body" id="counter-hof-portal" href="{% url 'brainrot:hall_of_fame' %}?mode={{ game_mode }}">
+        <span class="hof-mark" id="counter-hof-mark">{% if game_mode == 'leg_claps' %}TT{% else %}67{% endif %}</span>
+        <span>
+          <small class="text-secondary d-block">{% translate "PUBLIC VIDEO LEADERBOARD" %}</small>
+          <strong>{% translate "Hall of Fame" %} →</strong>
+        </span>
       </a>
       {% if request.user.is_authenticated %}
-      <a class="counter-my-hof" href="{% url 'brainrot:my_hall_of_fame' %}">{% if request.user.is_superuser %}{% translate "Manage all submitted runs" %}{% else %}{% translate "Manage my submitted runs" %}{% endif %} →</a>
+      <a class="d-block small mt-2" href="{% url 'brainrot:my_hall_of_fame' %}">{% if request.user.is_superuser %}{% translate "Manage all submitted runs" %}{% else %}{% translate "Manage my submitted runs" %}{% endif %}</a>
       {% endif %}
-    </div>
-  </section>
-
-  <section class="privacy-strip" aria-label="Camera privacy information">
-    <strong>{% translate "Camera privacy:" %}</strong> {% translate "Pose detection and recording run in this browser. Every run is recorded locally from the countdown, but nothing uploads unless you choose to submit it. Submitting publishes the video for everyone to watch; resetting or closing discards it." %}
-  </section>
-
-  <section class="counter-layout{% if rival %} challenge-layout{% endif %}">
-    {% if rival %}<div class="duel-grid">{% endif %}
-    {% if rival %}
-    <div class="camera-card rival-card">
-      <div class="camera-stage rival-stage">
-        <video id="rival-video" muted playsinline preload="auto"
-               src="{% url 'brainrot:hall_of_fame_video' rival.id %}"></video>
-        <div class="rival-score-pill">
-          <span>{{ rival.public_name }}</span>
-          <strong id="rival-score">0</strong>
-        </div>
-      </div>
-      <div class="detector-status ready">
-        <span class="status-dot"></span>
-        <span>{% if rival_timeline_exact %}{% translate "Recorded event timeline ready" %}{% else %}{% translate "Legacy run · estimated count pace" %}{% endif %}</span>
-      </div>
-    </div>
-    {% endif %}
-    <div class="camera-card">
-      <div class="camera-stage" id="camera-stage">
-        <video id="camera" playsinline muted></video>
-        <canvas id="pose-overlay"></canvas>
-        <div class="camera-placeholder" id="camera-placeholder">
-          <span class="placeholder-orbit" id="counter-placeholder-mark">{% if game_mode == 'leg_claps' %}TT{% else %}67{% endif %}</span>
-          <p>{% translate "Camera is currently doing nothing." %}</p>
-        </div>
-        <div class="countdown" id="countdown" aria-live="assertive"></div>
-        <div class="live-pill" id="live-pill" hidden>● {% translate "RECORDING LOCALLY" %}</div>
-      </div>
-      <div class="detector-status" id="detector-status">
-        <span class="status-dot"></span>
-        <span>{% translate "Preloading pose model — camera remains off" %}</span>
-      </div>
-    </div>
-    {% if rival %}</div>{% endif %}
-
-    <aside class="counter-panel">
-      <div class="score-block">
-        <span id="score-label">{% if game_mode == 'leg_claps' %}{% translate "leg claps counted" %}{% else %}{% translate "6️⃣7️⃣ moves counted" %}{% endif %}</span>
-        <strong id="score">0</strong>
-      </div>
-      <div class="timer-block"><span>{% translate "time remaining" %}</span><strong id="counter-time">20.0</strong></div>
-      {% if rival %}
-      <div class="challenge-target">
-        <span>{% translate "score to beat" %}</span>
-        <strong>{{ rival.score }}</strong>
-        <a href="{% url 'brainrot:hall_of_fame_detail' rival.id %}">{% translate "View HOF entry" %}</a>
-      </div>
-      {% endif %}
-
-      <button class="br-primary" id="enable-camera">{% translate "Enable camera" %}</button>
-      <button class="br-primary" id="start-run" disabled hidden>{% translate "Detector is still loading…" %}</button>
-      <p class="subtle run-consent">{% translate "I'm ready starts a local recording with the live count burned into the video. Submitting remains your decision." %}</p>
-      <button class="br-secondary" id="reset-run" hidden>{% translate "Run this foolish experiment again" %}</button>
-      <p class="counter-error" id="counter-error" role="alert"></p>
     </aside>
-  </section>
+  </div>
 
-  <section class="result-card" id="counter-result" hidden>
-    <div>
-      <span class="br-kicker">{% translate "PEER-REVIEWED BY YOURSELF" %}</span>
-      <h2><span id="result-score">0</span> <span id="result-unit">{% if game_mode == 'leg_claps' %}{% translate "leg claps in 20 seconds" %}{% else %}{% translate "6️⃣7️⃣ moves in 20 seconds" %}{% endif %}</span></h2>
-      <p id="result-copy">{% translate "A result has occurred." %}</p>
+  <section class="result-card p-3 p-md-4 mt-4" id="counter-result" hidden>
+    <div class="mb-4">
+      <div class="text-secondary small text-uppercase fw-semibold">RESULT</div>
+      <h2 class="h3 mt-1 mb-2"><span id="result-score">0</span> <span id="result-unit">{% if game_mode == 'leg_claps' %}{% translate "leg claps in 20 seconds" %}{% else %}{% translate "6️⃣7️⃣ moves in 20 seconds" %}{% endif %}</span></h2>
+      <p class="mb-0" id="result-copy">{% translate "A result has occurred." %}</p>
     </div>
-    <div class="recording-review" id="recording-review" hidden>
+
+    <div class="recording-review mb-4" id="recording-review" hidden>
       <video id="recording-preview" controls playsinline></video>
-      <p>{% translate "The recording remains local unless you submit it below. The downloaded and uploaded video includes the live count. Closing or resetting discards it." %}</p>
-      <a class="br-secondary br-button-link recording-download" id="download-recording" hidden>{% translate "Download counted video" %}</a>
+      <p class="small text-secondary mt-2">{% translate "The recording remains local unless you submit it below. The downloaded and uploaded video includes the live count. Closing or resetting discards it." %}</p>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <a class="btn btn-outline-secondary" id="download-recording" hidden>{% translate "Download counted video" %}</a>
+      </div>
+
       {% if not request.user.is_authenticated and anonymous_submission_available %}
-        <label class="anonymous-name-field" for="hof-display-name">
+        <label class="anonymous-name-field form-label" for="hof-display-name">
           <span>{% translate "Anonymous display name" %}</span>
-          <input id="hof-display-name" maxlength="32" placeholder="Anonymous Swan">
+          <input class="form-control mt-1" id="hof-display-name" maxlength="32" placeholder="Anonymous Swan">
         </label>
-        <p class="subtle">{% translate "Guest runs are labelled “guest” and cannot impersonate registered usernames. Guest submissions have no self-service privacy or delete controls; contact me with the public HOF link for changes." %}
+        <p class="small text-secondary">{% translate "Guest runs are labelled “guest” and cannot impersonate registered usernames. Guest submissions have no self-service privacy or delete controls; contact me with the public HOF link for changes." %}
           <a href="{% url 'login' %}?next={{ request.path|urlencode }}">{% translate "Log in before another run" %}</a> {% translate "if you want ownership controls." %}</p>
       {% elif request.user.is_authenticated %}
-        <p class="subtle">{% blocktranslate with username=request.user.username %}Submitting as <strong>{{ username }}</strong>. New submissions are public, but you can later make the run private or delete it from My HOF.{% endblocktranslate %}</p>
+        <p class="small text-secondary">{% blocktranslate with username=request.user.username %}Submitting as <strong>{{ username }}</strong>. New submissions are public, but you can later make the run private or delete it from My HOF.{% endblocktranslate %}</p>
       {% else %}
-        <p class="subtle">{% translate "Anonymous submission is temporarily unavailable because the production human-verification gate is not configured." %}</p>
+        <p class="small text-secondary">{% translate "Anonymous submission is temporarily unavailable because the production human-verification gate is not configured." %}</p>
       {% endif %}
+
       {% if request.user.is_authenticated or anonymous_submission_available %}
-        {% if turnstile_enabled %}<div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}"></div>{% endif %}
-      <button class="br-primary" id="submit-hof" type="button">{% translate "Submit to Hall of Fame" %}</button>
-      <button class="br-text-button" id="discard-recording" type="button">{% translate "Discard recording" %}</button>
+        {% if turnstile_enabled %}<div class="cf-turnstile mb-3" data-sitekey="{{ turnstile_site_key }}"></div>{% endif %}
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-primary" id="submit-hof" type="button">{% translate "Submit to Hall of Fame" %}</button>
+          <button class="btn btn-outline-danger" id="discard-recording" type="button">{% translate "Discard recording" %}</button>
+        </div>
       {% else %}
-        <a class="br-primary br-button-link" href="{% url 'login' %}?next={{ request.path|urlencode }}">{% translate "Log in to submit this run" %}</a>
-        <button class="br-text-button" id="discard-recording" type="button">{% translate "Discard recording" %}</button>
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-primary" href="{% url 'login' %}?next={{ request.path|urlencode }}">{% translate "Log in to submit this run" %}</a>
+          <button class="btn btn-outline-danger" id="discard-recording" type="button">{% translate "Discard recording" %}</button>
+        </div>
       {% endif %}
-      <p id="upload-status" role="status"></p>
+      <p class="small mt-2 mb-0" id="upload-status" role="status"></p>
     </div>
-    <div class="counter-share" id="counter-share">
-      <h3>🎉 {% translate "Share your result!" %}</h3>
-      <textarea id="counter-share-text" rows="6" readonly aria-label="Shareable counter result"></textarea>
-      <button class="br-secondary" id="copy-counter-share" type="button">{% translate "Copy to clipboard" %}</button>
-      <p class="subtle" id="copy-counter-status" role="status" aria-live="polite"></p>
+
+    <div class="counter-share border-top pt-4" id="counter-share">
+      <h3 class="h5">🎉 {% translate "Share your result!" %}</h3>
+      <textarea class="form-control mb-2" id="counter-share-text" rows="5" readonly aria-label="Shareable counter result"></textarea>
+      <button class="btn btn-outline-primary" id="copy-counter-share" type="button">{% translate "Copy to clipboard" %}</button>
+      <p class="small text-secondary mt-2 mb-0" id="copy-counter-status" role="status" aria-live="polite"></p>
     </div>
   </section>
 </main>
@@ -182,21 +199,21 @@
   <div class="publication-modal-backdrop" data-close-publication-modal></div>
   <section class="publication-modal-card">
     <button class="publication-modal-close" type="button" data-close-publication-modal aria-label="{% translate 'Close' %}">×</button>
-    <span class="br-kicker">{% translate "PUBLICATION CONSENT" %}</span>
-    <h2 id="publication-modal-title">{% translate "Your video will be public" %}</h2>
+    <div class="text-secondary small text-uppercase fw-semibold mb-2">{% translate "PUBLICATION CONSENT" %}</div>
+    <h2 class="h4" id="publication-modal-title">{% translate "Your video will be public" %}</h2>
     <p>{% translate "Submitting publishes this recording to the 67 Hall of Fame. Anyone can watch, download and share it." %}</p>
     {% if request.user.is_authenticated %}
-    <p class="publication-modal-note">{% translate "Because you are logged in, you can make it private or delete it later from My HOF." %}</p>
+      <p class="small text-secondary">{% translate "Because you are logged in, you can make it private or delete it later from My HOF." %}</p>
     {% else %}
-    <p class="publication-modal-note">{% translate "Guest submissions cannot be privately managed or deleted by you later. Contact the site owner with the HOF link if you need it removed." %}</p>
+      <p class="small text-secondary">{% translate "Guest submissions cannot be privately managed or deleted by you later. Contact the site owner with the HOF link if you need it removed." %}</p>
     {% endif %}
     <label class="publication-consent-check">
-      <input type="checkbox" id="publication-consent">
+      <input class="form-check-input" type="checkbox" id="publication-consent">
       <span>{% translate "I understand that my video will be published for anyone to watch." %}</span>
     </label>
     <div class="publication-modal-actions">
-      <button class="br-secondary" id="cancel-publication" type="button">{% translate "Not now" %}</button>
-      <button class="br-primary" id="confirm-publication" type="button" disabled>{% translate "Publish this video" %}</button>
+      <button class="btn btn-outline-secondary" id="cancel-publication" type="button">{% translate "Not now" %}</button>
+      <button class="btn btn-primary" id="confirm-publication" type="button" disabled>{% translate "Publish this video" %}</button>
     </div>
   </section>
 </div>
@@ -205,7 +222,6 @@
 {{ rival_timeline|json_script:'rival-event-timeline' }}
 {% endif %}
 
-{# Keep this version in step with counter.js so browsers cannot retain a broken runtime URL. #}
 <script src="{% url 'brainrot:javascript_catalog' %}"></script>
-<script type="module" src="{% static 'brainrot/counter.js' %}?v=20260817.2"></script>
+<script type="module" src="{% static 'brainrot/counter.js' %}"></script>
 {% endblock %}

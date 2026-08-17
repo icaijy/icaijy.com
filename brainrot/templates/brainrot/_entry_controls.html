@@ -1,8 +1,8 @@
 {% load i18n %}
 {% if request.user.is_authenticated %}
   {% if request.user.is_superuser or entry.user_id == request.user.id %}
-  <div class="hof-management">
-    <span class="visibility-badge visibility-{{ entry.visibility }}">
+  <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+    <span class="badge {% if entry.visibility == 'public' %}text-bg-success{% else %}text-bg-secondary{% endif %}">
       {% if entry.visibility == 'public' %}{% translate "Public" %}{% else %}{% translate "Private" %}{% endif %}
     </span>
     <form method="post" action="{% url 'brainrot:set_hall_of_fame_visibility' entry.id %}">
@@ -10,10 +10,10 @@
       <input type="hidden" name="next" value="{{ request.get_full_path }}">
       {% if entry.visibility == 'public' %}
       <input type="hidden" name="visibility" value="private">
-      <button class="hall-manage-button" type="submit">{% translate "Make private" %}</button>
+      <button class="btn btn-sm btn-outline-secondary" type="submit">{% translate "Make private" %}</button>
       {% else %}
       <input type="hidden" name="visibility" value="public">
-      <button class="hall-manage-button" type="submit">{% translate "Publish" %}</button>
+      <button class="btn btn-sm btn-outline-success" type="submit">{% translate "Publish" %}</button>
       {% endif %}
     </form>
     {% translate "Delete this Hall of Fame entry and its video permanently?" as delete_confirmation %}
@@ -21,7 +21,7 @@
           onsubmit="return confirm('{{ delete_confirmation|escapejs }}');">
       {% csrf_token %}
       <input type="hidden" name="next" value="{% url 'brainrot:my_hall_of_fame' %}?deleted=1">
-      <button class="hall-delete-link" type="submit">{% translate "Delete" %}</button>
+      <button class="btn btn-sm btn-outline-danger" type="submit">{% translate "Delete" %}</button>
     </form>
   </div>
   {% endif %}

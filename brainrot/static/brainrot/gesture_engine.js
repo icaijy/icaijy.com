@@ -5,7 +5,10 @@ export const GAME_MODES = Object.freeze({
 
 const LANDMARK_SETS = Object.freeze({
   [GAME_MODES.SIX_SEVEN]: [11, 12, 15, 16],
-  [GAME_MODES.LEG_CLAPS]: [23, 24, 25, 26, 27, 28],
+  // Leg claps are defined by the knees. Ankles are deliberately not required:
+  // MediaPipe often loses feet near the bottom of a phone frame, and foot motion
+  // should not decide whether an inward knee clap happened.
+  [GAME_MODES.LEG_CLAPS]: [23, 24, 25, 26],
 });
 
 export const OVERLAY_GEOMETRY = Object.freeze({
@@ -14,8 +17,8 @@ export const OVERLAY_GEOMETRY = Object.freeze({
     links: [[11, 13], [13, 15], [12, 14], [14, 16], [11, 12], [15, 16]],
   },
   [GAME_MODES.LEG_CLAPS]: {
-    points: [23, 24, 25, 26, 27, 28],
-    links: [[23, 24], [23, 25], [25, 27], [24, 26], [26, 28], [25, 26], [27, 28]],
+    points: [23, 24, 25, 26],
+    links: [[23, 24], [23, 25], [24, 26], [25, 26]],
   },
 });
 
@@ -67,13 +70,12 @@ class SixSevenTracker {
   }
 }
 
-function midpoint(a, b) {
-  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-}
-
-function distance(a, b) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
-}
+// These are intentionally boring, easy-to-tune thresholds rather than an
+// attempt to infer whether feet/hips stayed perfectly fixed. kneeRatio is the
+// horizontal knee gap divided by horizontal hip width.
+const LEG_CLAP_CLOSE_RATIO = 0.42;
+const LEG_CLAP_REOPEN_RATIO = 0.62;
+const LEG_CLAP_STABLE_FRAMES = 2;
 
 class LegClapTracker {
   constructor() {
@@ -81,82 +83,55 @@ class LegClapTracker {
   }
 
   reset() {
+    this.armed = false;
     this.openFrames = 0;
     this.closedFrames = 0;
-    this.readyForClose = false;
-    this.openBaseline = null;
-    this.lastCountAt = 0;
   }
 
-  metrics(landmarks) {
+  kneeRatio(landmarks) {
     const leftHip = landmarks[23];
     const rightHip = landmarks[24];
     const leftKnee = landmarks[25];
     const rightKnee = landmarks[26];
-    const leftAnkle = landmarks[27];
-    const rightAnkle = landmarks[28];
-    const ankleGap = Math.abs(leftAnkle.x - rightAnkle.x);
-    const hipGap = Math.abs(leftHip.x - rightHip.x);
-    const scale = Math.max(ankleGap, hipGap, 0.08);
-    return {
-      kneeRatio: Math.abs(leftKnee.x - rightKnee.x) / scale,
-      scale,
-      leftAnkle,
-      rightAnkle,
-      hipCentre: midpoint(leftHip, rightHip),
-    };
+    const hipWidth = Math.max(Math.abs(leftHip.x - rightHip.x), 0.06);
+    return Math.abs(leftKnee.x - rightKnee.x) / hipWidth;
   }
 
-  stableSinceOpen(metrics) {
-    if (!this.openBaseline) return false;
-    const ankleTolerance = metrics.scale * 0.28;
-    const hipTolerance = metrics.scale * 0.30;
-    return distance(metrics.leftAnkle, this.openBaseline.leftAnkle) <= ankleTolerance
-      && distance(metrics.rightAnkle, this.openBaseline.rightAnkle) <= ankleTolerance
-      && distance(metrics.hipCentre, this.openBaseline.hipCentre) <= hipTolerance;
-  }
-
-  observe(landmarks, now) {
+  observe(landmarks) {
     if (!landmarksAreVisible(GAME_MODES.LEG_CLAPS, landmarks)) {
-      this.openFrames = Math.max(0, this.openFrames - 1);
+      this.openFrames = 0;
       this.closedFrames = 0;
+      // Require a fresh visible open pose after tracking is lost. This avoids
+      // counting a person merely re-entering the frame with their knees closed.
+      this.armed = false;
       return false;
     }
 
-    const metrics = this.metrics(landmarks);
-    if (metrics.kneeRatio >= 0.72) {
-      this.openFrames += 1;
+    const ratio = this.kneeRatio(landmarks);
+
+    if (ratio >= LEG_CLAP_REOPEN_RATIO) {
       this.closedFrames = 0;
-      if (this.openFrames >= 3) {
-        this.readyForClose = true;
-        this.openBaseline = {
-          leftAnkle: { ...metrics.leftAnkle },
-          rightAnkle: { ...metrics.rightAnkle },
-          hipCentre: { ...metrics.hipCentre },
-        };
-      }
+      this.openFrames += 1;
+      if (this.openFrames >= LEG_CLAP_STABLE_FRAMES) this.armed = true;
       return false;
     }
 
     this.openFrames = 0;
-    if (metrics.kneeRatio > 0.45) {
+    if (ratio > LEG_CLAP_CLOSE_RATIO) {
       this.closedFrames = 0;
       return false;
     }
-    if (!this.readyForClose) return false;
+
+    if (!this.armed) {
+      this.closedFrames = 0;
+      return false;
+    }
 
     this.closedFrames += 1;
-    if (this.closedFrames < 2) return false;
-    if (!this.stableSinceOpen(metrics)) {
-      this.readyForClose = false;
-      this.closedFrames = 0;
-      return false;
-    }
-    if (now - this.lastCountAt <= 120) return false;
+    if (this.closedFrames < LEG_CLAP_STABLE_FRAMES) return false;
 
-    this.readyForClose = false;
+    this.armed = false;
     this.closedFrames = 0;
-    this.lastCountAt = now;
     return true;
   }
 }
