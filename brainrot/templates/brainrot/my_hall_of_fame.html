@@ -4,47 +4,52 @@
 {% block title %}My 67 Hall of Fame{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260817.2">
-<main class="br-page hall-page">
-  <header class="br-toolbar">
-    <a href="{% url 'brainrot:hall_of_fame' %}">← {% translate "Public Hall of Fame" %}</a>
-    <a href="{% url 'brainrot:counter' %}">{% translate "New run" %}</a>
-  </header>
+<main class="container py-4 py-md-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:hall_of_fame' %}">← {% translate "Public Hall of Fame" %}</a>
+    <a class="btn btn-sm btn-primary" href="{% url 'brainrot:counter' %}">{% translate "New run" %}</a>
+  </div>
 
-  <section class="hall-heading">
-    <span class="br-kicker">{% if superuser_mode %}{% translate "SUPERUSER HALL OF FAME CONTROL" %}{% else %}{% translate "PERSONAL ARM-ACTIVITY RECORDS" %}{% endif %}</span>
-    <h1>{% if superuser_mode %}{% translate "Manage HOF" %}{% else %}{% translate "My HOF" %}{% endif %}</h1>
-    <p>{% if superuser_mode %}{% translate "You can change visibility or delete any registered or guest run." %}{% else %}{% translate "Your runs can be public or private. Deleting one removes both its listing and video file." %}{% endif %}</p>
-  </section>
+  <div class="mb-4">
+    <div class="text-secondary small text-uppercase fw-semibold mb-2">{% if superuser_mode %}{% translate "SUPERUSER HALL OF FAME CONTROL" %}{% else %}{% translate "PERSONAL ARM-ACTIVITY RECORDS" %}{% endif %}</div>
+    <h1 class="display-5 fw-bold mb-2">{% if superuser_mode %}{% translate "Manage HOF" %}{% else %}{% translate "My HOF" %}{% endif %}</h1>
+    <p class="lead text-secondary mb-0">{% if superuser_mode %}{% translate "You can change visibility or delete any registered or guest run." %}{% else %}{% translate "Your runs can be public or private. Deleting one removes both its listing and video file." %}{% endif %}</p>
+  </div>
 
   {% if request.GET.deleted %}
-  <p class="hof-delete-notice" role="status">{% translate "Entry and recording deleted. The evidence has left the building." %}</p>
+    <div class="alert alert-success" role="status">{% translate "Entry and recording deleted. The evidence has left the building." %}</div>
   {% elif request.GET.updated %}
-  <p class="hof-delete-notice" role="status">{% translate "Visibility updated." %}</p>
+    <div class="alert alert-success" role="status">{% translate "Visibility updated." %}</div>
   {% endif %}
 
-  <section class="hall-list">
+  <div class="d-grid gap-3">
     {% for entry in entries %}
-    <article class="hall-entry my-hall-entry">
-      <span class="hall-rank">#{{ entry.id }}</span>
-      <div class="hall-person">
-        <strong>{% if superuser_mode %}{{ entry.public_name }} · {% endif %}{{ entry.created_at|date:'j M Y · H:i' }}</strong>
-        <span>{{ entry.get_game_mode_display }} · {{ entry.get_visibility_display }} · {% blocktranslate with duration=entry.duration_seconds|floatformat:2 %}{{ duration }} seconds{% endblocktranslate %}</span>
+    <article class="card shadow-sm">
+      <div class="card-body p-3 p-md-4">
+        <div class="row g-3 align-items-center">
+          <div class="col-auto"><span class="badge text-bg-light border text-dark">#{{ entry.id }}</span></div>
+          <div class="col">
+            <h2 class="h5 border-0 ps-0 ms-0 mb-1">{% if superuser_mode %}{{ entry.public_name }} · {% endif %}{{ entry.created_at|date:'j M Y · H:i' }}</h2>
+            <div class="text-secondary small">{{ entry.get_game_mode_display }} · {{ entry.get_visibility_display }} · {% blocktranslate with duration=entry.duration_seconds|floatformat:2 %}{{ duration }} seconds{% endblocktranslate %}</div>
+          </div>
+          <div class="col-auto"><span class="display-6 fw-bold">{{ entry.score }}</span></div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          <a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "View" %}</a>
+          <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:hall_of_fame_video' entry.id %}?download=1">{% translate "Download" %}</a>
+        </div>
+        {% include 'brainrot/_entry_controls.html' %}
       </div>
-      <strong class="hall-score">{{ entry.score }}</strong>
-      <div class="hall-actions">
-        <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "View" %}</a>
-        <a href="{% url 'brainrot:hall_of_fame_video' entry.id %}?download=1">{% translate "Download" %}</a>
-      </div>
-      {% include 'brainrot/_entry_controls.html' %}
     </article>
     {% empty %}
-    <div class="empty-hall">
-      <strong>{% translate "No owned specimens yet." %}</strong>
-      <p>{% translate "Anonymous submissions cannot be retroactively attached to this account." %}</p>
-      <a href="{% url 'brainrot:counter' %}" class="br-primary br-button-link">{% translate "Create an unnecessarily documented run" %}</a>
+    <div class="card">
+      <div class="card-body p-4 text-center">
+        <h2 class="h4 border-0 ps-0 ms-0">{% translate "No owned specimens yet." %}</h2>
+        <p class="text-secondary">{% translate "Anonymous submissions cannot be retroactively attached to this account." %}</p>
+        <a href="{% url 'brainrot:counter' %}" class="btn btn-primary">{% translate "Create an unnecessarily documented run" %}</a>
+      </div>
     </div>
     {% endfor %}
-  </section>
+  </div>
 </main>
 {% endblock %}
