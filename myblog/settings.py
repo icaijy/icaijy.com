@@ -142,6 +142,15 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'myblog.static_storage.HashedManifestStaticFilesStorage',
+    },
+}
+
 # Retained as a feature flag so the OJ can be restored without resurrecting
 # public submission endpoints by accident.
 OJ_ENABLED = os.getenv('OJ_ENABLED', 'False') == 'True'
