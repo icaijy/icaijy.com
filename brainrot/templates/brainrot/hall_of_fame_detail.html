@@ -4,61 +4,77 @@
 {% block title %}{{ entry.public_name }} — {% if entry.game_mode == 'leg_claps' %}{% translate "Tung Tung Leg Claps Hall of Fame" %}{% else %}{% translate "67 Hall of Fame" %}{% endif %}{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'brainrot/brainrot.css' %}?v=20260817.2">
-<main class="br-page hall-detail-page" id="hof-detail"
+<main class="container py-4 py-md-5" id="hof-detail"
       data-entry-url="{{ request.build_absolute_uri }}"
       data-username="{{ entry.public_name }}"
       data-score="{{ entry.score }}"
       data-game-mode="{{ entry.game_mode }}">
-  <header class="br-toolbar">
-    <a href="{% url 'brainrot:hall_of_fame' %}?mode={{ entry.game_mode }}">← {% translate "Hall of Fame" %}</a>
-    <a href="{% url 'brainrot:index' %}">{% translate "All experiments" %}</a>
-  </header>
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:hall_of_fame' %}?mode={{ entry.game_mode }}">← {% translate "Hall of Fame" %}</a>
+    <a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:index' %}">{% translate "All experiments" %}</a>
+  </div>
 
-  <section class="hall-detail-heading">
-    <span class="br-kicker">{% blocktranslate with id=entry.id %}ARCHIVED HUMAN PERFORMANCE SPECIMEN #{{ id }}{% endblocktranslate %}</span>
-    <h1>{{ entry.score }}</h1>
-    <div>
-      <strong>{% if entry.game_mode == 'leg_claps' %}{% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} Tung Tung Leg Claps in 20 seconds.{% endblocktranslate %}{% else %}{% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds.{% endblocktranslate %}{% endif %}</strong>
-      <span>{{ entry.created_at|date:'j M Y · H:i' }} · {% blocktranslate with duration=entry.duration_seconds|floatformat:2 %}{{ duration }} seconds{% endblocktranslate %}</span>
-      <span class="game-mode-badge game-mode-{{ entry.game_mode }}">{{ entry.get_game_mode_display }}</span>
-      <span class="visibility-badge visibility-{{ entry.visibility }}">{{ entry.get_visibility_display }}</span>
+  <div class="row g-4 align-items-start mb-4">
+    <div class="col-12 col-lg-8">
+      <div class="text-secondary small text-uppercase fw-semibold mb-2">{% blocktranslate with id=entry.id %}ARCHIVED HUMAN PERFORMANCE SPECIMEN #{{ id }}{% endblocktranslate %}</div>
+      <div class="d-flex flex-wrap align-items-end gap-3">
+        <h1 class="display-2 fw-bold mb-0">{{ entry.score }}</h1>
+        <div class="pb-2">
+          <div class="fw-bold">{% if entry.game_mode == 'leg_claps' %}{% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} Tung Tung Leg Claps in 20 seconds.{% endblocktranslate %}{% else %}{% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds.{% endblocktranslate %}{% endif %}</div>
+          <div class="text-secondary small">{{ entry.created_at|date:'j M Y · H:i' }} · {% blocktranslate with duration=entry.duration_seconds|floatformat:2 %}{{ duration }} seconds{% endblocktranslate %}</div>
+        </div>
+      </div>
+      <div class="d-flex flex-wrap gap-2 mt-2">
+        <span class="badge {% if entry.game_mode == 'leg_claps' %}text-bg-success{% else %}text-bg-primary{% endif %}">{{ entry.get_game_mode_display }}</span>
+        <span class="badge {% if entry.visibility == 'public' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ entry.get_visibility_display }}</span>
+      </div>
     </div>
-  </section>
+  </div>
 
   {% url 'brainrot:hall_of_fame_video' entry.id as evidence_url %}
-  <section class="hall-detail-grid">
-    <div class="hall-evidence-card">
-      <video controls preload="metadata" playsinline src="{{ evidence_url }}"></video>
-      <div class="hall-evidence-actions">
-        <a class="br-secondary br-button-link" href="{{ evidence_url }}?download=1">{% translate "Download counted video" %}</a>
-        {% if entry.visibility == 'public' %}
-        <a class="br-primary br-button-link" href="{% url 'brainrot:challenge' entry.id %}">{% translate "Challenge this specimen" %}</a>
-        {% endif %}
+  <div class="row g-4">
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body p-3">
+          <video class="w-100 rounded bg-dark" controls preload="metadata" playsinline src="{{ evidence_url }}"></video>
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <a class="btn btn-outline-secondary" href="{{ evidence_url }}?download=1">{% translate "Download counted video" %}</a>
+            {% if entry.visibility == 'public' %}
+            <a class="btn btn-primary" href="{% url 'brainrot:challenge' entry.id %}">{% translate "Challenge this specimen" %}</a>
+            {% endif %}
+          </div>
+        </div>
       </div>
     </div>
 
-    <aside class="hall-share-card">
-      <span class="br-kicker">{% if entry.visibility == 'public' %}{% translate "PUBLIC REPLICATION MATERIAL" %}{% else %}{% translate "PRIVATE OWNER VIEW" %}{% endif %}</span>
-      <h2>{% if entry.visibility == 'public' %}{% translate "Share this run" %}{% else %}{% translate "Private run" %}{% endif %}</h2>
-      {% if entry.visibility == 'private' %}
-      <p>{% translate "Only you and site superusers can open this page or video. Publish it to restore its Hall of Fame listing and share link." %}</p>
-      {% elif entry.user_id and request.user == entry.user %}
-      <p>{% translate "This is your permanent Hall of Fame link. Deploy it responsibly." %}</p>
-      {% elif not entry.user_id %}
-      <p>{% translate "This is a guest submission and has no self-service access. To request privacy changes or removal, contact the site owner and include this page's URL." %}</p>
-      {% else %}
-      <p>{% translate "Distribute this evidence to researchers, rivals and confused relatives." %}</p>
-      {% endif %}
-      {% if entry.visibility == 'public' %}
-      <textarea id="hof-share-text" rows="6" readonly aria-label="Shareable Hall of Fame result"></textarea>
-      <button class="br-primary" id="share-hof" type="button">{% translate "Share result!" %}</button>
-      <button class="br-secondary" id="copy-hof-link" type="button">{% translate "Copy share message" %}</button>
-      {% endif %}
-      {% include 'brainrot/_entry_controls.html' %}
-      <p class="subtle" id="hof-share-status" role="status" aria-live="polite"></p>
-    </aside>
-  </section>
+    <div class="col-12 col-lg-4">
+      <aside class="card shadow-sm">
+        <div class="card-body p-3 p-md-4">
+          <div class="text-secondary small text-uppercase fw-semibold mb-2">{% if entry.visibility == 'public' %}{% translate "PUBLIC REPLICATION MATERIAL" %}{% else %}{% translate "PRIVATE OWNER VIEW" %}{% endif %}</div>
+          <h2 class="h4 border-0 ps-0 ms-0">{% if entry.visibility == 'public' %}{% translate "Share this run" %}{% else %}{% translate "Private run" %}{% endif %}</h2>
+          {% if entry.visibility == 'private' %}
+            <p class="text-secondary small">{% translate "Only you and site superusers can open this page or video. Publish it to restore its Hall of Fame listing and share link." %}</p>
+          {% elif entry.user_id and request.user == entry.user %}
+            <p class="text-secondary small">{% translate "This is your permanent Hall of Fame link. Deploy it responsibly." %}</p>
+          {% elif not entry.user_id %}
+            <p class="text-secondary small">{% translate "This is a guest submission and has no self-service access. To request privacy changes or removal, contact the site owner and include this page's URL." %}</p>
+          {% else %}
+            <p class="text-secondary small">{% translate "Distribute this evidence to researchers, rivals and confused relatives." %}</p>
+          {% endif %}
+
+          {% if entry.visibility == 'public' %}
+            <textarea class="form-control mb-2" id="hof-share-text" rows="6" readonly aria-label="Shareable Hall of Fame result"></textarea>
+            <div class="d-grid gap-2">
+              <button class="btn btn-primary" id="share-hof" type="button">{% translate "Share result!" %}</button>
+              <button class="btn btn-outline-secondary" id="copy-hof-link" type="button">{% translate "Copy share message" %}</button>
+            </div>
+          {% endif %}
+          {% include 'brainrot/_entry_controls.html' %}
+          <p class="small text-secondary mt-2 mb-0" id="hof-share-status" role="status" aria-live="polite"></p>
+        </div>
+      </aside>
+    </div>
+  </div>
 </main>
 {% if entry.visibility == 'public' %}
 <script src="{% url 'brainrot:javascript_catalog' %}"></script>
