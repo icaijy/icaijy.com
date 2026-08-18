@@ -174,6 +174,14 @@ export class SixSevenLocalRecognizer {
       sixIndex: model.sixIndex,
       sevenIndex: model.sevenIndex,
     });
+    // voice_counter.js historically creates a recognizer synchronously and
+    // then spends 3.25 s in its countdown. Start the TF.js-owned microphone
+    // pipeline immediately so it is warm before GO without rewriting that
+    // mature runner.
+    this.startPromise = this.start().catch((error) => {
+      this.handlers.onError?.(error);
+      throw error;
+    });
   }
 
   async start() {
@@ -211,6 +219,11 @@ export class SixSevenLocalRecognizer {
   acceptWaveform() {}
 
   async finalise() {
+    try {
+      await this.startPromise;
+    } catch {
+      return '';
+    }
     if (!this.listening) return '';
     try {
       await this.model.recognizer.stopListening();
@@ -230,8 +243,6 @@ export class SixSevenLocalRecognizer {
 }
 
 export function releaseSixSevenVoiceModel() {
-  // Keep the warmed TF.js model for the life of the page. It is small, and
-  // releasing it here would force a full network/model warm-up on every retry.
   loadedModel = null;
   modelPromise = null;
 }
