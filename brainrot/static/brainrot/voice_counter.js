@@ -1,5 +1,5 @@
 import { installMp4Download } from './mp4_download.js';
-import { countSixSevenPhrases } from './voice_engine.js';
+import { MonotonicVoiceScorer } from './voice_engine.js';
 import {
   SixSevenLocalRecognizer,
   loadSixSevenVoiceModel,
@@ -72,6 +72,7 @@ if (app) {
   let rivalTimelineIndex = 0;
   let committedSegments = [];
   let partialSegment = '';
+  const voiceScorer = new MonotonicVoiceScorer();
 
   let recorder = null;
   let recordingStream = null;
@@ -100,40 +101,29 @@ if (app) {
     errorEl.textContent = message || '';
   }
 
-  function recognisedText({ includePartial = true } = {}) {
-    const parts = [...committedSegments];
-    if (includePartial && partialSegment) parts.push(partialSegment);
-    return parts.filter(Boolean).join(' ').trim();
-  }
-
   function updateRecognitionUI() {
     heardFinal.textContent = committedSegments.join(' ').trim() || '—';
     heardInterim.textContent = partialSegment ? `… ${partialSegment}` : '';
   }
 
-  function syncScore({ includePartial = true } = {}) {
-    const nextScore = countSixSevenPhrases(recognisedText({ includePartial }));
-    if (nextScore !== score) {
-      if (nextScore < score) {
-        eventTimeline.length = nextScore;
-      } else {
-        const elapsed = runStartedAt
-          ? Math.min(GAME_SECONDS, Math.max(0, (performance.now() - runStartedAt) / 1000))
-          : 0;
-        while (eventTimeline.length < nextScore) {
-          eventTimeline.push(Number(elapsed.toFixed(3)));
-        }
-      }
-      score = nextScore;
-      scoreEl.textContent = String(score);
+  function lockScore(nextScore) {
+    if (nextScore <= score) return;
+
+    const elapsed = runStartedAt
+      ? Math.min(GAME_SECONDS, Math.max(0, (performance.now() - runStartedAt) / 1000))
+      : 0;
+    while (eventTimeline.length < nextScore) {
+      eventTimeline.push(Number(elapsed.toFixed(3)));
     }
+    score = nextScore;
+    scoreEl.textContent = String(score);
   }
 
   function handlePartial(text) {
     if (!running && !finalising) return;
     partialSegment = text || '';
     updateRecognitionUI();
-    syncScore({ includePartial: true });
+    lockScore(voiceScorer.observePartial(partialSegment));
   }
 
   function handleResult(text) {
@@ -141,7 +131,7 @@ if (app) {
     if (text) committedSegments.push(text);
     partialSegment = '';
     updateRecognitionUI();
-    syncScore({ includePartial: false });
+    lockScore(voiceScorer.commitFinal(text || ''));
   }
 
   async function ensureVoiceModel() {
@@ -414,6 +404,7 @@ if (app) {
     eventTimeline = [];
     committedSegments = [];
     partialSegment = '';
+    voiceScorer.reset();
     runStartedAt = 0;
     endTime = 0;
     rivalTimelineIndex = 0;
@@ -456,7 +447,7 @@ if (app) {
     if (rivalVideo && Math.abs(rivalVideo.currentTime - RECORDING_LEAD_SECONDS) > 0.35) {
       rivalVideo.currentTime = RECORDING_LEAD_SECONDS;
     }
-    setStatus(tr('Listening locally — say six seven'), 'ready');
+    setStatus(tr('Listening locally — clear 67s lock in immediately'), 'ready');
     gameLoop = requestAnimationFrame(updateGameClock);
   }
 
@@ -469,7 +460,7 @@ if (app) {
     timeEl.textContent = '0.0';
     rivalVideo?.pause();
     if (rivalScoreEl) rivalScoreEl.textContent = String(rivalFinalScore);
-    setStatus(tr('Time — locking the local model result…'), 'busy');
+    setStatus(tr('Time — locking the last local model result…'), 'busy');
 
     // Stop evidence at the deadline. The worker may take a moment to flush
     // already-received audio, but no post-deadline microphone samples are fed.
@@ -477,14 +468,14 @@ if (app) {
     const finalResultPromise = localRecognizer?.finalise(1500) || Promise.resolve('');
     const [blob] = await Promise.all([recordingPromise, finalResultPromise]);
 
-    // If the worker timed out without a final event, keep only complete pairs
-    // visible in its last local partial snapshot. No fuzzy reconstruction.
-    syncScore({ includePartial: true });
+    // If the worker timed out without a final event, lock the best complete
+    // pair count already seen in the last partial. Awarded points never roll back.
+    lockScore(voiceScorer.commitFinal(''));
     finalising = false;
     localRecognizer?.remove();
     localRecognizer = null;
 
-    setStatus(tr('Run complete — local voice result locked'), 'ready');
+    setStatus(tr('Run complete — awarded voice points are locked'), 'ready');
     resultScore.textContent = String(score);
     resultCopy.textContent = rivalName
       ? score > rivalFinalScore
@@ -492,7 +483,7 @@ if (app) {
         : score === rivalFinalScore
           ? `You tied ${rivalName}.`
           : `${rivalName} is ahead by ${rivalFinalScore - score}.`
-      : `Counted ${score} clear six sevens.`;
+      : `Counted ${score} six sevens.`;
     shareText.value = shareableResult();
     copyShareStatus.textContent = '';
     resultCard.hidden = false;
@@ -563,6 +554,7 @@ if (app) {
     eventTimeline = [];
     committedSegments = [];
     partialSegment = '';
+    voiceScorer.reset();
     runStartedAt = 0;
     endTime = 0;
     rivalTimelineIndex = 0;
