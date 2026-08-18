@@ -1,4 +1,4 @@
-// Compatibility facade: the Voice runner already imports this module name.
+// Compatibility facade: voice_counter.js already imports this module name.
 // The implementation is now dedicated streaming keyword spotting, not Vosk ASR.
 export {
   SixSevenLocalRecognizer,
