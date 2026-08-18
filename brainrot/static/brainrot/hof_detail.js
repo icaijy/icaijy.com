@@ -1,3 +1,5 @@
+import { installMp4Download } from './mp4_download.js';
+
 const detail = document.getElementById('hof-detail');
 if (detail) {
   const tr = (message) => typeof gettext === 'function' ? gettext(message) : message;
@@ -17,25 +19,22 @@ if (detail) {
   // This sentence is already translated by Django in the visible page copy.
   const headline = detail.querySelector('.pb-2 .fw-bold')?.textContent.trim() || fallbackHeadline;
   const text = `${headline}\n${blocks}\n${url}`;
-  shareText.value = text;
+  if (shareText) shareText.value = text;
 
-  import('./mp4_download.js').then(({ installMp4Download }) => {
-    const downloadButton = detail.querySelector('a[href*="?download=1"]');
-    const safeName = detail.dataset.username.replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '') || 'run';
-    installMp4Download(downloadButton, {
-      filename: `${isLegClaps ? 'tung-tung-leg-claps' : '67'}-${safeName}-${score}.webm`,
-      onStatus(message) {
-        status.textContent = message;
-      },
-      onError(error) {
-        status.textContent = `MP4 download failed: ${error.message}`;
-      },
-    });
-  }).catch((error) => {
-    console.error('Could not initialise MP4 downloads.', error);
+  const downloadButton = detail.querySelector('a[href*="?download=1"]');
+  const safeName = detail.dataset.username.replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '') || 'run';
+  installMp4Download(downloadButton, {
+    filename: `${isLegClaps ? 'tung-tung-leg-claps' : '67'}-${safeName}-${score}.webm`,
+    onStatus(message) {
+      if (status) status.textContent = message;
+    },
+    onError(error) {
+      if (status) status.textContent = `MP4 download failed: ${error.message}`;
+    },
   });
 
   async function copyShareMessage() {
+    if (!shareText || !copyButton) return;
     try {
       if (navigator.clipboard?.writeText && window.isSecureContext) {
         await navigator.clipboard.writeText(text);
@@ -45,21 +44,23 @@ if (detail) {
         if (!document.execCommand('copy')) throw new Error('Copy command was rejected.');
       }
       copyButton.textContent = tr('Copied! 🎉');
-      status.textContent = isLegClaps
-        ? tr('Full result copied! The knee evidence is ready for deployment.')
-        : tr('Full result copied! The 6️⃣7️⃣ evidence is ready for deployment.');
+      if (status) {
+        status.textContent = isLegClaps
+          ? tr('Full result copied! The knee evidence is ready for deployment.')
+          : tr('Full result copied! The 6️⃣7️⃣ evidence is ready for deployment.');
+      }
     } catch (error) {
       shareText.select();
-      status.textContent = tr('Automatic copy failed. Select the message and copy it manually.');
+      if (status) status.textContent = tr('Automatic copy failed. Select the message and copy it manually.');
     }
     window.setTimeout(() => { copyButton.textContent = tr('Copy share message'); }, 1500);
   }
 
-  shareButton.addEventListener('click', async () => {
+  shareButton?.addEventListener('click', async () => {
     if (navigator.share) {
       try {
         await navigator.share({ title: document.title, text });
-        status.textContent = tr('Result launched into the world! 🚀');
+        if (status) status.textContent = tr('Result launched into the world! 🚀');
         return;
       } catch (error) {
         if (error.name === 'AbortError') return;
@@ -67,5 +68,5 @@ if (detail) {
     }
     await copyShareMessage();
   });
-  copyButton.addEventListener('click', copyShareMessage);
+  copyButton?.addEventListener('click', copyShareMessage);
 }
