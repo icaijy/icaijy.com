@@ -23,7 +23,7 @@ class HallOfFameEntryAdmin(admin.ModelAdmin):
             return 'Save first'
         video_url = f'/67/hall-of-fame/{obj.pk}/video/'
         return format_html(
-            '<a href="{}" target="_blank">Open recording</a> · <a href="{}?download=1">Download</a>',
+            '<a href="{}" target="_blank">Open recording</a> · <a href="{}?download=1&amp;format=mp4">Download MP4</a>',
             video_url,
             video_url,
         )
