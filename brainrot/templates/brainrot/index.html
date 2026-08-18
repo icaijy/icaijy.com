@@ -17,7 +17,7 @@
   </div>
 
   <div class="row g-3 g-lg-4">
-    <div class="col-12 col-md-6 col-xl-4">
+    <div class="col-12 col-md-6 col-xl-3">
       <a class="card h-100 text-decoration-none text-body shadow-sm border-primary" href="{% url 'brainrot:counter' %}?mode=six_seven">
         <div class="card-body p-4 d-flex flex-column">
           <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
@@ -31,7 +31,7 @@
       </a>
     </div>
 
-    <div class="col-12 col-md-6 col-xl-4">
+    <div class="col-12 col-md-6 col-xl-3">
       <a class="card h-100 text-decoration-none text-body shadow-sm border-success" href="{% url 'brainrot:counter' %}?mode=leg_claps">
         <div class="card-body p-4 d-flex flex-column">
           <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
@@ -45,7 +45,21 @@
       </a>
     </div>
 
-    <div class="col-12 col-md-6 col-xl-4">
+    <div class="col-12 col-md-6 col-xl-3">
+      <a class="card h-100 text-decoration-none text-body shadow-sm border-danger" href="{% url 'brainrot:voice_counter' %}">
+        <div class="card-body p-4 d-flex flex-column">
+          <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
+            <span class="badge text-bg-danger">20 s · voice</span>
+            <span class="display-6 fw-bold text-danger">🗣️</span>
+          </div>
+          <h2 class="h3 fw-bold">{% translate "Six Seven Voice Speedrun" %}</h2>
+          <p class="text-secondary flex-grow-1 mb-4">{% translate "Say “six seven” as many times as possible. Only complete recognised pairs count, so speed without clear speech gets punished." %}</p>
+          <span class="fw-semibold text-danger">{% translate "Speak" %} →</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
       <a class="card h-100 text-decoration-none text-body shadow-sm border-secondary" href="{% url 'brainrot:typing_test' %}">
         <div class="card-body p-4 d-flex flex-column">
           <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
