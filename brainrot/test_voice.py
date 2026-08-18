@@ -16,10 +16,12 @@ class VoiceSpeedrunPageTests(TestCase):
         self.assertContains(voice, 'id="voice-app"')
         self.assertContains(voice, 'data-game-mode="voice_67"')
         self.assertContains(voice, 'voice_counter.js')
-        self.assertContains(voice, 'Local model hearing')
+        self.assertContains(voice, 'Keyword detections')
         self.assertContains(voice, 'camera + microphone')
-        self.assertContains(voice, 'Recognition runs locally in this browser')
+        self.assertContains(voice, 'Keyword detection runs locally in this browser')
+        self.assertContains(voice, 'wake-word style detection')
         self.assertNotContains(voice, "browser vendor's speech service")
+        self.assertNotContains(voice, 'about 40 MB of model data')
 
     def test_voice_is_a_real_hall_of_fame_mode(self):
         voice_entry = HallOfFameEntry.objects.create(
