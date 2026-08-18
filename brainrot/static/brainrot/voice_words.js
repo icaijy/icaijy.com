@@ -170,17 +170,17 @@ export class SixSevenLocalRecognizer {
     this.model = model;
     this.handlers = handlers;
     this.listening = false;
+    this.active = false;
     this.detector = new SixSevenWordPairDetector({
       sixIndex: model.sixIndex,
       sevenIndex: model.sevenIndex,
     });
-    // voice_counter.js historically creates a recognizer synchronously and
-    // then spends 3.25 s in its countdown. Start the TF.js-owned microphone
-    // pipeline immediately so it is warm before GO without rewriting that
-    // mature runner.
+    // voice_counter.js creates the per-run recognizer before its 3.25-second
+    // countdown. Warm TF.js immediately, but gate scoring until the old PCM
+    // pipeline first calls acceptWaveform() after GO.
     this.startPromise = this.start().catch((error) => {
       this.handlers.onError?.(error);
-      throw error;
+      return undefined;
     });
   }
 
@@ -188,6 +188,7 @@ export class SixSevenLocalRecognizer {
     if (this.listening) return;
     this.detector.reset();
     await this.model.recognizer.listen((result) => {
+      if (!this.active) return;
       try {
         const observed = this.detector.observe(result.scores, performance.now());
         this.handlers.onPartial?.(observed.word || '');
@@ -213,17 +214,18 @@ export class SixSevenLocalRecognizer {
     this.listening = true;
   }
 
-  // The TF.js recognizer owns its own WebAudio microphone pipeline. The
-  // existing Voice runner still calls this method for the old sherpa/Vosk
-  // adapters, so keep it as an intentional no-op compatibility hook.
-  acceptWaveform() {}
+  // This call comes from the existing runner only while feedRecognizer=true.
+  // TF.js owns a separate local WebAudio stream; use the legacy callback solely
+  // as the exact game-window gate so countdown speech cannot pre-arm scoring.
+  acceptWaveform() {
+    if (this.active) return;
+    this.detector.reset();
+    this.active = true;
+  }
 
   async finalise() {
-    try {
-      await this.startPromise;
-    } catch {
-      return '';
-    }
+    this.active = false;
+    await this.startPromise;
     if (!this.listening) return '';
     try {
       await this.model.recognizer.stopListening();
@@ -234,6 +236,7 @@ export class SixSevenLocalRecognizer {
   }
 
   remove() {
+    this.active = false;
     if (!this.listening) return;
     this.model.recognizer.stopListening().catch((error) => {
       console.debug('Voice word detector cleanup failed.', error);
