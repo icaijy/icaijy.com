@@ -92,7 +92,7 @@ test('empty decoder results never manufacture a score', () => {
   assert.equal(spotter.resets, 0);
 });
 
-test('deadline finalisation adds only synthetic silence and may flush a pending hit', async () => {
+test('deadline finalisation keeps the live input rate and may flush a pending hit', async () => {
   const { model, spotter, stream } = makeFakeModel();
   let hits = 0;
   const recognizer = new SixSevenLocalRecognizer(model, 48000, {
@@ -105,8 +105,8 @@ test('deadline finalisation adds only synthetic silence and may flush a pending 
   assert.equal(hits, 1);
   assert.equal(stream.finished, true);
   assert.equal(stream.accepted.length, 1);
-  assert.equal(stream.accepted[0].sampleRate, 16000);
-  assert.equal(stream.accepted[0].samples.length, 7200);
+  assert.equal(stream.accepted[0].sampleRate, 48000);
+  assert.equal(stream.accepted[0].samples.length, 21600);
 });
 
 test('remove frees only the per-run stream', () => {
