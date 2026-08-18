@@ -18,10 +18,7 @@ function isMp4(blob) {
   return (blob.type || '').toLowerCase().split(';')[0] === 'video/mp4';
 }
 
-export async function convertVideoToMp4(blob, onProgress = () => {}) {
-  if (!(blob instanceof Blob)) throw new TypeError('Expected a video Blob.');
-  if (isMp4(blob)) return blob;
-
+async function runConversion(blob, library, videoOptions, onProgress) {
   const {
     ALL_FORMATS,
     BlobSource,
@@ -30,7 +27,7 @@ export async function convertVideoToMp4(blob, onProgress = () => {}) {
     Input,
     Mp4OutputFormat,
     Output,
-  } = await loadMediabunny();
+  } = library;
 
   const input = new Input({
     formats: ALL_FORMATS,
@@ -46,23 +43,53 @@ export async function convertVideoToMp4(blob, onProgress = () => {}) {
     const conversion = await Conversion.init({
       input,
       output,
-      video: {
-        codec: 'avc',
-        bitrate: 1_600_000,
-        keyFrameInterval: 2,
-      },
+      video: videoOptions,
       audio: { discard: true },
     });
     if (!conversion.isValid) {
-      throw new Error('This browser cannot convert this recording to MP4.');
+      const reasons = conversion.discardedTracks.map(({ reason }) => reason).join(', ');
+      throw new Error(reasons || 'no compatible video encoder');
     }
     conversion.onProgress = (progress) => onProgress(clampProgress(progress));
     await conversion.execute();
-    if (!target.buffer) throw new Error('MP4 conversion completed without output data.');
-    onProgress(1);
+    if (!target.buffer) throw new Error('conversion completed without output data');
     return new Blob([target.buffer], { type: 'video/mp4' });
   } finally {
-    await input.dispose?.();
+    input.dispose();
+  }
+}
+
+export async function convertVideoToMp4(blob, onProgress = () => {}) {
+  if (!(blob instanceof Blob)) throw new TypeError('Expected a video Blob.');
+  if (isMp4(blob)) {
+    onProgress(1);
+    return blob;
+  }
+
+  const library = await loadMediabunny();
+  const avcOptions = {
+    codec: 'avc',
+    bitrate: 1_600_000,
+    keyFrameInterval: 2,
+  };
+
+  try {
+    const mp4 = await runConversion(blob, library, avcOptions, onProgress);
+    onProgress(1);
+    return mp4;
+  } catch (avcError) {
+    console.warn('H.264 MP4 conversion unavailable; trying the browser\'s best MP4 codec.', avcError);
+  }
+
+  try {
+    const mp4 = await runConversion(blob, library, {
+      bitrate: 1_600_000,
+      keyFrameInterval: 2,
+    }, onProgress);
+    onProgress(1);
+    return mp4;
+  } catch (fallbackError) {
+    throw new Error(`This browser cannot convert this recording to MP4: ${fallbackError.message}`);
   }
 }
 
