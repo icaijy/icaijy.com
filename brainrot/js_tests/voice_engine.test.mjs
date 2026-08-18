@@ -10,22 +10,26 @@ const { countSixSevenPhrases, normaliseVoiceTranscript } = await import(
   `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`
 );
 
-test('normalises punctuation without guessing fuzzy speech', () => {
-  assert.equal(normaliseVoiceTranscript('Six, seven! SIX-seven.'), 'six seven six seven');
+test('normalises local recogniser tokens without fuzzy guessing', () => {
+  assert.equal(normaliseVoiceTranscript('Six, seven! [unk] SIX-seven.'), 'six seven [unk] six seven');
 });
 
 test('counts explicit repeated six seven pairs', () => {
   assert.equal(countSixSevenPhrases('six seven six seven six seven'), 3);
 });
 
-test('accepts digit normalisation produced by speech recognisers', () => {
-  assert.equal(countSixSevenPhrases('6 7 67 six 7'), 3);
+test('unknown speech breaks a pair', () => {
+  assert.equal(countSixSevenPhrases('six [unk] seven six seven'), 1);
 });
 
-test('does not count sixty seven, fused words, or incomplete pairs', () => {
-  assert.equal(countSixSevenPhrases('sixty seven sixseven six six'), 0);
+test('does not count numbers, sixty seven, fused words, or incomplete pairs', () => {
+  assert.equal(countSixSevenPhrases('6 7 67 sixty seven sixseven six'), 0);
 });
 
 test('greedily counts only complete adjacent pairs', () => {
   assert.equal(countSixSevenPhrases('seven six seven six six seven seven'), 2);
+});
+
+test('extra six tokens do not manufacture an extra pair', () => {
+  assert.equal(countSixSevenPhrases('six six seven six seven'), 2);
 });
