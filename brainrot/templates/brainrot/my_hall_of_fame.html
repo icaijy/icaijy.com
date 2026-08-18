@@ -7,7 +7,7 @@
 <main class="container py-4 py-md-5">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:hall_of_fame' %}">← {% translate "Public Hall of Fame" %}</a>
-    <a class="btn btn-sm btn-primary" href="{% url 'brainrot:counter' %}">{% translate "New run" %}</a>
+    <a class="btn btn-sm btn-primary" href="{% url 'brainrot:counter' %}?mode=six_seven">{% translate "New run" %}</a>
   </div>
 
   <div class="mb-4">
@@ -29,14 +29,14 @@
         <div class="row g-3 align-items-center">
           <div class="col-auto"><span class="badge text-bg-light border text-dark">#{{ entry.id }}</span></div>
           <div class="col">
-            <h2 class="h5 border-0 ps-0 ms-0 mb-1">{% if superuser_mode %}{{ entry.public_name }} · {% endif %}{{ entry.created_at|date:'j M Y · H:i' }}</h2>
+            <h2 class="h5 mb-1">{% if superuser_mode %}{{ entry.public_name }} · {% endif %}{{ entry.created_at|date:'j M Y · H:i' }}</h2>
             <div class="text-secondary small">{{ entry.get_game_mode_display }} · {{ entry.get_visibility_display }} · {% blocktranslate with duration=entry.duration_seconds|floatformat:2 %}{{ duration }} seconds{% endblocktranslate %}</div>
           </div>
           <div class="col-auto"><span class="display-6 fw-bold">{{ entry.score }}</span></div>
         </div>
         <div class="d-flex flex-wrap gap-2 mt-3">
           <a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "View" %}</a>
-          <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:hall_of_fame_video' entry.id %}?download=1">{% translate "Download" %}</a>
+          <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:hall_of_fame_video' entry.id %}?download=1&amp;format=mp4"><i class="fa-solid fa-download me-1"></i>{% translate "Download MP4" %}</a>
         </div>
         {% include 'brainrot/_entry_controls.html' %}
       </div>
@@ -44,9 +44,9 @@
     {% empty %}
     <div class="card">
       <div class="card-body p-4 text-center">
-        <h2 class="h4 border-0 ps-0 ms-0">{% translate "No owned specimens yet." %}</h2>
+        <h2 class="h4">{% translate "No owned specimens yet." %}</h2>
         <p class="text-secondary">{% translate "Anonymous submissions cannot be retroactively attached to this account." %}</p>
-        <a href="{% url 'brainrot:counter' %}" class="btn btn-primary">{% translate "Create an unnecessarily documented run" %}</a>
+        <a href="{% url 'brainrot:counter' %}?mode=six_seven" class="btn btn-primary">{% translate "Create an unnecessarily documented run" %}</a>
       </div>
     </div>
     {% endfor %}

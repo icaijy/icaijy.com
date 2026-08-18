@@ -5,7 +5,7 @@
 {% block title %}{% trans "ORAC Leaderboards - Henry's Website" %}{% endblock %}
 
 {% block content %}
-<style>.maincontent{font-family:"Droid Serif"}.maincontent h1{font-family:"Arial";font-weight:bold}.maincontent h2.no-indent{padding-left:none;border-left:none}.badge{font-size:100%;vertical-align:middle}h1{text-align:center}.hub-badge{width:60px}.sub-badge{width:40px}.x-card-body-sets{padding-top:0;padding-bottom:0}.leaderboard-grid{padding:0;margin:0;width:100%;display:grid;list-style:none;grid-auto-flow:column;grid-template-columns:repeat(auto-fit,minmax(0,1fr));grid-gap:15px;grid-template-rows:repeat(10,1fr)}@media screen and (max-width:900px){.leaderboard-grid{grid-template-rows:repeat(30,minmax(0,1fr))!important}}.leaderboard-grid h3{align-items:center;justify-content:center;display:flex;margin:0}.leaderboard-grid li{white-space:nowrap;border-radius:5px;padding:.5rem;box-shadow:0 0 0 1px black inset;vertical-align:middle;display:flex;max-width:500px;margin:0 auto;width:100%}.leaderboard-grid li .place{width:50px;border-right:1px solid black;margin-right:5px;flex-shrink:0}.leaderboard-grid li .username-field{flex-grow:1}.leaderboard-grid li .solvecount{width:50px;border-left:1px solid black;margin-left:5px;text-align:right;flex-shrink:0}</style>
+<style>.maincontent{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.badge{font-size:100%;vertical-align:middle}h1{text-align:center}.hub-badge{width:60px}.sub-badge{width:40px}.x-card-body-sets{padding-top:0;padding-bottom:0}.leaderboard-grid{padding:0;margin:0;width:100%;display:grid;list-style:none;grid-auto-flow:column;grid-template-columns:repeat(auto-fit,minmax(0,1fr));grid-gap:15px;grid-template-rows:repeat(10,1fr)}@media screen and (max-width:900px){.leaderboard-grid{grid-template-rows:repeat(30,minmax(0,1fr))!important}}.leaderboard-grid h3{align-items:center;justify-content:center;display:flex;margin:0}.leaderboard-grid li{white-space:nowrap;border-radius:8px;padding:.5rem;box-shadow:0 0 0 1px #cbd5e1 inset;vertical-align:middle;display:flex;max-width:500px;margin:0 auto;width:100%;background:#fff}.leaderboard-grid li .place{width:50px;border-right:1px solid #cbd5e1;margin-right:5px;flex-shrink:0}.leaderboard-grid li .username-field{flex-grow:1}.leaderboard-grid li .solvecount{width:50px;border-left:1px solid #cbd5e1;margin-left:5px;text-align:right;flex-shrink:0}</style>
 
 <div class="container-xl mt-5">
     <h1>ORAC Leaderboards</h1>
@@ -18,16 +18,14 @@
     </p>
     <p>Last updated: <span id="last-updated">{{ last_updated }}</span></p>
 
-    <!-- Tabs -->
-    <ul class="nav nav-tabs" id="leaderboard-tabs">
-        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#overall">Overall</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#week">Week</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#month">Month</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#year">Year</a></li>
+    <ul class="nav nav-tabs" id="leaderboard-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><a class="nav-link active" data-bs-toggle="tab" href="#overall" role="tab">Overall</a></li>
+        <li class="nav-item" role="presentation"><a class="nav-link" data-bs-toggle="tab" href="#week" role="tab">Week</a></li>
+        <li class="nav-item" role="presentation"><a class="nav-link" data-bs-toggle="tab" href="#month" role="tab">Month</a></li>
+        <li class="nav-item" role="presentation"><a class="nav-link" data-bs-toggle="tab" href="#year" role="tab">Year</a></li>
     </ul>
     <div class="tab-content mt-3">
-        <!-- Overall Tab -->
-        <div class="tab-pane fade show active" id="overall">
+        <div class="tab-pane fade show active" id="overall" role="tabpanel">
             <ul class="leaderboard-grid">
                 {% for user, data in people.overall.items %}
                     <li>
@@ -38,9 +36,7 @@
                 {% endfor %}
             </ul>
         </div>
-
-        <!-- Week Tab -->
-        <div class="tab-pane fade" id="week">
+        <div class="tab-pane fade" id="week" role="tabpanel">
             <ul class="leaderboard-grid list-unstyled">
                 {% for user, data in people.recent.week.items %}
                     <li>
@@ -51,9 +47,7 @@
                 {% endfor %}
             </ul>
         </div>
-
-        <!-- Month Tab -->
-        <div class="tab-pane fade" id="month">
+        <div class="tab-pane fade" id="month" role="tabpanel">
             <ul class="leaderboard-grid list-unstyled">
                 {% for user, data in people.recent.month.items %}
                     <li>
@@ -64,9 +58,7 @@
                 {% endfor %}
             </ul>
         </div>
-
-        <!-- Year Tab -->
-        <div class="tab-pane fade" id="year">
+        <div class="tab-pane fade" id="year" role="tabpanel">
             <ul class="leaderboard-grid list-unstyled">
                 {% for user, data in people.recent.year.items %}
                     <li>
