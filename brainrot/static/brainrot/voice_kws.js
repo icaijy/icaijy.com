@@ -3,9 +3,10 @@ const SHERPA_WASM_BASE = `https://cdn.jsdelivr.net/npm/@siteed/sherpa-onnx.rn@${
 const KWS_MODEL_BASE = 'https://huggingface.co/deeeed/sherpa-voice-models/resolve/main/kws';
 const KWS_MODEL_DIR = '/icaijy-kws';
 
-// GigaSpeech BPE contains both words as complete pieces. The @suffix is the
-// label returned by sherpa-onnx when this keyword path fires.
-const SIX_SEVEN_KEYWORD = '▁SIX ▁SEVEN @SIX_SEVEN\n';
+// GigaSpeech's tokenizer contains both words as complete BPE pieces. The
+// @suffix becomes the label returned by sherpa-onnx when this path fires.
+const SIX_SEVEN_KEYWORD = '▁SIX ▁SEVEN @SIX_SEVEN';
+const REQUIRED_KEYWORD_TOKENS = ['▁SIX', '▁SEVEN'];
 
 const MODEL_FILES = {
   encoder: 'encoder-epoch-12-avg-2-chunk-16-left-64.onnx',
@@ -45,10 +46,7 @@ function loadScript(url, marker) {
 }
 
 function sherpaRuntimeReady() {
-  return Boolean(
-    window.Module?.FS &&
-    (typeof window.createKws === 'function' || typeof window.Kws === 'function')
-  );
+  return Boolean(window.Module?.FS && window.SherpaOnnx?.KWS);
 }
 
 async function loadSherpaKwsRuntime() {
@@ -56,8 +54,8 @@ async function loadSherpaKwsRuntime() {
   if (runtimePromise) return runtimePromise;
 
   runtimePromise = (async () => {
-    // The combined package can load many speech features; only load the core
-    // filesystem wrapper and KWS wrapper for this page.
+    // The combined runtime supports many speech features. Restrict the page to
+    // the core filesystem helper plus keyword spotting only.
     window.sherpaOnnxModulePaths = [
       `${SHERPA_WASM_BASE}sherpa-onnx-core.js`,
       `${SHERPA_WASM_BASE}sherpa-onnx-kws.js`,
@@ -113,68 +111,18 @@ async function loadSherpaKwsRuntime() {
   return runtimePromise;
 }
 
-function ensureFsDirectory(Module, path) {
-  let current = '';
-  for (const part of path.split('/').filter(Boolean)) {
-    current += `/${part}`;
-    try {
-      if (!Module.FS.analyzePath(current).exists) Module.FS.mkdir(current);
-    } catch (error) {
-      if (!Module.FS.analyzePath(current).exists) throw error;
-    }
-  }
+function modelUrl(filename) {
+  return `${KWS_MODEL_BASE}/${filename}`;
 }
 
-async function fetchIntoFs(Module, filename) {
-  const destination = `${KWS_MODEL_DIR}/${filename}`;
-  try {
-    if (Module.FS.analyzePath(destination).exists) return destination;
-  } catch {
-    // Continue to fetch it.
+function assertKeywordTokens(modelInfo) {
+  const tokens = modelInfo?.paths?.tokensMap;
+  if (!tokens) throw new Error('The local keyword model loaded without a readable token table.');
+
+  const missing = REQUIRED_KEYWORD_TOKENS.filter((token) => !(token in tokens));
+  if (missing.length) {
+    throw new Error(`The local keyword model is missing SIX SEVEN tokens: ${missing.join(', ')}`);
   }
-
-  const response = await fetch(`${KWS_MODEL_BASE}/${filename}`, { cache: 'force-cache' });
-  if (!response.ok) throw new Error(`Could not download ${filename} (HTTP ${response.status}).`);
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  Module.FS.writeFile(destination, bytes);
-  return destination;
-}
-
-function makeSpotter(Module, paths) {
-  const config = {
-    featConfig: {
-      samplingRate: 16000,
-      featureDim: 80,
-    },
-    modelConfig: {
-      transducer: {
-        encoder: paths.encoder,
-        decoder: paths.decoder,
-        joiner: paths.joiner,
-      },
-      tokens: paths.tokens,
-      provider: 'cpu',
-      modelType: '',
-      numThreads: 1,
-      debug: 0,
-      modelingUnit: '',
-      bpeVocab: '',
-    },
-    maxActivePaths: 4,
-    // Keep confirmation quick: the game repeatedly says the same phrase with
-    // little silence between repetitions.
-    numTrailingBlanks: 1,
-    keywordsScore: 1.5,
-    keywordsThreshold: 0.25,
-    keywordsFile: paths.keywords,
-  };
-
-  const spotter = typeof window.createKws === 'function'
-    ? window.createKws(Module, config)
-    : new window.Kws(config, Module);
-
-  if (!spotter?.handle) throw new Error('Could not create the local SIX SEVEN keyword spotter.');
-  return spotter;
 }
 
 export async function loadSixSevenVoiceModel(onStatus = () => {}) {
@@ -183,25 +131,37 @@ export async function loadSixSevenVoiceModel(onStatus = () => {}) {
 
   modelPromise = (async () => {
     onStatus('Loading local keyword-spotting runtime…');
-    const Module = await loadSherpaKwsRuntime();
-    ensureFsDirectory(Module, KWS_MODEL_DIR);
+    await loadSherpaKwsRuntime();
 
+    const KWS = window.SherpaOnnx.KWS;
     onStatus('Loading local SIX SEVEN keyword model…');
-    const entries = await Promise.all(
-      Object.entries(MODEL_FILES).map(async ([key, filename]) => [key, await fetchIntoFs(Module, filename)]),
-    );
-    const paths = Object.fromEntries(entries);
+    const modelInfo = await KWS.loadModel({
+      modelDir: KWS_MODEL_DIR,
+      encoder: modelUrl(MODEL_FILES.encoder),
+      decoder: modelUrl(MODEL_FILES.decoder),
+      joiner: modelUrl(MODEL_FILES.joiner),
+      tokens: modelUrl(MODEL_FILES.tokens),
+      debug: false,
+    });
+    assertKeywordTokens(modelInfo);
 
-    // @siteed's current browser KWS glue consumes keywords through a file path
-    // in the Emscripten filesystem. Keep our one game-specific wake phrase
-    // entirely local rather than downloading a generic keywords file.
-    paths.keywords = `${KWS_MODEL_DIR}/keywords.txt`;
-    Module.FS.writeFile(paths.keywords, SIX_SEVEN_KEYWORD);
+    const spotter = KWS.createKeywordSpotter(modelInfo, {
+      keywords: SIX_SEVEN_KEYWORD,
+      sampleRate: 16000,
+      numThreads: 1,
+      provider: 'cpu',
+      maxActivePaths: 4,
+      // The game repeats the phrase with very little silence. Keep the
+      // post-keyword confirmation requirement as short as the runtime allows.
+      numTrailingBlanks: 1,
+      keywordsScore: 1.5,
+      keywordsThreshold: 0.25,
+      debug: false,
+    });
+    if (!spotter?.handle) throw new Error('Could not create the local SIX SEVEN keyword spotter.');
 
-    const spotter = makeSpotter(Module, paths);
     loadedModel = {
       ready: true,
-      Module,
       spotter,
     };
     onStatus('Local SIX SEVEN keyword spotter ready');
@@ -235,8 +195,8 @@ export class SixSevenLocalRecognizer {
       if (!result?.keyword) continue;
 
       detections += 1;
-      // Reset immediately after a wake-word hit so the next repeated
-      // "six seven" starts from a clean decoder state.
+      // Wake-word semantics: one complete SIX SEVEN emits one event, then the
+      // decoder resets immediately so the next repetition can start cleanly.
       spotter.reset(this.stream);
       this.handlers.onResult?.('six seven', result);
     }
