@@ -1,5 +1,5 @@
-// Compatibility shim for the existing Voice runner. The implementation moved
-// from general-purpose Vosk ASR to a dedicated sherpa-onnx keyword spotter.
+// Compatibility facade: the Voice runner already imports this module name.
+// The implementation is now dedicated streaming keyword spotting, not Vosk ASR.
 export {
   SixSevenLocalRecognizer,
   loadSixSevenVoiceModel,
