@@ -217,8 +217,11 @@ export class SixSevenLocalRecognizer {
     // Human audio stops exactly at the 20-second boundary. Feed only synthetic
     // silence afterwards so a phrase completed just before time can satisfy
     // the spotter's trailing-blank requirement without accepting late speech.
-    const silence = new Float32Array(Math.round(16000 * 0.45));
-    this.stream.acceptWaveform(16000, silence);
+    // Keep the same input sample rate used by the live stream: sherpa's
+    // resampler is stateful and intentionally rejects a mid-stream rate change.
+    const inputRate = this.sampleRate || 16000;
+    const silence = new Float32Array(Math.round(inputRate * 0.45));
+    this.stream.acceptWaveform(inputRate, silence);
     this.stream.inputFinished();
     this.drain();
     return '';
