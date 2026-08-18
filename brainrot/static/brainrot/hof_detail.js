@@ -19,6 +19,22 @@ if (detail) {
   const text = `${headline}\n${blocks}\n${url}`;
   shareText.value = text;
 
+  import('./mp4_download.js').then(({ installMp4Download }) => {
+    const downloadButton = detail.querySelector('a[href*="?download=1"]');
+    const safeName = detail.dataset.username.replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '') || 'run';
+    installMp4Download(downloadButton, {
+      filename: `${isLegClaps ? 'tung-tung-leg-claps' : '67'}-${safeName}-${score}.webm`,
+      onStatus(message) {
+        status.textContent = message;
+      },
+      onError(error) {
+        status.textContent = `MP4 download failed: ${error.message}`;
+      },
+    });
+  }).catch((error) => {
+    console.error('Could not initialise MP4 downloads.', error);
+  });
+
   async function copyShareMessage() {
     try {
       if (navigator.clipboard?.writeText && window.isSecureContext) {
