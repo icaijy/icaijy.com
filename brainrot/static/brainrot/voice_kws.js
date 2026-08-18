@@ -2,11 +2,7 @@ const SHERPA_PACKAGE_VERSION = '1.3.1';
 const SHERPA_WASM_BASE = `https://cdn.jsdelivr.net/npm/@siteed/sherpa-onnx.rn@${SHERPA_PACKAGE_VERSION}/wasm/`;
 const KWS_MODEL_BASE = 'https://modelscope.cn/models/pkufool/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01/resolve/master';
 const KWS_MODEL_DIR = '/icaijy-kws';
-
-// GigaSpeech's BPE vocabulary contains SIX and SEVEN as complete pieces. The
-// @suffix becomes the label returned by sherpa-onnx when this path fires.
-const SIX_SEVEN_KEYWORD = '▁SIX ▁SEVEN @SIX_SEVEN';
-const REQUIRED_KEYWORD_TOKENS = ['▁SIX', '▁SEVEN'];
+const SIX_SEVEN_LABEL = 'SIX_SEVEN';
 
 // Use the official int8 export: substantially smaller to download in-browser
 // while keeping the encoder/decoder/joiner/token table from one exact model.
@@ -117,14 +113,72 @@ function modelUrl(filename) {
   return `${KWS_MODEL_BASE}/${filename}`;
 }
 
-function assertKeywordTokens(modelInfo) {
-  const tokens = modelInfo?.paths?.tokensMap;
-  if (!tokens) throw new Error('The local keyword model loaded without a readable token table.');
+/**
+ * Enumerate every vocabulary-token path whose concatenated SentencePiece text
+ * is exactly the requested word. For these tiny words there are at most a few
+ * dozen character-boundary segmentations, so registering all valid paths is
+ * cheap and avoids hard-coding a tokenizer-specific BPE split.
+ */
+export function enumerateBpeWordPaths(word, tokensMap) {
+  if (!tokensMap || typeof tokensMap !== 'object') return [];
 
-  const missing = REQUIRED_KEYWORD_TOKENS.filter((token) => !(token in tokens));
-  if (missing.length) {
-    throw new Error(`The local keyword model is missing SIX SEVEN tokens: ${missing.join(', ')}`);
+  const target = `▁${String(word).toUpperCase()}`;
+  const vocabulary = Object.keys(tokensMap).filter((token) => {
+    if (!token || token.startsWith('<')) return false;
+    if (token.includes(' ') || token.includes('@')) return false;
+    return target.includes(token);
+  });
+
+  const memo = new Map();
+  const visit = (offset) => {
+    if (offset === target.length) return [[]];
+    if (memo.has(offset)) return memo.get(offset);
+
+    const paths = [];
+    for (const token of vocabulary) {
+      if (!target.startsWith(token, offset)) continue;
+      const suffixPaths = visit(offset + token.length);
+      for (const suffix of suffixPaths) {
+        paths.push([token, ...suffix]);
+      }
+    }
+    memo.set(offset, paths);
+    return paths;
+  };
+
+  return visit(0);
+}
+
+export function buildSixSevenKeywords(tokensMap) {
+  const sixPaths = enumerateBpeWordPaths('SIX', tokensMap);
+  const sevenPaths = enumerateBpeWordPaths('SEVEN', tokensMap);
+
+  if (!sixPaths.length || !sevenPaths.length) {
+    const missing = [];
+    if (!sixPaths.length) missing.push('SIX');
+    if (!sevenPaths.length) missing.push('SEVEN');
+    throw new Error(`The local keyword model cannot tokenise: ${missing.join(', ')}.`);
   }
+
+  const lines = [];
+  const seen = new Set();
+  for (const six of sixPaths) {
+    for (const seven of sevenPaths) {
+      const line = `${six.join(' ')} ${seven.join(' ')} @${SIX_SEVEN_LABEL}`;
+      if (!seen.has(line)) {
+        seen.add(line);
+        lines.push(line);
+      }
+    }
+  }
+
+  // SIX and SEVEN are short enough that the theoretical number of character
+  // boundary segmentations is tiny. Guard anyway if a future model has an
+  // unexpectedly pathological vocabulary.
+  if (lines.length > 256) {
+    throw new Error(`The local keyword model produced too many SIX SEVEN token paths (${lines.length}).`);
+  }
+  return lines.join('\n');
 }
 
 export async function loadSixSevenVoiceModel(onStatus = () => {}) {
@@ -145,10 +199,12 @@ export async function loadSixSevenVoiceModel(onStatus = () => {}) {
       tokens: modelUrl(MODEL_FILES.tokens),
       debug: false,
     });
-    assertKeywordTokens(modelInfo);
+
+    const keywords = buildSixSevenKeywords(modelInfo?.paths?.tokensMap);
+    console.debug('Voice 67 KWS token paths:', keywords);
 
     const spotter = KWS.createKeywordSpotter(modelInfo, {
-      keywords: SIX_SEVEN_KEYWORD,
+      keywords,
       sampleRate: 16000,
       numThreads: 1,
       provider: 'cpu',
@@ -165,6 +221,7 @@ export async function loadSixSevenVoiceModel(onStatus = () => {}) {
     loadedModel = {
       ready: true,
       spotter,
+      keywords,
     };
     onStatus('Local SIX SEVEN keyword spotter ready');
     return loadedModel;
