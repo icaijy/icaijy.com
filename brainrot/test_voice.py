@@ -20,6 +20,13 @@ class VoiceSpeedrunPageTests(TestCase):
         self.assertNotContains(voice, 'voice_counter.js')
         self.assertNotContains(voice, 'Enable camera + microphone')
 
+    def test_voice_coming_soon_has_direct_chinese_copy(self):
+        response = self.client.get('/67/voice/', HTTP_ACCEPT_LANGUAGE='zh-hans')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '语音 67 极速挑战')
+        self.assertContains(response, '专门为这种玩法训练的小型本地模型')
+        self.assertContains(response, '先玩 67 Counter')
+
     def test_voice_is_still_a_real_hall_of_fame_mode_for_historical_runs(self):
         voice_entry = HallOfFameEntry.objects.create(
             display_name='Fast Mouth',
