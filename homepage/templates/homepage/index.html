@@ -5,179 +5,128 @@
 
 {% block content %}
 <style>
-    /* 样式隔离，确保不污染全局 */
-    #homepage-wrapper {
-        font-family: 'Inter', -apple-system, system-ui, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        color: #1e293b;
-        padding: 60px 20px;
-        min-height: 80vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: #ffffff; /* 纯白背景 */
-    }
-
-    #homepage-wrapper .hero-section {
-        max-width: 800px;
-        text-align: center;
-        margin-bottom: 50px;
-    }
-
-    #homepage-wrapper h1 {
-        font-size: 3.5rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        margin-bottom: 20px;
-        background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    #homepage-wrapper .lead {
-        font-size: 1.25rem;
-        color: #64748b;
-        margin-bottom: 30px;
-    }
-
-    /* 快捷链接美化 */
-    #homepage-wrapper .quick-links {
-        font-size: 1.1rem;
-        color: #94a3b8;
-        border-top: 1px solid #f1f5f9;
-        padding-top: 25px;
-    }
-
-    #homepage-wrapper .quick-links a {
-        color: #0ea5e9;
-        text-decoration: none;
-        font-weight: 600;
-        border-bottom: 2px solid transparent;
-        transition: all 0.2s;
-    }
-
-    #homepage-wrapper .quick-links a:hover {
-        border-bottom-color: #0ea5e9;
-    }
-
-    /* 按钮组卡片化 */
-    #homepage-wrapper .button-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        width: 100%;
-        max-width: 900px;
-        margin-top: 40px;
-    }
-
-    #homepage-wrapper .featured-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        max-width: 900px;
-        margin-top: 10px;
-    }
-
-    #homepage-wrapper .featured-hof {
-        grid-column: 1 / -1;
-        min-height: 105px;
-        font-size: 1.35rem;
-    }
-
-    #homepage-wrapper .oi-section {
-        width: 100%;
-        max-width: 900px;
-        margin-top: 55px;
-        padding-top: 28px;
-        border-top: 1px solid #e2e8f0;
-    }
-
-    #homepage-wrapper .section-label {
-        color: #64748b;
-        font-size: .75rem;
-        font-weight: 800;
-        letter-spacing: .12em;
-        text-transform: uppercase;
-    }
-
-    #homepage-wrapper .oi-section .button-grid { margin-top: 16px; }
-
-    #homepage-wrapper .nav-card {
-        padding: 24px;
-        border-radius: 16px;
-        text-decoration: none;
-        text-align: center;
-        font-weight: 700;
-        font-size: 1.1rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid rgba(0,0,0,0.05);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-
-    #homepage-wrapper .nav-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-
-    /* 针对不同按钮的配色优化 */
-    .btn-blog { background: #eff6ff; color: #1d4ed8; border-color: #dbeafe; }
-    .btn-leader { background: #f0fdf4; color: #15803d; border-color: #dcfce7; }
-    .btn-oj { background: #fffbeb; color: #b45309; border-color: #fef3c7; }
-    .btn-analytics { background: #faf5ff; color: #7e22ce; border-color: #f3e8ff; }
-    .btn-brainrot { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
-    .btn-hof { background: #111827; color: #d8ff62; border-color: #111827; }
-    .btn-hof:hover { color: #d8ff62; }
-
-    @media (max-width: 600px) {
-        #homepage-wrapper h1 { font-size: 2.5rem; }
-        #homepage-wrapper .button-grid, #homepage-wrapper .featured-grid { grid-template-columns: 1fr; }
-        #homepage-wrapper .featured-hof { grid-column: auto; }
-    }
+  #homepage-wrapper {
+    min-height: 78vh;
+    padding: clamp(2.5rem, 6vw, 5.5rem) 1rem 3.5rem;
+    background:
+      radial-gradient(circle at 16% 8%, rgba(216,255,98,.26), transparent 28rem),
+      radial-gradient(circle at 86% 12%, rgba(59,130,246,.13), transparent 26rem),
+      #f8fafc;
+  }
+  #homepage-wrapper .home-shell { width: min(1080px, 100%); margin: 0 auto; }
+  #homepage-wrapper .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(250px, .8fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: center;
+    padding: clamp(1.5rem, 4vw, 3rem);
+    overflow: hidden;
+    border: 1px solid #dbe4ee;
+    border-radius: 2rem;
+    background: rgba(255,255,255,.88);
+    box-shadow: 0 28px 80px rgba(15,23,42,.10);
+  }
+  #homepage-wrapper .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: 1rem;
+    color: #64748b;
+    font-size: .76rem;
+    font-weight: 850;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  #homepage-wrapper .live-dot {
+    width: .55rem; height: .55rem; border-radius: 999px; background: #84cc16;
+    box-shadow: 0 0 0 .3rem rgba(132,204,22,.13);
+  }
+  #homepage-wrapper h1 {
+    margin: 0 0 1rem;
+    font-size: clamp(2.6rem, 7vw, 5.7rem);
+    font-weight: 950;
+    line-height: .94;
+    letter-spacing: -.065em;
+  }
+  #homepage-wrapper h1 span { color: #2563eb; }
+  #homepage-wrapper .hero-copy { max-width: 650px; color: #64748b; font-size: clamp(1rem, 2vw, 1.25rem); }
+  #homepage-wrapper .hero-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.6rem; }
+  #homepage-wrapper .play-67 {
+    display: inline-flex; align-items: center; gap: .65rem;
+    padding: .85rem 1.15rem; border-radius: .9rem;
+    background: #0f172a; color: #d8ff62; text-decoration: none; font-weight: 850;
+    box-shadow: 0 14px 32px rgba(15,23,42,.2);
+  }
+  #homepage-wrapper .play-67:hover { color: #fff; transform: translateY(-1px); }
+  #homepage-wrapper .secondary-action {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .85rem 1.05rem; border: 1px solid #cbd5e1; border-radius: .9rem;
+    background: #fff; color: #334155; text-decoration: none; font-weight: 750;
+  }
+  #homepage-wrapper .hero-mark {
+    position: relative; display: grid; place-items: center; aspect-ratio: 1;
+    border-radius: 2rem; background: #0b1220; color: #d8ff62;
+    font-size: clamp(6rem, 13vw, 10rem); font-weight: 950; letter-spacing: -.1em;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.09), 0 24px 70px rgba(15,23,42,.22);
+  }
+  #homepage-wrapper .hero-mark small {
+    position: absolute; bottom: 1.1rem; left: 1.2rem; right: 1.2rem;
+    color: #94a3b8; font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-align: center;
+  }
+  #homepage-wrapper .section-head { margin: 3.2rem 0 1rem; }
+  #homepage-wrapper .section-head h2 { margin: 0; font-size: 1.35rem; font-weight: 850; }
+  #homepage-wrapper .section-head p { margin: .35rem 0 0; color: #64748b; }
+  #homepage-wrapper .home-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  #homepage-wrapper .home-card {
+    min-height: 150px; padding: 1.2rem; border: 1px solid #e2e8f0; border-radius: 1.15rem;
+    background: #fff; color: #0f172a; text-decoration: none; box-shadow: 0 7px 20px rgba(15,23,42,.04);
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+  }
+  #homepage-wrapper .home-card:hover { transform: translateY(-3px); border-color: #cbd5e1; box-shadow: 0 16px 32px rgba(15,23,42,.08); }
+  #homepage-wrapper .home-card i { color: #2563eb; font-size: 1.35rem; }
+  #homepage-wrapper .home-card strong { display: block; margin-top: 1.4rem; font-size: 1.02rem; }
+  #homepage-wrapper .home-card small { display: block; margin-top: .35rem; color: #64748b; line-height: 1.45; }
+  @media (max-width: 900px) {
+    #homepage-wrapper .hero { grid-template-columns: 1fr; }
+    #homepage-wrapper .hero-mark { max-width: 330px; width: 100%; margin: 0 auto; }
+    #homepage-wrapper .home-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    #homepage-wrapper { padding-inline: .7rem; }
+    #homepage-wrapper .hero { border-radius: 1.35rem; }
+    #homepage-wrapper .home-grid { grid-template-columns: 1fr; }
+  }
 </style>
 
 <div id="homepage-wrapper">
-    <div class="hero-section">
-        <h1>{% trans "Welcome to My Homepage" %}</h1>
-        <p class="lead">{% trans "Projects, questionable experiments, and an archive of competitive-programming history." %}</p>
-
-        <div class="quick-links">
-            <p>
-                {% trans "Check out my" %}
-                <a href="/blog">{% trans "blog" %}</a>,
-                <a href="{% url 'brainrot:hall_of_fame' %}">67 Hall of Fame</a>,
-                {% trans "or" %}
-                <a href="{% url 'brainrot:index' %}">61/67 Research Division</a>.
-            </p>
+  <div class="home-shell">
+    <section class="hero">
+      <div>
+        <div class="eyebrow"><span class="live-dot"></span> currently the important bit</div>
+        <h1>Play the <span>67 Counter.</span></h1>
+        <p class="hero-copy">{% trans "Projects, questionable experiments, and an archive of competitive-programming history." %} The 20-second 67 game is currently receiving a suspicious amount of real-world use.</p>
+        <div class="hero-actions">
+          <a class="play-67" href="{% url 'brainrot:counter' %}?mode=six_seven"><i class="fa-solid fa-play"></i> Play 67 now</a>
+          <a class="secondary-action" href="{% url 'brainrot:hall_of_fame' %}"><i class="fa-solid fa-ranking-star"></i> Hall of Fame</a>
+          <a class="secondary-action" href="{% url 'brainrot:index' %}"><i class="fa-solid fa-gamepad"></i> All 67 games</a>
         </div>
-    </div>
-
-    <div class="button-grid featured-grid">
-        <a href="{% url 'brainrot:hall_of_fame' %}" class="nav-card btn-hof featured-hof">
-            ★ 67 Hall of Fame — 20-second video leaderboard
-        </a>
-        <a href="{% url 'brainrot:index' %}" class="nav-card btn-brainrot">
-            🧪 61/67 Research Division
-        </a>
-        <a href="/blog" class="nav-card btn-blog">
-            ✍️ {% trans "Henry's Blog" %}
-        </a>
-    </div>
-
-    <section class="oi-section">
-      <span class="section-label">OI / competitive programming archive</span>
-      <div class="button-grid">
-        <a href="/orac-leaderboards" class="nav-card btn-leader">
-            🏆 ORAC Leaderboards++
-        </a>
-        <a href="/oracdata" class="nav-card btn-analytics">
-            📊 {% trans "ORAC2 Analytics" %}
-        </a>
-        <a href="/oj" class="nav-card btn-oj">
-            🪦 {% trans "Speed Online Judge" %} (retired)
-        </a>
       </div>
+      <a class="hero-mark text-decoration-none" href="{% url 'brainrot:counter' %}?mode=six_seven" aria-label="Open 67 Counter">
+        67
+        <small>20 SECOND HUMAN PERFORMANCE PROTOCOL</small>
+      </a>
     </section>
+
+    <div class="section-head">
+      <h2>Everything else</h2>
+      <p>The serious projects are still here. They have simply lost the homepage election.</p>
+    </div>
+    <div class="home-grid">
+      <a class="home-card" href="/blog"><i class="fa-solid fa-pen-nib"></i><strong>{% trans "Henry's Blog" %}</strong><small>Notes, articles and assorted write-ups.</small></a>
+      <a class="home-card" href="/orac-leaderboards"><i class="fa-solid fa-ranking-star"></i><strong>ORAC Leaderboards++</strong><small>Competitive-programming leaderboard archive.</small></a>
+      <a class="home-card" href="/oracdata"><i class="fa-solid fa-chart-line"></i><strong>{% trans "ORAC2 Analytics" %}</strong><small>Historical data and statistics.</small></a>
+      <a class="home-card" href="{% url 'brainrot:index' %}"><i class="fa-solid fa-flask"></i><strong>67 Research Division</strong><small>67, Tung Tung, typing, and whatever terrible idea ships next.</small></a>
+    </div>
+  </div>
 </div>
 {% endblock %}
