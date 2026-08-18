@@ -8,8 +8,8 @@ from .views import hall_of_fame_video as original_hall_of_fame_video
 
 
 def hall_of_fame_video(request, entry_id):
-    """Keep inline evidence untouched; normalise explicit downloads to MP4."""
-    if request.GET.get('download') != '1':
+    """Keep inline/legacy evidence untouched; normalise new downloads to MP4."""
+    if request.GET.get('format') != 'mp4':
         return original_hall_of_fame_video(request, entry_id)
 
     entry = get_object_or_404(HallOfFameEntry.objects.select_related('user'), pk=entry_id)
