@@ -1,29 +1,26 @@
-from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from .models import HallOfFameEntry
 
 
 class VoiceSpeedrunPageTests(TestCase):
-    def test_index_and_voice_page_expose_the_new_game(self):
+    def test_index_and_voice_page_expose_coming_soon_mode(self):
         index = self.client.get('/67/')
         self.assertEqual(index.status_code, 200)
         self.assertContains(index, '/67/voice/')
         self.assertContains(index, 'Six Seven Voice Speedrun')
+        self.assertContains(index, 'COMING SOON')
 
         voice = self.client.get('/67/voice/')
         self.assertEqual(voice.status_code, 200)
-        self.assertContains(voice, 'id="voice-app"')
-        self.assertContains(voice, 'data-game-mode="voice_67"')
-        self.assertContains(voice, 'voice_counter.js')
-        self.assertContains(voice, 'Keyword detections')
-        self.assertContains(voice, 'camera + microphone')
-        self.assertContains(voice, 'Keyword detection runs locally in this browser')
-        self.assertContains(voice, 'wake-word style detection')
-        self.assertNotContains(voice, "browser vendor's speech service")
-        self.assertNotContains(voice, 'about 40 MB of model data')
+        self.assertContains(voice, 'Six Seven Voice Speedrun')
+        self.assertContains(voice, 'COMING SOON')
+        self.assertContains(voice, 'tiny model trained specifically for this game')
+        self.assertNotContains(voice, 'id="voice-app"')
+        self.assertNotContains(voice, 'voice_counter.js')
+        self.assertNotContains(voice, 'Enable camera + microphone')
 
-    def test_voice_is_a_real_hall_of_fame_mode(self):
+    def test_voice_is_still_a_real_hall_of_fame_mode_for_historical_runs(self):
         voice_entry = HallOfFameEntry.objects.create(
             display_name='Fast Mouth',
             game_mode=HallOfFameEntry.GameMode.VOICE_67,
@@ -51,9 +48,9 @@ class VoiceSpeedrunPageTests(TestCase):
         self.assertContains(response, 'Fast Mouth')
         self.assertContains(response, 'said “six seven” 12 times')
         self.assertNotContains(response, 'Arms Only')
-        self.assertContains(response, f'/67/voice/?rival={voice_entry.id}')
+        self.assertContains(response, f'/67/hall-of-fame/{voice_entry.id}/')
 
-    def test_generic_challenge_dispatches_voice_but_preserves_pose_runner(self):
+    def test_generic_challenge_parks_voice_but_preserves_pose_runner(self):
         voice_entry = HallOfFameEntry.objects.create(
             display_name='Voice Rival',
             game_mode=HallOfFameEntry.GameMode.VOICE_67,
@@ -76,29 +73,9 @@ class VoiceSpeedrunPageTests(TestCase):
         )
 
         voice_challenge = self.client.get(f'/67/challenge/{voice_entry.id}/')
-        self.assertRedirects(
-            voice_challenge,
-            f'/67/voice/?rival={voice_entry.id}',
-            fetch_redirect_response=False,
-        )
+        self.assertRedirects(voice_challenge, '/67/voice/', fetch_redirect_response=False)
 
         pose_challenge = self.client.get(f'/67/challenge/{pose_entry.id}/')
         self.assertEqual(pose_challenge.status_code, 200)
         self.assertContains(pose_challenge, 'id="counter-app"')
         self.assertContains(pose_challenge, 'Pose Rival')
-
-    def test_voice_challenge_rejects_non_voice_rival_parameter(self):
-        user = get_user_model().objects.create_user('pose-user')
-        pose_entry = HallOfFameEntry.objects.create(
-            user=user,
-            game_mode=HallOfFameEntry.GameMode.LEG_CLAPS,
-            score=4,
-            video='hall_of_fame/leg-rival.webm',
-            mime_type='video/webm',
-            duration_seconds=23.25,
-            event_timeline=[2.0, 4.0, 6.0, 8.0],
-            visibility=HallOfFameEntry.Visibility.PUBLIC,
-        )
-
-        response = self.client.get(f'/67/voice/?rival={pose_entry.id}')
-        self.assertEqual(response.status_code, 404)
