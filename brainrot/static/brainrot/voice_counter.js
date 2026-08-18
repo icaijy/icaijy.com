@@ -1,10 +1,14 @@
 import { installMp4Download } from './mp4_download.js';
 import { countSixSevenPhrases } from './voice_engine.js';
+import {
+  SixSevenLocalRecognizer,
+  loadSixSevenVoiceModel,
+  releaseSixSevenVoiceModel,
+} from './voice_vosk.js';
 
 const app = document.getElementById('voice-app');
 if (app) {
   const tr = (message) => typeof gettext === 'function' ? gettext(message) : message;
-  const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition || null;
   const GAME_SECONDS = 20;
   const COUNTDOWN_STEP_MS = 1000;
   const GO_DISPLAY_MS = 250;
@@ -48,24 +52,26 @@ if (app) {
   const rivalFinalScore = Number(app.dataset.rivalScore || 0);
 
   let stream = null;
+  let voiceModel = null;
+  let modelLoadPromise = null;
+  let localRecognizer = null;
+  let audioContext = null;
+  let microphoneSource = null;
+  let recognizerNode = null;
+  let silentGain = null;
+  let feedRecognizer = false;
+
   let running = false;
   let countdownActive = false;
-  let finalisingRecognition = false;
+  let finalising = false;
   let runStartedAt = 0;
   let endTime = 0;
   let gameLoop = null;
   let score = 0;
   let eventTimeline = [];
   let rivalTimelineIndex = 0;
-
-  let recognition = null;
-  let recognitionActive = false;
-  let recognitionStopping = false;
-  let recognitionStopResolve = null;
-  let recognitionStopTimer = null;
-  let completedTranscript = [];
-  let sessionFinalTranscript = '';
-  let sessionInterimTranscript = '';
+  let committedSegments = [];
+  let partialSegment = '';
 
   let recorder = null;
   let recordingStream = null;
@@ -94,189 +100,159 @@ if (app) {
     errorEl.textContent = message || '';
   }
 
-  function officialTranscript() {
-    return [...completedTranscript, sessionFinalTranscript].filter(Boolean).join(' ').trim();
+  function recognisedText({ includePartial = true } = {}) {
+    const parts = [...committedSegments];
+    if (includePartial && partialSegment) parts.push(partialSegment);
+    return parts.filter(Boolean).join(' ').trim();
   }
 
-  function updateTranscriptUI() {
-    const finalText = officialTranscript();
-    heardFinal.textContent = finalText || '—';
-    heardInterim.textContent = sessionInterimTranscript ? `… ${sessionInterimTranscript}` : '';
+  function updateRecognitionUI() {
+    heardFinal.textContent = committedSegments.join(' ').trim() || '—';
+    heardInterim.textContent = partialSegment ? `… ${partialSegment}` : '';
   }
 
-  function syncOfficialScore() {
-    const nextScore = countSixSevenPhrases(officialTranscript());
-    if (nextScore > score) {
-      const elapsed = runStartedAt
-        ? Math.min(GAME_SECONDS, Math.max(0, (performance.now() - runStartedAt) / 1000))
-        : 0;
-      while (eventTimeline.length < nextScore) {
-        eventTimeline.push(Number(elapsed.toFixed(3)));
+  function syncScore({ includePartial = true } = {}) {
+    const nextScore = countSixSevenPhrases(recognisedText({ includePartial }));
+    if (nextScore !== score) {
+      if (nextScore < score) {
+        eventTimeline.length = nextScore;
+      } else {
+        const elapsed = runStartedAt
+          ? Math.min(GAME_SECONDS, Math.max(0, (performance.now() - runStartedAt) / 1000))
+          : 0;
+        while (eventTimeline.length < nextScore) {
+          eventTimeline.push(Number(elapsed.toFixed(3)));
+        }
       }
-    }
-    score = nextScore;
-    scoreEl.textContent = String(score);
-  }
-
-  function commitRecognitionSession() {
-    if (sessionFinalTranscript.trim()) completedTranscript.push(sessionFinalTranscript.trim());
-    sessionFinalTranscript = '';
-    sessionInterimTranscript = '';
-    updateTranscriptUI();
-    syncOfficialScore();
-  }
-
-  function createRecognition() {
-    const instance = new SpeechRecognitionCtor();
-    instance.lang = 'en-AU';
-    instance.continuous = true;
-    instance.interimResults = true;
-    instance.maxAlternatives = 1;
-
-    // Newer implementations can bias the recogniser toward the literal phrase.
-    // This is optional; scoring never depends on this experimental API existing.
-    if ('phrases' in instance && window.SpeechRecognitionPhrase) {
-      try {
-        instance.phrases = [new window.SpeechRecognitionPhrase('six seven', 6)];
-      } catch (error) {
-        console.debug('Speech phrase bias is unavailable.', error);
-      }
-    }
-
-    instance.addEventListener('start', () => {
-      recognitionActive = true;
-      if (running) setStatus(tr('Listening — say six seven'), 'ready');
-    });
-
-    instance.addEventListener('result', (event) => {
-      let finalText = '';
-      let interimText = '';
-      for (let index = 0; index < event.results.length; index += 1) {
-        const result = event.results[index];
-        const transcript = result[0]?.transcript?.trim() || '';
-        if (!transcript) continue;
-        if (result.isFinal) finalText += `${transcript} `;
-        else interimText += `${transcript} `;
-      }
-      sessionFinalTranscript = finalText.trim();
-      sessionInterimTranscript = interimText.trim();
-      updateTranscriptUI();
-      if (running || finalisingRecognition) syncOfficialScore();
-    });
-
-    instance.addEventListener('error', (event) => {
-      if (event.error === 'aborted' && recognitionStopping) return;
-      if (event.error === 'no-speech') {
-        if (running) setStatus(tr('Still listening — speak clearly'), 'busy');
-        return;
-      }
-      showError(`Speech recognition: ${event.error || 'unknown error'}`);
-    });
-
-    instance.addEventListener('end', () => {
-      recognitionActive = false;
-      commitRecognitionSession();
-
-      if (recognitionStopping) {
-        recognitionStopping = false;
-        if (recognitionStopTimer) window.clearTimeout(recognitionStopTimer);
-        recognitionStopTimer = null;
-        const resolve = recognitionStopResolve;
-        recognitionStopResolve = null;
-        resolve?.();
-        return;
-      }
-
-      if (running && performance.now() < endTime) {
-        window.setTimeout(() => {
-          if (running && !recognitionActive && !recognitionStopping) startRecognitionSession();
-        }, 60);
-      }
-    });
-
-    return instance;
-  }
-
-  function startRecognitionSession() {
-    if (!SpeechRecognitionCtor || recognitionActive || recognitionStopping || !running) return;
-    recognition = createRecognition();
-    sessionFinalTranscript = '';
-    sessionInterimTranscript = '';
-    try {
-      recognition.start();
-    } catch (error) {
-      showError(`Could not start speech recognition: ${error.message}`);
+      score = nextScore;
+      scoreEl.textContent = String(score);
     }
   }
 
-  function stopRecognition() {
-    finalisingRecognition = true;
-    return new Promise((resolve) => {
-      if (!recognition || !recognitionActive) {
-        commitRecognitionSession();
-        finalisingRecognition = false;
-        resolve();
-        return;
-      }
+  function handlePartial(text) {
+    if (!running && !finalising) return;
+    partialSegment = text || '';
+    updateRecognitionUI();
+    syncScore({ includePartial: true });
+  }
 
-      recognitionStopping = true;
-      recognitionStopResolve = () => {
-        finalisingRecognition = false;
-        resolve();
-      };
-      try {
-        recognition.stop();
-      } catch (error) {
-        console.warn('Speech recognition stop failed.', error);
-        recognitionStopping = false;
-        commitRecognitionSession();
-        recognitionStopResolve = null;
-        finalisingRecognition = false;
-        resolve();
-        return;
-      }
+  function handleResult(text) {
+    if (!running && !finalising) return;
+    if (text) committedSegments.push(text);
+    partialSegment = '';
+    updateRecognitionUI();
+    syncScore({ includePartial: false });
+  }
 
-      recognitionStopTimer = window.setTimeout(() => {
-        try { recognition?.abort(); } catch (error) { console.debug(error); }
-        recognitionActive = false;
-        recognitionStopping = false;
-        commitRecognitionSession();
-        const finish = recognitionStopResolve;
-        recognitionStopResolve = null;
-        recognitionStopTimer = null;
-        finalisingRecognition = false;
-        finish?.();
-      }, 2500);
-    });
+  async function ensureVoiceModel() {
+    if (voiceModel?.ready) return voiceModel;
+    if (!modelLoadPromise) {
+      modelLoadPromise = loadSixSevenVoiceModel((message) => {
+        if (!stream) setStatus(tr(message), 'busy');
+      }).then((model) => {
+        voiceModel = model;
+        if (!stream) setStatus(tr('Local voice model ready — camera and microphone remain off'), 'ready');
+        updateStartAvailability();
+        return model;
+      }).catch((error) => {
+        modelLoadPromise = null;
+        showError(`Local voice model: ${error.message}`);
+        setStatus(tr('Local voice model failed to load'));
+        throw error;
+      });
+    }
+    return modelLoadPromise;
+  }
+
+  function updateStartAvailability() {
+    const ready = Boolean(stream && voiceModel?.ready);
+    startButton.hidden = !stream;
+    startButton.disabled = !ready;
+    startButton.textContent = ready ? tr("I'm ready") : tr('Loading local voice model…');
+    if (stream && !voiceModel?.ready) {
+      setStatus(tr('Camera and microphone ready — loading local voice model'), 'busy');
+    } else if (ready && !running && !countdownActive) {
+      setStatus(tr('Camera, microphone and local voice model ready'), 'ready');
+    }
   }
 
   async function enableVoice() {
     showError('');
-    if (!SpeechRecognitionCtor) {
-      showError(tr('This browser does not expose SpeechRecognition. Try a current browser with Web Speech recognition support.'));
-      return;
-    }
-
     enableButton.disabled = true;
     setStatus(tr('Requesting camera and microphone permission…'), 'busy');
+
+    const modelPromise = ensureVoiceModel();
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30, max: 30 } },
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          frameRate: { ideal: 30, max: 30 },
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          channelCount: 1,
+        },
       });
       video.srcObject = stream;
       await video.play();
       placeholder.hidden = true;
       enableButton.hidden = true;
-      startButton.hidden = false;
-      startButton.disabled = false;
-      startButton.textContent = tr("I'm ready");
-      setStatus(tr('Camera, microphone and recogniser ready'), 'ready');
+      updateStartAvailability();
+
+      try {
+        await modelPromise;
+      } catch {
+        // ensureVoiceModel already surfaced the useful error; camera/mic can stay enabled for retry.
+      }
+      updateStartAvailability();
     } catch (error) {
       enableButton.disabled = false;
       setStatus(tr('Camera or microphone unavailable'));
       showError(error.message || tr('Allow camera and microphone access, then try again.'));
     }
+  }
+
+  async function ensureAudioPipeline() {
+    if (audioContext) {
+      if (audioContext.state === 'suspended') await audioContext.resume();
+      return;
+    }
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) throw new Error('This browser does not support Web Audio.');
+
+    audioContext = new AudioContextCtor();
+    microphoneSource = audioContext.createMediaStreamSource(stream);
+    recognizerNode = audioContext.createScriptProcessor(2048, 1, 1);
+    silentGain = audioContext.createGain();
+    silentGain.gain.value = 0;
+
+    recognizerNode.onaudioprocess = (event) => {
+      if (!feedRecognizer || !localRecognizer) return;
+      try {
+        localRecognizer.acceptWaveform(event.inputBuffer);
+      } catch (error) {
+        showError(`Local voice recognition: ${error.message}`);
+      }
+    };
+
+    microphoneSource.connect(recognizerNode);
+    recognizerNode.connect(silentGain);
+    silentGain.connect(audioContext.destination);
+    if (audioContext.state === 'suspended') await audioContext.resume();
+  }
+
+  function createLocalRecognizer() {
+    localRecognizer?.remove();
+    localRecognizer = new SixSevenLocalRecognizer(voiceModel, audioContext.sampleRate, {
+      onPartial: handlePartial,
+      onResult: handleResult,
+      onError(error) {
+        showError(`Local voice recognition: ${error.message}`);
+      },
+    });
   }
 
   function preferredRecordingType() {
@@ -365,7 +341,10 @@ if (app) {
     recordingStream.addTrack(microphone.clone());
 
     recordingChunks = [];
-    recorder = new MediaRecorder(recordingStream, { mimeType: type, videoBitsPerSecond: 1_600_000 });
+    recorder = new MediaRecorder(recordingStream, {
+      mimeType: type,
+      videoBitsPerSecond: 1_600_000,
+    });
     recorder.addEventListener('dataavailable', (event) => {
       if (event.data.size) recordingChunks.push(event.data);
     });
@@ -426,25 +405,26 @@ if (app) {
   }
 
   async function beginRun() {
-    if (!stream || running || countdownActive) return;
+    if (!stream || !voiceModel?.ready || running || countdownActive || finalising) return;
     showError('');
     resultCard.hidden = true;
     resetButton.hidden = true;
     startButton.hidden = true;
     score = 0;
     eventTimeline = [];
-    completedTranscript = [];
-    sessionFinalTranscript = '';
-    sessionInterimTranscript = '';
+    committedSegments = [];
+    partialSegment = '';
     runStartedAt = 0;
     endTime = 0;
     rivalTimelineIndex = 0;
     scoreEl.textContent = '0';
     timeEl.textContent = GAME_SECONDS.toFixed(1);
-    updateTranscriptUI();
+    updateRecognitionUI();
     if (rivalScoreEl) rivalScoreEl.textContent = '0';
 
     try {
+      await ensureAudioPipeline();
+      createLocalRecognizer();
       if (rivalVideo) {
         rivalVideo.muted = true;
         rivalVideo.currentTime = 0;
@@ -470,30 +450,41 @@ if (app) {
     countdownActive = false;
 
     running = true;
+    feedRecognizer = true;
     runStartedAt = performance.now();
     endTime = runStartedAt + GAME_SECONDS * 1000;
     if (rivalVideo && Math.abs(rivalVideo.currentTime - RECORDING_LEAD_SECONDS) > 0.35) {
       rivalVideo.currentTime = RECORDING_LEAD_SECONDS;
     }
-    startRecognitionSession();
-    setStatus(tr('Listening — say six seven'), 'ready');
+    setStatus(tr('Listening locally — say six seven'), 'ready');
     gameLoop = requestAnimationFrame(updateGameClock);
   }
 
   async function finishRun() {
     if (!running) return;
     running = false;
+    feedRecognizer = false;
+    finalising = true;
     cancelAnimationFrame(gameLoop);
     timeEl.textContent = '0.0';
     rivalVideo?.pause();
     if (rivalScoreEl) rivalScoreEl.textContent = String(rivalFinalScore);
-    setStatus(tr('Time — finalising the recogniser…'), 'busy');
+    setStatus(tr('Time — locking the local model result…'), 'busy');
 
-    await stopRecognition();
-    syncOfficialScore();
-    const blob = await stopRecording();
+    // Stop evidence at the deadline. The worker may take a moment to flush
+    // already-received audio, but no post-deadline microphone samples are fed.
+    const recordingPromise = stopRecording();
+    const finalResultPromise = localRecognizer?.finalise(1500) || Promise.resolve('');
+    const [blob] = await Promise.all([recordingPromise, finalResultPromise]);
 
-    setStatus(tr('Run complete — final recognitions locked'), 'ready');
+    // If the worker timed out without a final event, keep only complete pairs
+    // visible in its last local partial snapshot. No fuzzy reconstruction.
+    syncScore({ includePartial: true });
+    finalising = false;
+    localRecognizer?.remove();
+    localRecognizer = null;
+
+    setStatus(tr('Run complete — local voice result locked'), 'ready');
     resultScore.textContent = String(score);
     resultCopy.textContent = rivalName
       ? score > rivalFinalScore
@@ -542,7 +533,7 @@ if (app) {
       }
       copyShareButton.textContent = tr('Copied! 🎉');
       copyShareStatus.textContent = tr('Result copied.');
-    } catch (error) {
+    } catch {
       copyShareStatus.textContent = tr('Automatic copy failed. Select the text and copy it manually.');
     }
     window.setTimeout(() => { copyShareButton.textContent = tr('Copy to clipboard'); }, 1500);
@@ -562,22 +553,22 @@ if (app) {
 
   function resetRun() {
     discardRecording();
-    try { recognition?.abort(); } catch (error) { console.debug(error); }
-    recognition = null;
-    recognitionActive = false;
-    recognitionStopping = false;
-    finalisingRecognition = false;
+    feedRecognizer = false;
+    localRecognizer?.remove();
+    localRecognizer = null;
+    running = false;
+    countdownActive = false;
+    finalising = false;
     score = 0;
     eventTimeline = [];
-    completedTranscript = [];
-    sessionFinalTranscript = '';
-    sessionInterimTranscript = '';
+    committedSegments = [];
+    partialSegment = '';
     runStartedAt = 0;
     endTime = 0;
     rivalTimelineIndex = 0;
     scoreEl.textContent = '0';
     timeEl.textContent = GAME_SECONDS.toFixed(1);
-    updateTranscriptUI();
+    updateRecognitionUI();
     if (rivalScoreEl) rivalScoreEl.textContent = '0';
     if (rivalVideo) {
       rivalVideo.pause();
@@ -587,10 +578,8 @@ if (app) {
     shareText.value = '';
     copyShareStatus.textContent = '';
     resetButton.hidden = true;
-    startButton.hidden = false;
-    startButton.disabled = !stream;
+    updateStartAvailability();
     showError('');
-    setStatus(tr('Ready for another voice run'), 'ready');
   }
 
   function openPublicationModal() {
@@ -648,7 +637,9 @@ if (app) {
       uploadStatus.textContent = payload.message;
       submitButton.hidden = true;
       if (discardButton) discardButton.hidden = true;
-      window.setTimeout(() => { window.location.href = payload.entry_url || app.dataset.hallUrl; }, 900);
+      window.setTimeout(() => {
+        window.location.href = payload.entry_url || app.dataset.hallUrl;
+      }, 900);
     } catch (error) {
       uploadStatus.textContent = error.message;
       submitButton.disabled = false;
@@ -661,14 +652,6 @@ if (app) {
       showError(`MP4 download failed: ${error.message}`);
     },
   });
-
-  if (!SpeechRecognitionCtor) {
-    enableButton.disabled = true;
-    setStatus(tr('Speech recognition is unavailable in this browser'));
-    showError(tr('This browser does not expose SpeechRecognition. Use a supported browser for Voice Speedrun.'));
-  } else {
-    setStatus(tr('Ready to request camera and microphone'), 'ready');
-  }
 
   enableButton.addEventListener('click', enableVoice);
   startButton.addEventListener('click', beginRun);
@@ -690,4 +673,22 @@ if (app) {
   document.querySelectorAll('[data-close-publication-modal]').forEach((node) => {
     node.addEventListener('click', closePublicationModal);
   });
+
+  window.addEventListener('pagehide', () => {
+    feedRecognizer = false;
+    localRecognizer?.remove();
+    stream?.getTracks().forEach((track) => track.stop());
+    try {
+      recognizerNode?.disconnect();
+      microphoneSource?.disconnect();
+      silentGain?.disconnect();
+      audioContext?.close();
+    } catch (error) {
+      console.debug('Voice audio cleanup failed.', error);
+    }
+    releaseSixSevenVoiceModel();
+  }, { once: true });
+
+  setStatus(tr('Preloading local voice model — camera and microphone remain off'), 'busy');
+  ensureVoiceModel().catch(() => {});
 }
