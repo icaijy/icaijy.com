@@ -20,9 +20,10 @@ let modelPromise = null;
 let loadedModel = null;
 
 function loadScript(url, marker) {
-  const existing = document.querySelector(`script[data-${marker}]`);
+  const markerAttribute = `data-${marker}`;
+  const existing = document.querySelector(`script[${markerAttribute}]`);
   if (existing) {
-    if (existing.dataset.loaded === '1') return Promise.resolve();
+    if (existing.getAttribute('data-loaded') === '1') return Promise.resolve();
     return new Promise((resolve, reject) => {
       existing.addEventListener('load', resolve, { once: true });
       existing.addEventListener('error', () => reject(new Error(`Could not load ${url}`)), { once: true });
@@ -34,9 +35,9 @@ function loadScript(url, marker) {
     script.src = url;
     script.async = false;
     script.crossOrigin = 'anonymous';
-    script.dataset[marker] = '1';
+    script.setAttribute(markerAttribute, '1');
     script.addEventListener('load', () => {
-      script.dataset.loaded = '1';
+      script.setAttribute('data-loaded', '1');
       resolve();
     }, { once: true });
     script.addEventListener('error', () => reject(new Error(`Could not load ${url}`)), { once: true });
@@ -73,10 +74,11 @@ async function loadSherpaKwsRuntime() {
 
       let settled = false;
       const previousReady = window.onSherpaOnnxReady;
+      let timer = null;
       const finish = (error = null) => {
         if (settled) return;
         settled = true;
-        window.clearTimeout(timer);
+        if (timer !== null) window.clearTimeout(timer);
         if (error) reject(error);
         else resolve();
       };
@@ -91,7 +93,7 @@ async function loadSherpaKwsRuntime() {
         else if (!loaded) finish(new Error('The local keyword-spotting runtime failed to initialise.'));
       };
 
-      const timer = window.setTimeout(() => {
+      timer = window.setTimeout(() => {
         if (sherpaRuntimeReady()) finish();
         else finish(new Error('The local keyword-spotting runtime timed out while loading.'));
       }, 45_000);
