@@ -16,10 +16,11 @@ class VoiceSpeedrunPageTests(TestCase):
         self.assertContains(voice, 'id="voice-app"')
         self.assertContains(voice, 'data-game-mode="voice_67"')
         self.assertContains(voice, 'voice_counter.js')
-        self.assertContains(voice, 'Keyword detections')
+        self.assertContains(voice, 'Local detector')
         self.assertContains(voice, 'camera + microphone')
         self.assertContains(voice, 'Keyword detection runs locally in this browser')
-        self.assertContains(voice, 'wake-word style detection')
+        self.assertContains(voice, 'Wake-word-style scoring')
+        self.assertContains(voice, 'valid BPE token paths')
         self.assertNotContains(voice, "browser vendor's speech service")
         self.assertNotContains(voice, 'about 40 MB of model data')
 
