@@ -5,7 +5,7 @@
 
 {% block content %}
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="preconnect" href="https://fiddle-app.github.io" crossorigin>
+<link rel="preconnect" href="https://huggingface.co" crossorigin>
 <link rel="stylesheet" href="{% static 'brainrot/counter_bootstrap.css' %}">
 {% if turnstile_enabled %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}
 
@@ -30,15 +30,15 @@
       <h1 class="display-5 mb-2">YOU vs {{ rival.public_name }}</h1>
       <p class="lead text-secondary mb-0">{% blocktranslate with name=rival.public_name score=rival.score %}{{ name }} clearly said “six seven” {{ score }} times in 20 seconds. Their evidence video plays muted so it cannot contaminate your microphone.{% endblocktranslate %}</p>
     {% else %}
-      <span class="badge text-bg-danger mode-badge mb-2">20 seconds · local voice model</span>
+      <span class="badge text-bg-danger mode-badge mb-2">20 seconds · local keyword spotter</span>
       <h1 class="display-5 mb-2">{% translate "Six Seven Voice Speedrun" %}</h1>
-      <p class="lead text-secondary mb-0">{% translate "Say “six seven” as many times as possible in 20 seconds. A clear six then seven counts; one unclear word between them is tolerated." %}</p>
+      <p class="lead text-secondary mb-0">{% translate "Say “six seven” as many times as possible in 20 seconds. Each complete phrase detected by the local wake-word model counts immediately." %}</p>
     {% endif %}
   </header>
 
   <div class="alert alert-info py-2 px-3 small" role="note">
     <strong>{% translate "Voice privacy:" %}</strong>
-    {% translate "Recognition runs locally in this browser using a downloaded voice model; microphone audio is not sent to a speech-recognition service. The first visit downloads about 40 MB of model data. The evidence recording also stays local unless you submit it. Submitting publishes the camera-and-microphone recording for anyone to watch." %}
+    {% translate "Keyword detection runs locally in this browser; microphone audio is not sent to a speech-recognition service. The first visit downloads the local keyword-spotting runtime and model. The evidence recording also stays local unless you submit it. Submitting publishes the camera-and-microphone recording for anyone to watch." %}
   </div>
 
   <div class="row g-4 align-items-start">
@@ -76,16 +76,16 @@
             </div>
             <div class="detector-status" id="voice-status">
               <span class="status-dot"></span>
-              <span>{% translate "Preloading local voice model — camera and microphone remain off" %}</span>
+              <span>{% translate "Preloading local keyword spotter — camera and microphone remain off" %}</span>
             </div>
           </section>
 
           <section class="card shadow-sm mt-3">
             <div class="card-body p-3">
-              <div class="text-secondary small text-uppercase fw-semibold mb-1">{% translate "Local model hearing" %}</div>
+              <div class="text-secondary small text-uppercase fw-semibold mb-1">{% translate "Keyword detections" %}</div>
               <div id="heard-final" class="fw-semibold" aria-live="polite">—</div>
               <div id="heard-interim" class="text-secondary small mt-1"></div>
-              <p class="small text-secondary mb-0 mt-2">{% translate "The live recognition refreshes as the local model hears words. Once it has recognised a valid six-seven pair, that point is locked and later revisions never subtract it." %}</p>
+              <p class="small text-secondary mb-0 mt-2">{% translate "This is wake-word style detection, not general speech-to-text. Every SIX SEVEN hit is counted immediately and the detector resets for the next repetition." %}</p>
             </div>
           </section>
         </div>
@@ -111,10 +111,10 @@
 
         <div class="d-grid gap-2">
           <button class="btn btn-danger" id="enable-voice">{% translate "Enable camera + microphone" %}</button>
-          <button class="btn btn-danger" id="start-run" disabled hidden>{% translate "Loading local voice model…" %}</button>
+          <button class="btn btn-danger" id="start-run" disabled hidden>{% translate "Loading local keyword spotter…" %}</button>
           <button class="btn btn-outline-secondary" id="reset-run" hidden>{% translate "Try again" %}</button>
         </div>
-        <p class="small text-secondary mt-3 mb-0">{% translate "The grammar is deliberately tiny: six, seven, and unknown. Both “six seven” and “six [unknown] seven” count; missing or reversed words do not. Awarded points never decrease." %}</p>
+        <p class="small text-secondary mt-3 mb-0">{% translate "The detector listens only for the complete phrase SIX SEVEN. Speak as quickly as you can while staying clear enough to trigger each repetition." %}</p>
         <p class="counter-error text-danger small mt-2 mb-0" id="voice-error" role="alert"></p>
       </section>
 
