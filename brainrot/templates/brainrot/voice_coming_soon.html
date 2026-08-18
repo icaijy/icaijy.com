@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
+
+{% block title %}{% if CURRENT_LANGUAGE == 'zh-hans' %}语音 67 极速挑战 — 即将推出{% else %}Six Seven Voice Speedrun — Coming Soon{% endif %}{% endblock %}
+
+{% block content %}
+<style>
+  .voice-soon-page {
+    min-height: 72vh;
+    display: grid;
+    place-items: center;
+    padding: clamp(2.5rem, 7vw, 6rem) 1rem;
+    background:
+      radial-gradient(circle at 50% 8%, rgba(239,68,68,.14), transparent 24rem),
+      linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+  }
+  .voice-soon-card {
+    width: min(820px, 100%);
+    padding: clamp(1.6rem, 5vw, 3.4rem);
+    border: 1px solid #e2e8f0;
+    border-radius: 2rem;
+    background: rgba(255,255,255,.96);
+    box-shadow: 0 30px 85px rgba(15,23,42,.12);
+  }
+  .voice-soon-mark {
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 76px;
+    margin-bottom: 1.4rem;
+    border-radius: 1.35rem;
+    background: #111827;
+    font-size: 2.2rem;
+  }
+  .voice-soon-card h1 { font-size: clamp(2.2rem, 7vw, 4.6rem); font-weight: 950; letter-spacing: -.055em; }
+  .voice-soon-card .lead { color: #64748b; }
+  .voice-soon-note {
+    margin-top: 1.7rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid #fed7aa;
+    border-radius: 1rem;
+    background: #fff7ed;
+    color: #9a3412;
+  }
+  .voice-build-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .8rem; margin-top: 1.5rem; }
+  .voice-build-grid div { padding: 1rem; border: 1px solid #e2e8f0; border-radius: 1rem; background: #f8fafc; }
+  .voice-build-grid strong { display: block; margin-bottom: .25rem; }
+  .voice-build-grid small { color: #64748b; line-height: 1.4; }
+  @media (max-width: 700px) { .voice-build-grid { grid-template-columns: 1fr; } }
+</style>
+
+<main class="voice-soon-page">
+  <section class="voice-soon-card">
+    <div class="voice-soon-mark">🗣️</div>
+    <span class="badge text-bg-warning mb-3">COMING SOON</span>
+
+    {% if CURRENT_LANGUAGE == 'zh-hans' %}
+      <h1>语音 67 极速挑战</h1>
+      <p class="lead">目标还是很简单：20 秒内尽可能多、尽可能清楚地连续说 <strong>six seven</strong>。</p>
+      <div class="voice-soon-note"><strong>现在先不上线半成品。</strong> 我们试过通用 ASR、唤醒词模型和现成单词分类器；慢速都能识别，但连续高速复读时漏判太严重。下一版会使用专门为这种玩法训练的小型本地模型。</div>
+      <div class="voice-build-grid">
+        <div><strong>⚡ 连续高速</strong><small>不等整句话结束，不要求每次 six seven 之间停顿。</small></div>
+        <div><strong>🧠 专用模型</strong><small>只需要理解 six、seven 和其他声音，不拿大模型打蚊子。</small></div>
+        <div><strong>🔒 本地运行</strong><small>最终目标仍是在浏览器本地计数，麦克风音频不送到语音识别服务器。</small></div>
+      </div>
+      <div class="d-flex flex-wrap gap-2 mt-4">
+        <a class="btn btn-dark" href="{% url 'brainrot:counter' %}?mode=six_seven">先玩 67 Counter →</a>
+        <a class="btn btn-outline-secondary" href="{% url 'brainrot:index' %}">返回所有 67 游戏</a>
+      </div>
+    {% else %}
+      <h1>Six Seven Voice Speedrun</h1>
+      <p class="lead">The goal is still simple: say <strong>six seven</strong> as many times as possible in 20 seconds while staying clear at ridiculous speed.</p>
+      <div class="voice-soon-note"><strong>The half-working prototype is parked.</strong> General ASR, wake-word spotting and an off-the-shelf word classifier all worked slowly but missed too many repetitions during continuous fast speech. The next version will use a tiny model trained specifically for this game.</div>
+      <div class="voice-build-grid">
+        <div><strong>⚡ Continuous speed</strong><small>No phrase-ending pause and no waiting for a long transcript to settle.</small></div>
+        <div><strong>🧠 Purpose-built model</strong><small>It only needs to understand six, seven and everything else.</small></div>
+        <div><strong>🔒 Local inference</strong><small>The target remains browser-local scoring without sending microphone audio to a speech-recognition service.</small></div>
+      </div>
+      <div class="d-flex flex-wrap gap-2 mt-4">
+        <a class="btn btn-dark" href="{% url 'brainrot:counter' %}?mode=six_seven">Play the working 67 Counter →</a>
+        <a class="btn btn-outline-secondary" href="{% url 'brainrot:index' %}">All 67 games</a>
+      </div>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}
