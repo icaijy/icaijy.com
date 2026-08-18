@@ -44,11 +44,10 @@ async function runConversion(blob, library, videoOptions, onProgress) {
       input,
       output,
       video: videoOptions,
-      audio: { discard: true },
     });
     if (!conversion.isValid) {
       const reasons = conversion.discardedTracks.map(({ reason }) => reason).join(', ');
-      throw new Error(reasons || 'no compatible video encoder');
+      throw new Error(reasons || 'no compatible MP4 codec');
     }
     conversion.onProgress = (progress) => onProgress(clampProgress(progress));
     await conversion.execute();

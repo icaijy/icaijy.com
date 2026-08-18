@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static i18n %}
 
-{% block title %}{% if game_mode == 'leg_claps' %}{% translate "Tung Tung Leg Claps Hall of Fame" %}{% else %}{% translate "67 Hall of Fame" %}{% endif %}{% endblock %}
+{% block title %}{% if game_mode == 'leg_claps' %}{% translate "Tung Tung Leg Claps Hall of Fame" %}{% elif game_mode == 'voice_67' %}{% translate "Six Seven Voice Speedrun Hall of Fame" %}{% else %}{% translate "67 Hall of Fame" %}{% endif %}{% endblock %}
 
 {% block content %}
 <main class="container py-4 py-md-5">
@@ -15,13 +15,26 @@
   <div class="row g-4 align-items-end mb-4">
     <div class="col-12 col-lg-8">
       <div class="text-secondary small text-uppercase fw-semibold mb-2">{% translate "PUBLIC 20-SECOND VIDEO LEADERBOARD" %}</div>
-      <h1 class="display-5 fw-bold mb-2">{% if game_mode == 'leg_claps' %}{% translate "Leg Claps Hall of Fame" %}{% else %}{% translate "67 Hall of Fame" %}{% endif %}</h1>
-      <p class="lead text-secondary mb-0">{% if game_mode == 'leg_claps' %}{% translate "See who made the most inward knee claps in 20 seconds, watch each run, then challenge it yourself. Each clap requires the knees to open again before the next count." %}{% else %}{% translate "See who made the most 6️⃣7️⃣ moves in 20 seconds, watch each run, then challenge it yourself. Guest names are visibly labelled and cannot copy registered usernames." %}{% endif %}</p>
+      <h1 class="display-5 fw-bold mb-2">
+        {% if game_mode == 'leg_claps' %}{% translate "Leg Claps Hall of Fame" %}
+        {% elif game_mode == 'voice_67' %}{% translate "Voice 67 Hall of Fame" %}
+        {% else %}{% translate "67 Hall of Fame" %}{% endif %}
+      </h1>
+      <p class="lead text-secondary mb-0">
+        {% if game_mode == 'leg_claps' %}
+          {% translate "See who made the most inward knee claps in 20 seconds, watch each run, then challenge it yourself. Each clap requires the knees to open again before the next count." %}
+        {% elif game_mode == 'voice_67' %}
+          {% translate "See who clearly said “six seven” the most times in 20 seconds. The recogniser only awards complete recognised pairs; the evidence video includes microphone audio." %}
+        {% else %}
+          {% translate "See who made the most 6️⃣7️⃣ moves in 20 seconds, watch each run, then challenge it yourself. Guest names are visibly labelled and cannot copy registered usernames." %}
+        {% endif %}
+      </p>
     </div>
     <div class="col-12 col-lg-4 text-lg-end">
-      <div class="btn-group" role="group" aria-label="{% translate 'Leaderboard mode' %}">
+      <div class="btn-group flex-wrap" role="group" aria-label="{% translate 'Leaderboard mode' %}">
         <a class="btn {% if game_mode == 'six_seven' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'brainrot:hall_of_fame' %}?mode=six_seven">67 Counter</a>
         <a class="btn {% if game_mode == 'leg_claps' %}btn-success{% else %}btn-outline-success{% endif %}" href="{% url 'brainrot:hall_of_fame' %}?mode=leg_claps">{% translate "Tung Tung Leg Claps" %}</a>
+        <a class="btn {% if game_mode == 'voice_67' %}btn-danger{% else %}btn-outline-danger{% endif %}" href="{% url 'brainrot:hall_of_fame' %}?mode=voice_67">{% translate "Voice 67" %}</a>
       </div>
     </div>
   </div>
@@ -37,18 +50,28 @@
           <div class="col">
             <h2 class="h5 border-0 ps-0 ms-0 mb-1">{{ entry.public_name }}</h2>
             <div class="text-secondary small">
-              {% if entry.game_mode == 'leg_claps' %}{% blocktranslate with score=entry.score date=entry.created_at|date:'j M Y' %}made {{ score }} leg claps in 20 seconds · {{ date }}{% endblocktranslate %}{% else %}{% blocktranslate with score=entry.score date=entry.created_at|date:'j M Y' %}made {{ score }} 6️⃣7️⃣ moves in 20 seconds · {{ date }}{% endblocktranslate %}{% endif %}
+              {% if entry.game_mode == 'leg_claps' %}
+                {% blocktranslate with score=entry.score date=entry.created_at|date:'j M Y' %}made {{ score }} leg claps in 20 seconds · {{ date }}{% endblocktranslate %}
+              {% elif entry.game_mode == 'voice_67' %}
+                {% blocktranslate with score=entry.score date=entry.created_at|date:'j M Y' %}said “six seven” {{ score }} times in 20 seconds · {{ date }}{% endblocktranslate %}
+              {% else %}
+                {% blocktranslate with score=entry.score date=entry.created_at|date:'j M Y' %}made {{ score }} 6️⃣7️⃣ moves in 20 seconds · {{ date }}{% endblocktranslate %}
+              {% endif %}
             </div>
           </div>
           <div class="col-auto text-end">
             <div class="display-6 fw-bold">{{ entry.score }}</div>
-            <small class="text-secondary">{% if entry.game_mode == 'leg_claps' %}{% translate "claps" %}{% else %}{% translate "moves" %}{% endif %}</small>
+            <small class="text-secondary">{% if entry.game_mode == 'leg_claps' %}{% translate "claps" %}{% elif entry.game_mode == 'voice_67' %}{% translate "67s" %}{% else %}{% translate "moves" %}{% endif %}</small>
           </div>
         </div>
 
         <div class="d-flex flex-wrap gap-2 mt-3">
           <a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "Full details" %}</a>
-          <a class="btn btn-sm btn-primary" href="{% url 'brainrot:challenge' entry.id %}">{% translate "Challenge this run" %}</a>
+          {% if entry.game_mode == 'voice_67' %}
+            <a class="btn btn-sm btn-danger" href="{% url 'brainrot:voice_counter' %}?rival={{ entry.id }}">{% translate "Challenge this run" %}</a>
+          {% else %}
+            <a class="btn btn-sm btn-primary" href="{% url 'brainrot:challenge' entry.id %}">{% translate "Challenge this run" %}</a>
+          {% endif %}
         </div>
 
         {% url 'brainrot:hall_of_fame_video' entry.id as preview_url %}
@@ -59,7 +82,15 @@
               <video class="w-100 rounded bg-dark" controls preload="none" playsinline src="{{ preview_url }}"></video>
             </div>
             <div class="col-12 col-lg-6">
-              <strong>{% if entry.game_mode == 'leg_claps' %}{% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} Tung Tung Leg Claps in 20 seconds.{% endblocktranslate %}{% else %}{% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds.{% endblocktranslate %}{% endif %}</strong>
+              <strong>
+                {% if entry.game_mode == 'leg_claps' %}
+                  {% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} Tung Tung Leg Claps in 20 seconds.{% endblocktranslate %}
+                {% elif entry.game_mode == 'voice_67' %}
+                  {% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} clearly said “six seven” {{ score }} times in 20 seconds.{% endblocktranslate %}
+                {% else %}
+                  {% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds.{% endblocktranslate %}
+                {% endif %}
+              </strong>
               <p class="text-secondary small mt-2">{% translate "Open the detail page to share this run, download it, or start a synchronized challenge." %}</p>
               <div class="d-flex flex-wrap gap-2">
                 <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "Open full run" %} →</a>
@@ -76,7 +107,11 @@
       <div class="card-body p-4 text-center">
         <h2 class="h4 border-0 ps-0 ms-0">{% translate "No legends yet." %}</h2>
         <p class="text-secondary">{% translate "The scientific community has uploaded absolutely nothing." %}</p>
-        <a href="{% url 'brainrot:counter' %}?mode={{ game_mode }}" class="btn btn-primary">{% translate "Submit the first specimen" %}</a>
+        {% if game_mode == 'voice_67' %}
+          <a href="{% url 'brainrot:voice_counter' %}" class="btn btn-danger">{% translate "Submit the first specimen" %}</a>
+        {% else %}
+          <a href="{% url 'brainrot:counter' %}?mode={{ game_mode }}" class="btn btn-primary">{% translate "Submit the first specimen" %}</a>
+        {% endif %}
       </div>
     </div>
     {% endfor %}

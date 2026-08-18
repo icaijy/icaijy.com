@@ -16,6 +16,7 @@ class HallOfFameEntry(models.Model):
     class GameMode(models.TextChoices):
         SIX_SEVEN = 'six_seven', _('67 Counter')
         LEG_CLAPS = 'leg_claps', _('Tung Tung Leg Claps')
+        VOICE_67 = 'voice_67', _('Six Seven Voice Speedrun')
 
     class Visibility(models.TextChoices):
         PUBLIC = 'public', _('Public')
