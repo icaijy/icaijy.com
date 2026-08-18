@@ -1,17 +1,19 @@
 const SHERPA_PACKAGE_VERSION = '1.3.1';
 const SHERPA_WASM_BASE = `https://cdn.jsdelivr.net/npm/@siteed/sherpa-onnx.rn@${SHERPA_PACKAGE_VERSION}/wasm/`;
-const KWS_MODEL_BASE = 'https://huggingface.co/deeeed/sherpa-voice-models/resolve/main/kws';
+const KWS_MODEL_BASE = 'https://modelscope.cn/models/pkufool/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01/resolve/master';
 const KWS_MODEL_DIR = '/icaijy-kws';
 
-// GigaSpeech's tokenizer contains both words as complete BPE pieces. The
+// GigaSpeech's BPE vocabulary contains SIX and SEVEN as complete pieces. The
 // @suffix becomes the label returned by sherpa-onnx when this path fires.
 const SIX_SEVEN_KEYWORD = '▁SIX ▁SEVEN @SIX_SEVEN';
 const REQUIRED_KEYWORD_TOKENS = ['▁SIX', '▁SEVEN'];
 
+// Use the official int8 export: substantially smaller to download in-browser
+// while keeping the encoder/decoder/joiner/token table from one exact model.
 const MODEL_FILES = {
-  encoder: 'encoder-epoch-12-avg-2-chunk-16-left-64.onnx',
-  decoder: 'decoder-epoch-12-avg-2-chunk-16-left-64.onnx',
-  joiner: 'joiner-epoch-12-avg-2-chunk-16-left-64.onnx',
+  encoder: 'encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx',
+  decoder: 'decoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx',
+  joiner: 'joiner-epoch-12-avg-2-chunk-16-left-64.int8.onnx',
   tokens: 'tokens.txt',
 };
 
@@ -134,7 +136,7 @@ export async function loadSixSevenVoiceModel(onStatus = () => {}) {
     await loadSherpaKwsRuntime();
 
     const KWS = window.SherpaOnnx.KWS;
-    onStatus('Loading local SIX SEVEN keyword model…');
+    onStatus('Loading local SIX SEVEN keyword model (~5 MB)…');
     const modelInfo = await KWS.loadModel({
       modelDir: KWS_MODEL_DIR,
       encoder: modelUrl(MODEL_FILES.encoder),
