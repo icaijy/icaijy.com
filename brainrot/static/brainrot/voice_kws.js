@@ -5,8 +5,7 @@ const KWS_MODEL_DIR = '/icaijy-kws';
 
 // GigaSpeech BPE contains both words as complete pieces. The @suffix is the
 // label returned by sherpa-onnx when this keyword path fires.
-const SIX_SEVEN_KEYWORD = '▁SIX ▁SEVEN @SIX_SEVEN';
-const SIX_SEVEN_KEYWORD_BYTES = new TextEncoder().encode(SIX_SEVEN_KEYWORD).byteLength;
+const SIX_SEVEN_KEYWORD = '▁SIX ▁SEVEN @SIX_SEVEN\n';
 
 const MODEL_FILES = {
   encoder: 'encoder-epoch-12-avg-2-chunk-16-left-64.onnx',
@@ -167,9 +166,7 @@ function makeSpotter(Module, paths) {
     numTrailingBlanks: 1,
     keywordsScore: 1.5,
     keywordsThreshold: 0.25,
-    keywords: '',
-    keywordsBuf: SIX_SEVEN_KEYWORD,
-    keywordsBufSize: SIX_SEVEN_KEYWORD_BYTES,
+    keywordsFile: paths.keywords,
   };
 
   const spotter = typeof window.createKws === 'function'
@@ -194,8 +191,14 @@ export async function loadSixSevenVoiceModel(onStatus = () => {}) {
       Object.entries(MODEL_FILES).map(async ([key, filename]) => [key, await fetchIntoFs(Module, filename)]),
     );
     const paths = Object.fromEntries(entries);
-    const spotter = makeSpotter(Module, paths);
 
+    // @siteed's current browser KWS glue consumes keywords through a file path
+    // in the Emscripten filesystem. Keep our one game-specific wake phrase
+    // entirely local rather than downloading a generic keywords file.
+    paths.keywords = `${KWS_MODEL_DIR}/keywords.txt`;
+    Module.FS.writeFile(paths.keywords, SIX_SEVEN_KEYWORD);
+
+    const spotter = makeSpotter(Module, paths);
     loadedModel = {
       ready: true,
       Module,
