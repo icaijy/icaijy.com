@@ -1,5 +1,3 @@
-import { installMp4Download } from './mp4_download.js';
-
 const detail = document.getElementById('hof-detail');
 if (detail) {
   const tr = (message) => typeof gettext === 'function' ? gettext(message) : message;
@@ -19,23 +17,9 @@ if (detail) {
     : isVoice
       ? `${detail.dataset.username} clearly said “six seven” ${score} times in 20 seconds! 🗣️`
       : `${detail.dataset.username} made ${score} 6️⃣7️⃣ moves in 20 seconds! 🔥`;
-  // This sentence is already translated by Django in the visible page copy.
   const headline = detail.querySelector('.pb-2 .fw-bold')?.textContent.trim() || fallbackHeadline;
   const text = `${headline}\n${blocks}\n${url}`;
   if (shareText) shareText.value = text;
-
-  const downloadButton = detail.querySelector('a[href*="?download=1"]');
-  const safeName = detail.dataset.username.replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '') || 'run';
-  const downloadSlug = isLegClaps ? 'tung-tung-leg-claps' : isVoice ? 'six-seven-voice' : '67';
-  installMp4Download(downloadButton, {
-    filename: `${downloadSlug}-${safeName}-${score}.webm`,
-    onStatus(message) {
-      if (status) status.textContent = message;
-    },
-    onError(error) {
-      if (status) status.textContent = `MP4 download failed: ${error.message}`;
-    },
-  });
 
   async function copyShareMessage() {
     if (!shareText || !copyButton) return;
