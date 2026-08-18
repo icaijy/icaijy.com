@@ -6,7 +6,11 @@ const source = await readFile(
   new URL('../static/brainrot/voice_kws.js', import.meta.url),
   'utf8',
 );
-const { SixSevenLocalRecognizer } = await import(
+const {
+  SixSevenLocalRecognizer,
+  buildSixSevenKeywords,
+  enumerateBpeWordPaths,
+} = await import(
   `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`
 );
 
@@ -59,6 +63,47 @@ function fakeAudioBuffer(sampleRate = 48000) {
     },
   };
 }
+
+test('whole-word BPE pieces create the simple SIX SEVEN keyword path', () => {
+  const tokens = {
+    '<blank>': 0,
+    '<unk>': 1,
+    '▁SIX': 2,
+    '▁SEVEN': 3,
+  };
+
+  assert.deepEqual(enumerateBpeWordPaths('SIX', tokens), [['▁SIX']]);
+  assert.deepEqual(enumerateBpeWordPaths('SEVEN', tokens), [['▁SEVEN']]);
+  assert.equal(buildSixSevenKeywords(tokens), '▁SIX ▁SEVEN @SIX_SEVEN');
+});
+
+test('SEVEN may be split across BPE pieces without blocking model startup', () => {
+  const tokens = {
+    '<blank>': 0,
+    '<unk>': 1,
+    '▁SIX': 2,
+    '▁SE': 3,
+    'V': 4,
+    'EN': 5,
+    'E': 6,
+    'N': 7,
+  };
+
+  const sevenPaths = enumerateBpeWordPaths('SEVEN', tokens);
+  assert.ok(sevenPaths.some((path) => path.join(' ') === '▁SE V EN'));
+  assert.ok(sevenPaths.some((path) => path.join(' ') === '▁SE V E N'));
+
+  const keywords = buildSixSevenKeywords(tokens).split('\n');
+  assert.ok(keywords.includes('▁SIX ▁SE V EN @SIX_SEVEN'));
+  assert.ok(keywords.includes('▁SIX ▁SE V E N @SIX_SEVEN'));
+});
+
+test('keyword generation fails clearly only when the vocabulary truly cannot spell a word', () => {
+  assert.throws(
+    () => buildSixSevenKeywords({ '▁SIX': 1, '▁SE': 2 }),
+    /cannot tokenise: SEVEN/,
+  );
+});
 
 test('one keyword hit fires one score event and immediately resets the stream', () => {
   const { model, spotter, stream } = makeFakeModel();
