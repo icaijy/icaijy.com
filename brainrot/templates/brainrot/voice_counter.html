@@ -32,7 +32,7 @@
     {% else %}
       <span class="badge text-bg-danger mode-badge mb-2">20 seconds · local voice model</span>
       <h1 class="display-5 mb-2">{% translate "Six Seven Voice Speedrun" %}</h1>
-      <p class="lead text-secondary mb-0">{% translate "Say “six seven” as many times as possible in 20 seconds. Only complete pairs that the local model clearly resolves as six then seven count." %}</p>
+      <p class="lead text-secondary mb-0">{% translate "Say “six seven” as many times as possible in 20 seconds. A clear six then seven counts; one unclear word between them is tolerated." %}</p>
     {% endif %}
   </header>
 
@@ -85,7 +85,7 @@
               <div class="text-secondary small text-uppercase fw-semibold mb-1">{% translate "Local model hearing" %}</div>
               <div id="heard-final" class="fw-semibold" aria-live="polite">—</div>
               <div id="heard-interim" class="text-secondary small mt-1"></div>
-              <p class="small text-secondary mb-0 mt-2">{% translate "The live line can revise itself while you speak. At 20 seconds the same local model is forced to finalise all audio received before the deadline." %}</p>
+              <p class="small text-secondary mb-0 mt-2">{% translate "The live recognition refreshes as the local model hears words. Once it has recognised a valid six-seven pair, that point is locked and later revisions never subtract it." %}</p>
             </div>
           </section>
         </div>
@@ -114,7 +114,7 @@
           <button class="btn btn-danger" id="start-run" disabled hidden>{% translate "Loading local voice model…" %}</button>
           <button class="btn btn-outline-secondary" id="reset-run" hidden>{% translate "Try again" %}</button>
         </div>
-        <p class="small text-secondary mt-3 mb-0">{% translate "The grammar is deliberately tiny: six, seven, and unknown. Speak fast, but if the model hears an unknown or the order is wrong, it does not count." %}</p>
+        <p class="small text-secondary mt-3 mb-0">{% translate "The grammar is deliberately tiny: six, seven, and unknown. Both “six seven” and “six [unknown] seven” count; missing or reversed words do not. Awarded points never decrease." %}</p>
         <p class="counter-error text-danger small mt-2 mb-0" id="voice-error" role="alert"></p>
       </section>
 
