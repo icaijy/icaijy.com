@@ -1,3 +1,5 @@
+import { installMp4Download } from './mp4_download.js';
+
 (() => {
   const app = document.getElementById('counter-app');
   const resultCard = document.getElementById('counter-result');
@@ -39,4 +41,11 @@
   });
 
   document.getElementById('copy-counter-share')?.addEventListener('pointerdown', updateShareText, { capture: true });
+
+  installMp4Download(document.getElementById('download-recording'), {
+    onError(error) {
+      const errorNode = document.getElementById('counter-error');
+      if (errorNode) errorNode.textContent = `MP4 download failed: ${error.message}`;
+    },
+  });
 })();
