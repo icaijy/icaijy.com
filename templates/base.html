@@ -1,88 +1,79 @@
-{% load static %}
-{% load i18n %}
+{% load static i18n %}
 {% get_current_language as CURRENT_LANGUAGE %}
 <!DOCTYPE html>
 <html lang="{{ CURRENT_LANGUAGE }}">
   <head>
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      .maincontent {
-        font-family: 'Droid Serif';
-      }
-      .maincontent h1 {
-        font-family: 'Arial';
-        font-weight: bold;
-      }
-      .maincontent h2 {
-        font-family: 'Arial';
-        padding-left: 0.25rem;
-        border-left: 0.5rem solid #c2c1c1;
-        margin-left: -0.25rem;
-      }
-      .maincontent h2.no-indent {
-        padding-left: none;
-        border-left: none;
-        margin-left: 0;
-      }
-    </style>
-    <title>
-      {% block title %}
-        Henry's Website
-      {% endblock %}
-    </title>
+    <meta name="theme-color" content="#0b1220" />
+    <title>{% block title %}Henry's Website{% endblock %}</title>
+
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
-    <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/js/all.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/css/fontawesome.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/css/all.min.css" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css" />
     <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'monokai.css' %}" />
-    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
-    <style>
-      @import url('https://fonts.googleapis.com/css?family=Droid+Serif');
-    </style>
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
-
-    <script>
-      hljs.highlightAll()
-    </script>
+    {% block extra_head %}{% endblock %}
   </head>
 
   <body class="maincontent">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container">
-        <a class="navbar-brand" href="{% url 'home' %}"><img src="{% static 'compass.svg' %}" height="50" /> {% trans 'Henry - Home' %}</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav me-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'blog' %}"><i class="fa-solid fa-blog"></i> {% trans 'Blog' %}</a>
+    <nav class="navbar navbar-expand-lg navbar-dark site-navbar sticky-top" aria-label="Primary navigation">
+      <div class="container-xl">
+        <a class="navbar-brand site-brand" href="{% url 'home' %}" aria-label="icaijy.com home">
+          <img src="{% static 'compass.svg' %}" width="34" height="34" alt="" />
+          <span>
+            <strong>icaijy.com</strong>
+            <small>{% trans "Henry's Website" %}</small>
+          </span>
+        </a>
+
+        <a class="site-67-shortcut d-lg-none" href="{% url 'brainrot:counter' %}?mode=six_seven" aria-label="Play 67 Counter">
+          <span>67</span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#siteNavbar" aria-controls="siteNavbar" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="siteNavbar">
+          <ul class="navbar-nav me-auto align-items-lg-center gap-lg-1">
+            <li class="nav-item d-none d-lg-block">
+              <a class="site-67-shortcut" href="{% url 'brainrot:counter' %}?mode=six_seven">
+                <span>67</span>
+                <small>{% trans "Play" %}</small>
+              </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="/orac-leaderboards"><i class="fa-solid fa-ranking-star"></i> ORAC LB</a>
+              <a class="nav-link" href="{% url 'brainrot:hall_of_fame' %}"><i class="fa-solid fa-ranking-star me-1"></i> 67 HOF</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'brainrot:index' %}"><i class="fa-solid fa-flask"></i> {% translate "61/67 Lab" %}</a>
+              <a class="nav-link" href="{% url 'brainrot:index' %}"><i class="fa-solid fa-gamepad me-1"></i> {% trans "Games" %}</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/oj"><i class="fa-solid fa-box-archive"></i> {% trans 'OJ' %}</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#"><i class="fa-solid fa-circle-info"></i> {% trans 'About' %}</a>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="projectsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fa-solid fa-folder-open me-1"></i> {% trans "Projects" %}
+              </a>
+              <ul class="dropdown-menu site-dropdown" aria-labelledby="projectsDropdown">
+                <li><a class="dropdown-item" href="{% url 'blog' %}"><i class="fa-solid fa-blog me-2"></i>{% trans "Blog" %}</a></li>
+                <li><a class="dropdown-item" href="/orac-leaderboards"><i class="fa-solid fa-ranking-star me-2"></i>ORAC Leaderboards</a></li>
+                <li><a class="dropdown-item" href="/oracdata"><i class="fa-solid fa-chart-line me-2"></i>ORAC Analytics</a></li>
+                <li><hr class="dropdown-divider" /></li>
+                <li><a class="dropdown-item" href="/oj"><i class="fa-solid fa-box-archive me-2"></i>{% trans "OJ" %} <span class="text-secondary">(retired)</span></a></li>
+              </ul>
             </li>
           </ul>
-          <ul class="navbar-nav ms-auto">
-            <!-- Language Dropdown -->
-            <li class="nav-item dropdown me-2">
-              <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-solid fa-language"></i> {% trans 'Language' %}</a>
-              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+
+          <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fa-solid fa-language me-1"></i> {% if CURRENT_LANGUAGE == 'zh-hans' %}中文{% else %}EN{% endif %}
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end site-dropdown" aria-labelledby="languageDropdown">
                 <li>
                   <form method="post" action="{% url 'set_language' %}">
                     {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.path }}" />
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
                     <button type="submit" name="language" value="en" class="dropdown-item">English</button>
                     <button type="submit" name="language" value="zh-hans" class="dropdown-item">中文</button>
                   </form>
@@ -90,31 +81,19 @@
               </ul>
             </li>
 
-            <!-- User/Login Dropdown -->
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fa-solid fa-user"></i>
-                {% if request.user.is_authenticated %}
-                  {{ request.user.username }}
-                {% else %}
-                  {% trans 'Account' %}
-                {% endif %}
+                <i class="fa-solid fa-user me-1"></i>
+                {% if request.user.is_authenticated %}{{ request.user.username }}{% else %}{% trans "Account" %}{% endif %}
               </a>
-              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              <ul class="dropdown-menu dropdown-menu-end site-dropdown" aria-labelledby="userDropdown">
                 {% if request.user.is_authenticated %}
-                  <li>
-                    <a class="dropdown-item" href="{% url 'brainrot:my_hall_of_fame' %}">{% translate "My 67 Hall of Fame" %}</a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item" href="{% url 'logout' %}">{% trans 'Logout' %}</a>
-                  </li>
+                  <li><a class="dropdown-item" href="{% url 'brainrot:my_hall_of_fame' %}"><i class="fa-solid fa-medal me-2"></i>{% translate "My 67 Hall of Fame" %}</a></li>
+                  <li><hr class="dropdown-divider" /></li>
+                  <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket me-2"></i>{% trans "Logout" %}</a></li>
                 {% else %}
-                  <li>
-                    <a class="dropdown-item" href="{% url 'login' %}">{% trans 'Login' %}</a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item" href="{% url 'register' %}">{% trans 'Register' %}</a>
-                  </li>
+                  <li><a class="dropdown-item" href="{% url 'login' %}"><i class="fa-solid fa-right-to-bracket me-2"></i>{% trans "Login" %}</a></li>
+                  <li><a class="dropdown-item" href="{% url 'register' %}"><i class="fa-solid fa-user-plus me-2"></i>{% trans "Register" %}</a></li>
                 {% endif %}
               </ul>
             </li>
@@ -124,24 +103,24 @@
     </nav>
 
     <div class="content">
-      {% block content %}
-
-      {% endblock %}
+      {% block content %}{% endblock %}
     </div>
 
-    <footer class="bg-dark text-white">
-      <style>
-        footer {
-          margin-top: 30px;
-          color: white;
-          padding: 10px 20px;
-          text-align: center;
-        }
-      </style>
-      <div class="container">
-        <p>&copy; 2025 Henry's Website. All rights reserved.</p>
+    <footer class="site-footer">
+      <div class="container-xl d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+        <span>&copy; {% now "Y" %} Henry · icaijy.com</span>
+        <span class="site-footer-links">
+          <a href="{% url 'brainrot:counter' %}?mode=six_seven">67</a>
+          <a href="{% url 'brainrot:hall_of_fame' %}">HOF</a>
+          <a href="{% url 'blog' %}">{% trans "Blog" %}</a>
+          <a href="https://github.com/icaijy" rel="me">GitHub</a>
+        </span>
       </div>
     </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+    <script>document.addEventListener('DOMContentLoaded', () => window.hljs?.highlightAll());</script>
     <script type="text/x-mathjax-config">
       MathJax.Hub.Config({
         config: ['MMLorHTML.js'],
@@ -150,5 +129,6 @@
       })
     </script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    {% block extra_scripts %}{% endblock %}
   </body>
 </html>
