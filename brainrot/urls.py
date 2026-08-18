@@ -19,6 +19,6 @@ urlpatterns = [
     path('hall-of-fame/<int:entry_id>/video/', views.hall_of_fame_video, name='hall_of_fame_video'),
     path('hall-of-fame/<int:entry_id>/visibility/', views.set_hall_of_fame_visibility, name='set_hall_of_fame_visibility'),
     path('hall-of-fame/<int:entry_id>/delete/', views.delete_hall_of_fame_entry, name='delete_hall_of_fame_entry'),
-    path('challenge/<int:entry_id>/', views.challenge, name='challenge'),
+    path('challenge/<int:entry_id>/', voice_views.challenge_dispatch, name='challenge'),
     path('typing/', views.typing_test, name='typing_test'),
 ]
