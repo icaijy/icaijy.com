@@ -76,8 +76,6 @@
     </div>
   </div>
 </main>
-{% if entry.visibility == 'public' %}
 <script src="{% url 'brainrot:javascript_catalog' %}"></script>
-<script src="{% static 'brainrot/hof_detail.js' %}?v=20260817.2" defer></script>
-{% endif %}
+<script type="module" src="{% static 'brainrot/hof_detail.js' %}"></script>
 {% endblock %}
