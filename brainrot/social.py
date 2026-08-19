@@ -23,9 +23,11 @@ def anonymous_session_key(request, purpose='hof-social', *, create=True):
     ).hexdigest()
 
 
-def reactor_key(request, *, create=True):
+def reactor_key(request, *, create=None):
     if request.user.is_authenticated:
         return f'u:{request.user.pk}'
+    if create is None:
+        create = request.method != 'GET'
     anonymous_key = anonymous_session_key(request, 'hof-reaction', create=create)
     return f'g:{anonymous_key}' if anonymous_key else ''
 
