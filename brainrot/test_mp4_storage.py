@@ -1,13 +1,14 @@
 import json
 import tempfile
-from contextlib import contextmanager
 from unittest.mock import patch
 
+from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
-from .models import HallOfFameEntry, HallOfFameUploadAttempt
-from .validators import ValidatedVideo
+from .models import HallOfFameEntry
+from .validators import ValidatedVideo, validate_hall_of_fame_video
 from .video_mp4 import Mp4TranscodeError
 
 
@@ -22,26 +23,35 @@ class HallOfFameCanonicalMp4StorageTests(TestCase):
         self.override.disable()
         self.private_directory.cleanup()
 
-    @staticmethod
-    @contextmanager
-    def fake_mp4(_upload):
-        yield SimpleUploadedFile(
-            'canonical.mp4',
-            b'canonical-mp4-bytes',
-            content_type='video/mp4',
-        )
-
-    @patch('brainrot.views.validate_hall_of_fame_video')
-    @patch('brainrot.upload_views.transcode_upload_to_mp4')
-    def test_new_submission_persists_only_mp4(self, transcode, validate):
-        validate.return_value = ValidatedVideo('video/webm', 'webm', 23.0)
-        transcode.side_effect = self.fake_mp4
+    @patch('brainrot.validators._probe_video', return_value=23.0)
+    @patch('brainrot.validators.transcode_upload_to_content_file')
+    def test_validator_replaces_browser_upload_with_mp4(self, transcode, probe):
         source = SimpleUploadedFile(
             'browser.webm',
             b'\x1aE\xdf\xa3browser-evidence',
             content_type='video/webm',
         )
+        transcode.return_value = ContentFile(b'canonical-mp4-bytes', name='recording.mp4')
 
+        inspected = validate_hall_of_fame_video(source)
+
+        self.assertEqual(inspected, ValidatedVideo('video/mp4', 'mp4', 23.0))
+        self.assertEqual(source.content_type, 'video/mp4')
+        self.assertTrue(source.name.endswith('.mp4'))
+        self.assertEqual(source.read(), b'canonical-mp4-bytes')
+
+    @patch('brainrot.views.validate_hall_of_fame_video')
+    def test_submission_persists_canonicalised_upload(self, validate):
+        def canonicalise(upload):
+            canonical = ContentFile(b'canonical-mp4-bytes', name='recording.mp4')
+            upload.file = canonical
+            upload.name = canonical.name
+            upload.size = canonical.size
+            upload.content_type = 'video/mp4'
+            return ValidatedVideo('video/mp4', 'mp4', 23.0)
+
+        validate.side_effect = canonicalise
+        source = SimpleUploadedFile('browser.webm', b'placeholder', content_type='video/webm')
         response = self.client.post('/67/submit/', {
             'score': 3,
             'display_name': 'MP4 Swan',
@@ -55,28 +65,16 @@ class HallOfFameCanonicalMp4StorageTests(TestCase):
         self.assertEqual(entry.mime_type, 'video/mp4')
         self.assertTrue(entry.video.name.endswith('.mp4'))
         self.assertEqual(entry.video.read(), b'canonical-mp4-bytes')
-        transcode.assert_called_once()
 
-    @patch('brainrot.views.validate_hall_of_fame_video')
-    @patch('brainrot.upload_views.transcode_upload_to_mp4')
-    def test_transcode_failure_does_not_publish_entry(self, transcode, validate):
-        validate.return_value = ValidatedVideo('video/webm', 'webm', 23.0)
+    @patch('brainrot.validators._probe_video', return_value=23.0)
+    @patch('brainrot.validators.transcode_upload_to_content_file')
+    def test_transcode_failure_is_validation_failure(self, transcode, probe):
         transcode.side_effect = Mp4TranscodeError('ffmpeg failed')
         source = SimpleUploadedFile(
             'browser.webm',
             b'\x1aE\xdf\xa3browser-evidence',
             content_type='video/webm',
         )
-
-        response = self.client.post('/67/submit/', {
-            'score': 1,
-            'display_name': 'Failed Swan',
-            'event_timeline': '[1.0]',
-            'publication_consent': 'yes',
-            'video': source,
-        })
-
-        self.assertEqual(response.status_code, 503)
+        with self.assertRaisesMessage(ValidationError, 'ffmpeg failed'):
+            validate_hall_of_fame_video(source)
         self.assertEqual(HallOfFameEntry.objects.count(), 0)
-        attempt = HallOfFameUploadAttempt.objects.get()
-        self.assertFalse(attempt.accepted)
