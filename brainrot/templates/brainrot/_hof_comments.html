@@ -7,7 +7,7 @@
     {% if request.user.is_authenticated %}
       <span class="small text-secondary">Posting as <strong>{{ request.user.username }}</strong> · up to {{ comment_max_length }} characters</span>
     {% else %}
-      <span class="small text-secondary">Guest comments · up to {{ comment_max_length }} characters · 3 per 10 minutes</span>
+      <span class="small text-secondary">Guest comments · up to {{ comment_max_length }} characters · 6 per 10 minutes</span>
     {% endif %}
   </div>
 
@@ -22,6 +22,7 @@
           <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
             <strong class="comment-author">{{ comment.public_name }}</strong>
             {% if comment.is_original_poster %}<span class="badge text-bg-primary">OP</span>{% endif %}
+            {% if comment.author_pb is not None %}<span class="badge text-bg-light border text-dark">PB {{ comment.author_pb }}</span>{% endif %}
             {% if comment.is_submission_note %}<span class="badge text-bg-light border text-dark">submission note</span>{% endif %}
             <span class="small text-secondary">{{ comment.created_at|date:'j M Y · H:i' }}</span>
             <a class="small text-secondary ms-sm-auto text-decoration-none" href="#comment-{{ comment.id }}">#{{ forloop.counter }}</a>
@@ -29,7 +30,7 @@
 
           <div class="comment-markdown">{{ comment.rendered_body }}</div>
 
-          <div class="d-flex flex-wrap gap-2 mt-3">
+          <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
             <button class="btn btn-sm btn-outline-secondary" type="button" data-comment-reply data-author="{{ comment.author_name }}">
               <i class="fa-solid fa-reply me-1"></i>Reply
             </button>
@@ -41,6 +42,9 @@
                 </form>
               {% endif %}
             {% endif %}
+          </div>
+          <div class="mt-2">
+            {% include 'brainrot/_reactions.html' with target_type='comment' target_id=comment.id reaction_items=comment.reaction_items %}
           </div>
         </div>
       </article>
@@ -71,9 +75,9 @@
         <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
           <button class="btn btn-primary" type="submit" id="post-hof-comment"><i class="fa-regular fa-comment me-1"></i>Post comment</button>
           {% if request.user.is_authenticated %}
-            <span class="small text-secondary">20 comments per 10 minutes.</span>
+            <span class="small text-secondary">40 comments per 10 minutes.</span>
           {% else %}
-            <span class="small text-secondary">3 comments per 10 minutes. Log in for a larger limit and self-delete controls.</span>
+            <span class="small text-secondary">6 comments per 10 minutes per browser. Log in for a larger limit and self-delete controls.</span>
           {% endif %}
         </div>
         <p class="small text-danger mt-2 mb-0" id="hof-comment-error" role="alert"></p>
