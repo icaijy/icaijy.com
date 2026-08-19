@@ -58,6 +58,12 @@ msgstr "每 10 分钟最多 40 条评论。"
 msgid "6 comments per 10 minutes per browser. Log in for a larger limit and self-delete controls."
 msgstr "每个浏览器每 10 分钟最多 6 条。登录后限额更高，也可以自己删除评论。"
 
+msgid "Posting as <strong>%(username)s</strong> · up to %(limit)s characters"
+msgstr "以 <strong>%(username)s</strong> 身份发表 · 最多 %(limit)s 个字符"
+
+msgid "Guest comments · up to %(limit)s characters · 6 per 10 minutes"
+msgstr "游客评论 · 最多 %(limit)s 个字符 · 每 10 分钟 6 条"
+
 msgid "Comment formatting"
 msgstr "评论格式"
 
@@ -100,11 +106,20 @@ msgstr "给这条成绩来个 reaction · 无需登录。游客 reaction 会记�
 msgid "PB"
 msgstr "PB"
 
-msgid "COMING SOON · detector rebuild"
-msgstr "即将推出 · 检测器重做中"
+msgid "PB %(pb)s"
+msgstr "PB %(pb)s"
+
+msgid "Best %(pb)s"
+msgstr "最佳 %(pb)s"
+
+msgid "%(username)s · %(mode)s PB"
+msgstr "%(username)s · %(mode)s PB"
 
 msgid "This run matches their personal best."
 msgstr "这条成绩追平了他的个人最佳。"
+
+msgid "COMING SOON · detector rebuild"
+msgstr "即将推出 · 检测器重做中"
 
 msgid "20-SECOND PACING ANALYSIS"
 msgstr "20 秒节奏分析"
@@ -160,6 +175,9 @@ msgstr "旧成绩 · 没有精确节奏时间线"
 msgid "Open the detail page for the full speed chart, comments, sharing and a phone-friendly MP4."
 msgstr "打开详情页可查看完整速度图、评论、分享和手机兼容 MP4。"
 
+msgid "%(count)s comments"
+msgstr "%(count)s 条评论"
+
 msgid "Voice 67 is being rebuilt."
 msgstr "Voice 67 正在重做。"
 
@@ -195,6 +213,9 @@ msgstr "对这条成绩有什么想说的？"
 
 msgid "Shareable counter result"
 msgstr "可分享的计数成绩"
+
+msgid "Shareable Hall of Fame result"
+msgstr "可分享的 Hall of Fame 成绩"
 
 msgid "Submitting publishes this recording to the Hall of Fame. Anyone can watch, download and share it."
 msgstr "提交后，这段录像会公开发布到 Hall of Fame，任何人都可以观看、下载和分享。"
