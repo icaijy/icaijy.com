@@ -126,6 +126,15 @@ class HallOfFameCommentTests(TestCase):
         rejected = self.client.post(self.comment_url(), {'body': 'x' * 4001})
         self.assertEqual(rejected.status_code, 400)
 
+    def test_logged_in_user_gets_twenty_comments_per_window(self):
+        self.client.force_login(self.commenter)
+        for index in range(20):
+            response = self.client.post(self.comment_url(), {'body': f'auth comment {index}'})
+            self.assertEqual(response.status_code, 302)
+        blocked = self.client.post(self.comment_url(), {'body': 'twenty first'})
+        self.assertEqual(blocked.status_code, 429)
+        self.assertEqual(HallOfFameComment.objects.filter(user=self.commenter).count(), 20)
+
     def test_private_entry_rejects_outsiders_but_owner_can_comment(self):
         self.entry.visibility = HallOfFameEntry.Visibility.PRIVATE
         self.entry.save(update_fields=['visibility'])
