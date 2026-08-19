@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 
@@ -43,7 +44,7 @@ class SocialPrivacyTests(TestCase):
         guest = Client()
         response = guest.get(f'/67/hall-of-fame/{self.public_run.id}/')
         self.assertEqual(response.status_code, 200)
-        self.assertNotIn('sessionid', response.cookies)
+        self.assertNotIn(settings.SESSION_COOKIE_NAME, response.cookies)
 
     def test_first_guest_reaction_creates_session_and_can_be_remembered(self):
         guest = Client()
@@ -54,7 +55,7 @@ class SocialPrivacyTests(TestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()['active'])
-        self.assertIn('sessionid', response.cookies)
+        self.assertIn(settings.SESSION_COOKIE_NAME, response.cookies)
 
         detail = guest.get(f'/67/hall-of-fame/{self.public_run.id}/')
         active = [item for item in detail.context['entry'].reaction_items if item['emoji'] == '😋'][0]
