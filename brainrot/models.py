@@ -67,6 +67,59 @@ class HallOfFameEntry(models.Model):
         return f'{self.display_name or "Anonymous Swan"} · guest'
 
 
+class HallOfFameComment(models.Model):
+    entry = models.ForeignKey(
+        HallOfFameEntry,
+        on_delete=models.CASCADE,
+        related_name='comments',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='hall_of_fame_comments',
+        null=True,
+        blank=True,
+    )
+    # Snapshot the visible name so a comment still has an author label if a
+    # registered account is later removed. Guest comments also use this field.
+    author_name = models.CharField(max_length=32)
+    body = models.TextField()
+    # HMAC-derived pseudonymous key for anonymous rate limiting; never a raw IP.
+    client_key = models.CharField(max_length=64, blank=True)
+    is_submission_note = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('created_at', 'id')
+        indexes = [
+            models.Index(fields=('entry', 'created_at'), name='hof_comment_entry_idx'),
+            models.Index(fields=('user', 'created_at'), name='hof_comment_user_idx'),
+            models.Index(fields=('client_key', 'created_at'), name='hof_comment_client_idx'),
+        ]
+
+    def __str__(self):
+        return f'{self.public_name} on HOF #{self.entry_id}: {self.body[:40]}'
+
+    @property
+    def public_name(self):
+        if self.user_id:
+            return self.user.username
+        if self.client_key:
+            return f'{self.author_name or "Anonymous Swan"} · guest'
+        return self.author_name or 'Deleted user'
+
+    @property
+    def rendered_body(self):
+        from .comment_markup import render_comment_markdown
+        return render_comment_markdown(self.body)
+
+    @property
+    def is_original_poster(self):
+        if self.is_submission_note:
+            return True
+        return bool(self.user_id and self.entry.user_id == self.user_id)
+
+
 class HallOfFameUploadAttempt(models.Model):
     """Small audit/rate-limit row; failed uploads must count as attempts too."""
 
