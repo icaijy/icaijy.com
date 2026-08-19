@@ -24,7 +24,7 @@ from django.views.decorators.http import require_POST
 
 from .comment_markup import comment_max_length, normalise_comment_body
 from .models import HallOfFameComment, HallOfFameEntry, HallOfFameUploadAttempt
-from .social import reaction_items, reactor_key
+from .social import reaction_items_map, reactor_key
 from .validators import validate_hall_of_fame_video
 
 
@@ -152,10 +152,13 @@ def hall_of_fame_detail(request, entry_id):
     entry.is_personal_best = bool(entry.user_id and entry.score == entry.personal_best)
 
     identity = reactor_key(request)
-    entry.reaction_items = reaction_items(f'entry:{entry.pk}', identity)
+    entry_target = f'entry:{entry.pk}'
+    comment_targets = [f'comment:{comment.pk}' for comment in comments]
+    reactions = reaction_items_map([entry_target, *comment_targets], identity)
+    entry.reaction_items = reactions[entry_target]
     for comment in comments:
         comment.author_pb = pb_map.get(comment.user_id) if comment.user_id else None
-        comment.reaction_items = reaction_items(f'comment:{comment.pk}', identity)
+        comment.reaction_items = reactions[f'comment:{comment.pk}']
 
     timeline_exact = len(entry.event_timeline) == entry.score
     speed_unit = {
