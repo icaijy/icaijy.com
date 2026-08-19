@@ -2,7 +2,7 @@ from django.urls import path
 from django.views.generic import RedirectView
 from django.views.i18n import JavaScriptCatalog
 
-from . import comment_views, download_views, views, voice_views
+from . import comment_views, download_views, upload_views, views, voice_views
 
 app_name = 'brainrot'
 
@@ -12,7 +12,7 @@ urlpatterns = [
     path('counter/', views.counter, name='counter'),
     path('voice/', voice_views.voice_counter, name='voice_counter'),
     path('games/', RedirectView.as_view(pattern_name='brainrot:index', permanent=True), name='games_legacy'),
-    path('submit/', views.submit_hall_of_fame, name='submit_hall_of_fame'),
+    path('submit/', upload_views.submit_hall_of_fame, name='submit_hall_of_fame'),
     path('hall-of-fame/', views.hall_of_fame, name='hall_of_fame'),
     path('hall-of-fame/mine/', views.my_hall_of_fame, name='my_hall_of_fame'),
     path('hall-of-fame/<int:entry_id>/', views.hall_of_fame_detail, name='hall_of_fame_detail'),
