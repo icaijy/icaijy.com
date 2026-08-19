@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 
 from .comment_markup import render_comment_markdown
-from .models import HallOfFameComment, HallOfFameEntry
+from .models import HallOfFameComment, HallOfFameEntry, HallOfFameReaction
 from .validators import ValidatedVideo
 
 
@@ -49,6 +49,7 @@ class HallOfFameCommentTests(TestCase):
             video='hall_of_fame/comment-test.webm',
             mime_type='video/webm',
             duration_seconds=23,
+            event_timeline=[1.0, 2.0, 3.0],
             visibility=HallOfFameEntry.Visibility.PUBLIC,
         )
 
@@ -78,38 +79,45 @@ class HallOfFameCommentTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(HallOfFameComment.objects.count(), 0)
 
-    def test_guest_length_and_rate_limits_are_stricter(self):
-        too_long = self.client.post(self.comment_url(), {
+    def test_guest_length_and_rate_limits_are_doubled(self):
+        accepted = self.client.post(self.comment_url(), {
             'display_name': 'Guest',
-            'body': 'x' * 1001,
-        }, REMOTE_ADDR='203.0.113.12')
+            'body': 'x' * 1500,
+        })
+        self.assertEqual(accepted.status_code, 302)
+
+        too_long = Client().post(self.comment_url(), {
+            'display_name': 'Guest Too Long',
+            'body': 'x' * 2001,
+        })
         self.assertEqual(too_long.status_code, 400)
 
-        for index in range(3):
-            response = self.client.post(self.comment_url(), {
-                'display_name': 'Guest',
+        rate_client = Client()
+        for index in range(6):
+            response = rate_client.post(self.comment_url(), {
+                'display_name': 'Rate Guest',
                 'body': f'comment {index}',
-            }, REMOTE_ADDR='203.0.113.13')
+            })
             self.assertEqual(response.status_code, 302)
-
-        blocked = self.client.post(self.comment_url(), {
-            'display_name': 'Guest',
-            'body': 'fourth',
-        }, REMOTE_ADDR='203.0.113.13')
+        blocked = rate_client.post(self.comment_url(), {
+            'display_name': 'Rate Guest',
+            'body': 'seventh',
+        })
         self.assertEqual(blocked.status_code, 429)
-        self.assertEqual(HallOfFameComment.objects.filter(author_name='Guest').count(), 3)
+        self.assertEqual(HallOfFameComment.objects.filter(author_name='Rate Guest').count(), 6)
 
     def test_guest_rate_limit_does_not_block_everyone_on_the_same_wifi(self):
         shared_ip = '203.0.113.67'
-        for index in range(3):
-            response = self.client.post(self.comment_url(), {
+        first_browser = Client()
+        for index in range(6):
+            response = first_browser.post(self.comment_url(), {
                 'display_name': 'First Browser',
                 'body': f'first {index}',
             }, REMOTE_ADDR=shared_ip)
             self.assertEqual(response.status_code, 302)
-        self.assertEqual(self.client.post(self.comment_url(), {
+        self.assertEqual(first_browser.post(self.comment_url(), {
             'display_name': 'First Browser',
-            'body': 'blocked fourth',
+            'body': 'blocked seventh',
         }, REMOTE_ADDR=shared_ip).status_code, 429)
 
         second_browser = Client()
@@ -119,21 +127,21 @@ class HallOfFameCommentTests(TestCase):
         }, REMOTE_ADDR=shared_ip)
         self.assertEqual(response.status_code, 302)
 
-    def test_logged_in_user_gets_larger_length_limit(self):
+    def test_logged_in_user_gets_doubled_length_limit(self):
         self.client.force_login(self.commenter)
-        accepted = self.client.post(self.comment_url(), {'body': 'x' * 1500})
+        accepted = self.client.post(self.comment_url(), {'body': 'x' * 6000})
         self.assertEqual(accepted.status_code, 302)
-        rejected = self.client.post(self.comment_url(), {'body': 'x' * 4001})
+        rejected = self.client.post(self.comment_url(), {'body': 'x' * 8001})
         self.assertEqual(rejected.status_code, 400)
 
-    def test_logged_in_user_gets_twenty_comments_per_window(self):
+    def test_logged_in_user_gets_forty_comments_per_window(self):
         self.client.force_login(self.commenter)
-        for index in range(20):
+        for index in range(40):
             response = self.client.post(self.comment_url(), {'body': f'auth comment {index}'})
             self.assertEqual(response.status_code, 302)
-        blocked = self.client.post(self.comment_url(), {'body': 'twenty first'})
+        blocked = self.client.post(self.comment_url(), {'body': 'forty first'})
         self.assertEqual(blocked.status_code, 429)
-        self.assertEqual(HallOfFameComment.objects.filter(user=self.commenter).count(), 20)
+        self.assertEqual(HallOfFameComment.objects.filter(user=self.commenter).count(), 40)
 
     def test_private_entry_rejects_outsiders_but_owner_can_comment(self):
         self.entry.visibility = HallOfFameEntry.Visibility.PRIVATE
@@ -141,7 +149,7 @@ class HallOfFameCommentTests(TestCase):
         response = self.client.post(self.comment_url(), {
             'display_name': 'Guest',
             'body': 'should not exist',
-        }, REMOTE_ADDR='203.0.113.14')
+        })
         self.assertEqual(response.status_code, 404)
 
         self.client.force_login(self.owner)
@@ -202,6 +210,108 @@ class HallOfFameCommentTests(TestCase):
         self.client.force_login(self.superuser)
         self.assertEqual(self.client.post(f'/67/comments/{third.id}/delete/').status_code, 302)
         self.assertFalse(HallOfFameComment.objects.filter(pk=third.pk).exists())
+
+
+class HallOfFameReactionTests(TestCase):
+    def setUp(self):
+        self.owner = get_user_model().objects.create_user('reactowner', password='x')
+        self.entry = HallOfFameEntry.objects.create(
+            user=self.owner,
+            score=100,
+            video='hall_of_fame/reaction.webm',
+            mime_type='video/webm',
+            duration_seconds=23,
+            visibility=HallOfFameEntry.Visibility.PUBLIC,
+        )
+        self.comment = HallOfFameComment.objects.create(
+            entry=self.entry,
+            user=self.owner,
+            author_name=self.owner.username,
+            body='peak',
+        )
+
+    def toggle(self, client, target_type, target_id, emoji='😋'):
+        return client.post('/67/reactions/toggle/', {
+            'target_type': target_type,
+            'target_id': target_id,
+            'emoji': emoji,
+        })
+
+    def test_guest_can_toggle_run_reaction_without_login(self):
+        response = self.toggle(self.client, 'entry', self.entry.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['active'])
+        reaction = HallOfFameReaction.objects.get()
+        self.assertIsNone(reaction.user_id)
+        self.assertTrue(reaction.reactor_key.startswith('g:'))
+
+        response = self.toggle(self.client, 'entry', self.entry.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['active'])
+        self.assertEqual(HallOfFameReaction.objects.count(), 0)
+
+    def test_two_guest_browsers_have_independent_reaction_identity(self):
+        other_browser = Client()
+        self.toggle(self.client, 'entry', self.entry.id, '🔥')
+        self.toggle(other_browser, 'entry', self.entry.id, '🔥')
+        self.assertEqual(HallOfFameReaction.objects.filter(emoji='🔥').count(), 2)
+
+    def test_guest_can_react_to_comment_and_multiple_emoji(self):
+        self.assertEqual(self.toggle(self.client, 'comment', self.comment.id, '😂').status_code, 200)
+        self.assertEqual(self.toggle(self.client, 'comment', self.comment.id, '💀').status_code, 200)
+        self.assertEqual(HallOfFameReaction.objects.filter(comment=self.comment).count(), 2)
+
+    def test_logged_in_reaction_is_account_bound(self):
+        self.client.force_login(self.owner)
+        self.toggle(self.client, 'entry', self.entry.id, '😋')
+        reaction = HallOfFameReaction.objects.get()
+        self.assertEqual(reaction.user, self.owner)
+        self.assertEqual(reaction.reactor_key, f'u:{self.owner.id}')
+
+
+class PersonalBestAndAnalysisTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user('pbuser', password='x')
+        self.old = HallOfFameEntry.objects.create(
+            user=self.user,
+            game_mode=HallOfFameEntry.GameMode.SIX_SEVEN,
+            score=120,
+            video='hall_of_fame/pb-old.webm',
+            mime_type='video/webm',
+            duration_seconds=23,
+            event_timeline=[],
+            visibility=HallOfFameEntry.Visibility.PUBLIC,
+        )
+        self.pb = HallOfFameEntry.objects.create(
+            user=self.user,
+            game_mode=HallOfFameEntry.GameMode.SIX_SEVEN,
+            score=150,
+            video='hall_of_fame/pb.webm',
+            mime_type='video/webm',
+            duration_seconds=23,
+            event_timeline=[round((index + 1) * 20 / 151, 3) for index in range(150)],
+            visibility=HallOfFameEntry.Visibility.PUBLIC,
+        )
+
+    def test_hof_list_exposes_registered_user_pb(self):
+        response = self.client.get('/67/hall-of-fame/?mode=six_seven')
+        entries = list(response.context['entries'])
+        by_id = {entry.id: entry for entry in entries}
+        self.assertEqual(by_id[self.old.id].personal_best, 150)
+        self.assertFalse(by_id[self.old.id].is_personal_best)
+        self.assertTrue(by_id[self.pb.id].is_personal_best)
+        self.assertContains(response, 'PB 150')
+
+    def test_detail_shows_pb_and_exact_speed_analysis(self):
+        response = self.client.get(f'/67/hall-of-fame/{self.pb.id}/')
+        self.assertContains(response, 'Best 150')
+        self.assertContains(response, 'run-speed-analysis')
+        self.assertContains(response, 'run-event-timeline')
+
+    def test_legacy_run_does_not_fake_speed_curve(self):
+        response = self.client.get(f'/67/hall-of-fame/{self.old.id}/')
+        self.assertNotContains(response, 'id="run-speed-analysis"')
+        self.assertContains(response, 'fake science')
 
 
 class SubmissionCommentTests(TestCase):
