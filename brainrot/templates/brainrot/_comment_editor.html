@@ -13,11 +13,29 @@
     </div>
   </div>
 
-  <textarea class="form-control markdown-textarea" id="{{ textarea_id }}" name="{{ field_name }}" rows="{{ rows|default:5 }}" maxlength="{{ max_length }}" placeholder="{{ placeholder|default:'Write a comment…' }}" {% if required_field %}required{% endif %}></textarea>
-  <div class="markdown-preview border rounded p-3" data-md-preview-panel hidden></div>
-  <div class="d-flex justify-content-between gap-3 mt-2 small text-secondary">
-    <span><strong>Markdown optional.</strong> The buttons above work like a normal editor.</span>
-    <span><span data-md-count>0</span>/{{ max_length }}</span>
-  </div>
+  {% if textarea_id == 'hof-submission-comment' %}
+    {% if request.user.is_authenticated %}
+      <textarea class="form-control markdown-textarea" id="{{ textarea_id }}" name="{{ field_name }}" rows="{{ rows|default:5 }}" maxlength="8000" placeholder="{{ placeholder|default:'Write a comment…' }}" {% if required_field %}required{% endif %}></textarea>
+      <div class="markdown-preview border rounded p-3" data-md-preview-panel hidden></div>
+      <div class="d-flex justify-content-between gap-3 mt-2 small text-secondary">
+        <span><strong>Markdown optional.</strong> The buttons above work like a normal editor.</span>
+        <span><span data-md-count>0</span>/8000</span>
+      </div>
+    {% else %}
+      <textarea class="form-control markdown-textarea" id="{{ textarea_id }}" name="{{ field_name }}" rows="{{ rows|default:5 }}" maxlength="2000" placeholder="{{ placeholder|default:'Write a comment…' }}" {% if required_field %}required{% endif %}></textarea>
+      <div class="markdown-preview border rounded p-3" data-md-preview-panel hidden></div>
+      <div class="d-flex justify-content-between gap-3 mt-2 small text-secondary">
+        <span><strong>Markdown optional.</strong> The buttons above work like a normal editor.</span>
+        <span><span data-md-count>0</span>/2000</span>
+      </div>
+    {% endif %}
+  {% else %}
+    <textarea class="form-control markdown-textarea" id="{{ textarea_id }}" name="{{ field_name }}" rows="{{ rows|default:5 }}" maxlength="{{ max_length }}" placeholder="{{ placeholder|default:'Write a comment…' }}" {% if required_field %}required{% endif %}></textarea>
+    <div class="markdown-preview border rounded p-3" data-md-preview-panel hidden></div>
+    <div class="d-flex justify-content-between gap-3 mt-2 small text-secondary">
+      <span><strong>Markdown optional.</strong> The buttons above work like a normal editor.</span>
+      <span><span data-md-count>0</span>/{{ max_length }}</span>
+    </div>
+  {% endif %}
   <p class="small text-danger mt-2 mb-0" data-md-error role="alert"></p>
 </div>
