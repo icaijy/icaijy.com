@@ -1,0 +1,23 @@
+<div class="markdown-editor" data-markdown-editor data-preview-url="{% url 'brainrot:comment_preview' %}">
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+    <div class="btn-group btn-group-sm markdown-toolbar" role="toolbar" aria-label="Comment formatting">
+      <button class="btn btn-outline-secondary" type="button" data-md-action="bold" title="Bold"><strong>B</strong></button>
+      <button class="btn btn-outline-secondary" type="button" data-md-action="italic" title="Italic"><em>I</em></button>
+      <button class="btn btn-outline-secondary" type="button" data-md-action="quote" title="Quote"><i class="fa-solid fa-quote-left"></i></button>
+      <button class="btn btn-outline-secondary" type="button" data-md-action="code" title="Inline code"><i class="fa-solid fa-code"></i></button>
+      <button class="btn btn-outline-secondary" type="button" data-md-action="link" title="Link"><i class="fa-solid fa-link"></i></button>
+    </div>
+    <div class="btn-group btn-group-sm ms-sm-auto" role="group" aria-label="Editor view">
+      <button class="btn btn-dark active" type="button" data-md-write>Write</button>
+      <button class="btn btn-outline-dark" type="button" data-md-preview>Preview</button>
+    </div>
+  </div>
+
+  <textarea class="form-control markdown-textarea" id="{{ textarea_id }}" name="{{ field_name }}" rows="{{ rows|default:5 }}" maxlength="{{ max_length }}" placeholder="{{ placeholder|default:'Write a comment…' }}" {% if required_field %}required{% endif %}></textarea>
+  <div class="markdown-preview border rounded p-3" data-md-preview-panel hidden></div>
+  <div class="d-flex justify-content-between gap-3 mt-2 small text-secondary">
+    <span><strong>Markdown optional.</strong> The buttons above work like a normal editor.</span>
+    <span><span data-md-count>0</span>/{{ max_length }}</span>
+  </div>
+  <p class="small text-danger mt-2 mb-0" data-md-error role="alert"></p>
+</div>
