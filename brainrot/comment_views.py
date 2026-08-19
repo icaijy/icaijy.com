@@ -1,22 +1,21 @@
-import hashlib
-import hmac
 from datetime import timedelta
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.db.models import Count
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.encoding import force_bytes
 from django.views.decorators.http import require_POST
 
 from .comment_markup import comment_max_length, normalise_comment_body, render_comment_markdown
-from .models import HallOfFameComment, HallOfFameEntry
+from .models import HallOfFameComment, HallOfFameEntry, HallOfFameReaction
+from .social import REACTION_EMOJIS, anonymous_session_key, reactor_key
 from .views import _anonymous_display_name, _may_manage_entry
 
-ANONYMOUS_COMMENT_LIMIT = 3
-AUTHENTICATED_COMMENT_LIMIT = 20
+ANONYMOUS_COMMENT_LIMIT = 6
+AUTHENTICATED_COMMENT_LIMIT = 40
 COMMENT_RATE_WINDOW = timedelta(minutes=10)
 
 
@@ -25,20 +24,7 @@ def _entry_is_visible_to(entry, user):
 
 
 def _anonymous_comment_key(request):
-    """Stable per-browser anonymous key without persisting a raw network address.
-
-    School Wi-Fi can put many real users behind one public IP, so using the HOF
-    upload network key here would make one student's three comments exhaust the
-    quota for everybody. Django's anonymous session cookie gives each browser a
-    separate small quota; the stored value is an HMAC, not the session ID itself.
-    """
-    if not request.session.session_key:
-        request.session.create()
-    return hmac.new(
-        force_bytes(settings.SECRET_KEY),
-        force_bytes(f'hof-comment:{request.session.session_key}'),
-        hashlib.sha256,
-    ).hexdigest()
+    return anonymous_session_key(request, 'hof-comment')
 
 
 def _rate_limit_state(request):
@@ -142,3 +128,69 @@ def delete_comment(request, comment_id):
     entry_id = comment.entry_id
     comment.delete()
     return redirect(f'{reverse("brainrot:hall_of_fame_detail", args=(entry_id,))}#comments')
+
+
+def _reaction_counts(target_key):
+    rows = HallOfFameReaction.objects.filter(target_key=target_key).values('emoji').annotate(count=Count('id'))
+    counts = {row['emoji']: row['count'] for row in rows}
+    return {emoji: counts.get(emoji, 0) for emoji in REACTION_EMOJIS}
+
+
+@require_POST
+def toggle_reaction(request):
+    emoji = request.POST.get('emoji', '')
+    target_type = request.POST.get('target_type', '')
+    try:
+        target_id = int(request.POST.get('target_id', ''))
+    except (TypeError, ValueError):
+        return JsonResponse({'error': 'Invalid reaction target.'}, status=400)
+
+    if emoji not in REACTION_EMOJIS:
+        return JsonResponse({'error': 'Unsupported reaction.'}, status=400)
+
+    if target_type == 'entry':
+        entry = get_object_or_404(HallOfFameEntry.objects.select_related('user'), pk=target_id)
+        comment = None
+        target_key = f'entry:{entry.pk}'
+    elif target_type == 'comment':
+        comment = get_object_or_404(
+            HallOfFameComment.objects.select_related('entry', 'entry__user'),
+            pk=target_id,
+        )
+        entry = comment.entry
+        target_key = f'comment:{comment.pk}'
+    else:
+        return JsonResponse({'error': 'Invalid reaction target.'}, status=400)
+
+    if not _entry_is_visible_to(entry, request.user):
+        return JsonResponse({'error': 'This Hall of Fame entry is private.'}, status=404)
+
+    identity = reactor_key(request)
+    owner = request.user if request.user.is_authenticated else None
+
+    with transaction.atomic():
+        existing = HallOfFameReaction.objects.filter(
+            target_key=target_key,
+            reactor_key=identity,
+            emoji=emoji,
+        ).first()
+        if existing:
+            existing.delete()
+            active = False
+        else:
+            HallOfFameReaction.objects.create(
+                entry=entry,
+                comment=comment,
+                user=owner,
+                target_key=target_key,
+                reactor_key=identity,
+                emoji=emoji,
+            )
+            active = True
+
+    return JsonResponse({
+        'ok': True,
+        'active': active,
+        'emoji': emoji,
+        'counts': _reaction_counts(target_key),
+    })
