@@ -1,7 +1,8 @@
-<div class="reaction-bar d-flex flex-wrap align-items-center gap-2"
+<div class="reaction-bar d-flex flex-wrap align-items-center gap-2 {% if compact %}reaction-bar-compact{% endif %}"
      data-reaction-bar
      data-target-type="{{ target_type }}"
      data-target-id="{{ target_id }}"
+     data-csrf-token="{{ csrf_token }}"
      data-reaction-url="{% url 'brainrot:toggle_reaction' %}">
   {% for reaction in reaction_items %}
     <button class="reaction-button btn btn-sm {% if reaction.active %}btn-dark active{% else %}btn-outline-secondary{% endif %}"

@@ -80,6 +80,14 @@ def _attach_personal_bests(entries, game_mode):
     return pb_map
 
 
+def _speed_units(game_mode):
+    if game_mode == HallOfFameEntry.GameMode.LEG_CLAPS:
+        return 'claps/s', 'claps/20s'
+    if game_mode == HallOfFameEntry.GameMode.VOICE_67:
+        return '67s/s', '67s/20s'
+    return 'moves/s', 'moves/20s'
+
+
 @ensure_csrf_cookie
 def counter(request):
     game_mode = _normalise_game_mode(request.GET.get('mode'))
@@ -92,14 +100,32 @@ def typing_test(request):
 
 def hall_of_fame(request):
     game_mode = _normalise_game_mode(request.GET.get('mode'))
-    entries = list(HallOfFameEntry.objects.filter(
-        game_mode=game_mode,
-        visibility=HallOfFameEntry.Visibility.PUBLIC,
-    ).select_related('user').annotate(comment_count=Count('comments'))[:67])
+    entries = list(
+        HallOfFameEntry.objects.filter(
+            game_mode=game_mode,
+            visibility=HallOfFameEntry.Visibility.PUBLIC,
+        )
+        .select_related('user')
+        .annotate(comment_count=Count('comments'))
+        # Keep the leaderboard contract explicit. Aggregation/annotation must never
+        # be allowed to change the ranking order accidentally.
+        .order_by('-score', 'created_at', 'id')[:67]
+    )
     _attach_personal_bests(entries, game_mode)
+
+    identity = reactor_key(request, create=False)
+    targets = [f'entry:{entry.pk}' for entry in entries]
+    reactions = reaction_items_map(targets, identity)
+    for entry in entries:
+        entry.timeline_exact = len(entry.event_timeline) == entry.score
+        entry.reaction_items = reactions.get(f'entry:{entry.pk}', [])
+
+    speed_unit, speed_unit_20 = _speed_units(game_mode)
     return render(request, 'brainrot/hall_of_fame.html', {
         'entries': entries,
         'game_mode': game_mode,
+        'speed_unit': speed_unit,
+        'speed_unit_20': speed_unit_20,
     })
 
 
@@ -161,10 +187,7 @@ def hall_of_fame_detail(request, entry_id):
         comment.reaction_items = reactions[f'comment:{comment.pk}']
 
     timeline_exact = len(entry.event_timeline) == entry.score
-    speed_unit = {
-        HallOfFameEntry.GameMode.LEG_CLAPS: 'claps/s',
-        HallOfFameEntry.GameMode.VOICE_67: '67s/s',
-    }.get(entry.game_mode, 'moves/s')
+    speed_unit, speed_unit_20 = _speed_units(entry.game_mode)
 
     return render(request, 'brainrot/hall_of_fame_detail.html', {
         'entry': entry,
@@ -172,6 +195,7 @@ def hall_of_fame_detail(request, entry_id):
         'comment_max_length': comment_max_length(request.user),
         'timeline_exact': timeline_exact,
         'speed_unit': speed_unit,
+        'speed_unit_20': speed_unit_20,
     })
 
 

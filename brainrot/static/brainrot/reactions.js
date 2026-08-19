@@ -1,4 +1,8 @@
-function csrfToken() {
+const tr = (message) => typeof gettext === 'function' ? gettext(message) : message;
+
+function csrfToken(bar) {
+  const embedded = bar?.dataset.csrfToken || '';
+  if (embedded && embedded !== 'NOTPROVIDED') return embedded;
   const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
   return match ? decodeURIComponent(match[1]) : '';
 }
@@ -20,12 +24,12 @@ async function toggleReaction(bar, button) {
       body: form,
       credentials: 'same-origin',
       headers: {
-        'X-CSRFToken': csrfToken(),
+        'X-CSRFToken': csrfToken(bar),
         'X-Requested-With': 'XMLHttpRequest',
       },
     });
     const payload = await response.json();
-    if (!response.ok) throw new Error(payload.error || 'Could not react.');
+    if (!response.ok) throw new Error(payload.error || tr('Could not react.'));
 
     bar.querySelectorAll('[data-reaction-count]').forEach((countNode) => {
       const key = countNode.dataset.reactionCount;

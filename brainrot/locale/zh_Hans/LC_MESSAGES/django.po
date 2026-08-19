@@ -1,0 +1,221 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: icaijy brainrot\n"
+"Language: zh_Hans\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Comments"
+msgstr "评论"
+
+msgid "HOF DISCUSSION THREAD"
+msgstr "HOF 讨论串"
+
+msgid "Comment posted. The scientific peer-review process has begun."
+msgstr "评论已发送。同行评审流程正式开始。"
+
+msgid "submission note"
+msgstr "投稿附言"
+
+msgid "Reply"
+msgstr "回复"
+
+msgid "Delete"
+msgstr "删除"
+
+msgid "Delete this comment?"
+msgstr "删除这条评论？"
+
+msgid "No comments yet."
+msgstr "还没有评论。"
+
+msgid "Be the first person to conduct peer review on this extremely important specimen."
+msgstr "来成为第一个对这份极其重要的标本进行同行评审的人。"
+
+msgid "Join the discussion"
+msgstr "加入讨论"
+
+msgid "Talk trash, explain technique, congratulate the specimen, or post actual analysis for some reason."
+msgstr "可以锐评、讲技术、恭喜这位标本，或者莫名其妙地认真分析。"
+
+msgid "Display name"
+msgstr "显示名称"
+
+msgid "Guest names are labelled as guest and cannot impersonate registered usernames."
+msgstr "游客名称会明确标记为 guest，并且不能冒充已注册用户名。"
+
+msgid "Write something under this run…"
+msgstr "在这条成绩下面说点什么……"
+
+msgid "Post comment"
+msgstr "发表评论"
+
+msgid "40 comments per 10 minutes."
+msgstr "每 10 分钟最多 40 条评论。"
+
+msgid "6 comments per 10 minutes per browser. Log in for a larger limit and self-delete controls."
+msgstr "每个浏览器每 10 分钟最多 6 条。登录后限额更高，也可以自己删除评论。"
+
+msgid "Posting as <strong>%(username)s</strong> · up to %(limit)s characters"
+msgstr "以 <strong>%(username)s</strong> 身份发表 · 最多 %(limit)s 个字符"
+
+msgid "Guest comments · up to %(limit)s characters · 6 per 10 minutes"
+msgstr "游客评论 · 最多 %(limit)s 个字符 · 每 10 分钟 6 条"
+
+msgid "Comment formatting"
+msgstr "评论格式"
+
+msgid "Bold"
+msgstr "粗体"
+
+msgid "Italic"
+msgstr "斜体"
+
+msgid "Quote"
+msgstr "引用"
+
+msgid "Inline code"
+msgstr "行内代码"
+
+msgid "Link"
+msgstr "链接"
+
+msgid "Editor view"
+msgstr "编辑器视图"
+
+msgid "Write"
+msgstr "编辑"
+
+msgid "Preview"
+msgstr "预览"
+
+msgid "Write a comment…"
+msgstr "写条评论……"
+
+msgid "Markdown optional."
+msgstr "Markdown 可选。"
+
+msgid "The buttons above work like a normal editor."
+msgstr "上面的按钮可以像普通编辑器一样直接使用。"
+
+msgid "React to this run · no account required. Guest reactions are remembered in this browser."
+msgstr "给这条成绩来个 reaction · 无需登录。游客 reaction 会记在当前浏览器里。"
+
+msgid "PB"
+msgstr "PB"
+
+msgid "PB %(pb)s"
+msgstr "PB %(pb)s"
+
+msgid "Best %(pb)s"
+msgstr "最佳 %(pb)s"
+
+msgid "%(username)s · %(mode)s PB"
+msgstr "%(username)s · %(mode)s PB"
+
+msgid "This run matches their personal best."
+msgstr "这条成绩追平了他的个人最佳。"
+
+msgid "COMING SOON · detector rebuild"
+msgstr "即将推出 · 检测器重做中"
+
+msgid "20-SECOND PACING ANALYSIS"
+msgstr "20 秒节奏分析"
+
+msgid "Speed over time"
+msgstr "速度随时间变化"
+
+msgid "Display unit"
+msgstr "显示单位"
+
+msgid "Speed display unit"
+msgstr "速度显示单位"
+
+msgid "2-second centred rolling rate"
+msgstr "2 秒居中滚动速度"
+
+msgid "Average"
+msgstr "平均速度"
+
+msgid "Peak 2s rate"
+msgstr "2 秒峰值速度"
+
+msgid "Fastest 5s"
+msgstr "最快 5 秒"
+
+msgid "First → second half"
+msgstr "前 10 秒 → 后 10 秒"
+
+msgid "2-second centred rolling rate. Switch to the 20-second pace unit to read each local speed as an equivalent full-run score."
+msgstr "曲线使用 2 秒居中滚动速度。切换到 20 秒单位后，可以把局部速度理解为按这个速度跑满全程时的等效成绩。"
+
+msgid "Rolling speed over the 20 second run"
+msgstr "20 秒过程中滚动速度曲线"
+
+msgid "Move across the chart to inspect the speed at that time."
+msgstr "把鼠标或手指移到曲线上，查看该时刻的速度。"
+
+msgid "This is a legacy run without an exact per-count event timeline, so a speed curve would be fake science. Newer runs record every count timestamp and get the full pacing graph."
+msgstr "这是一条没有逐次计数时间戳的旧成绩，所以硬画速度曲线属于伪科学。新成绩会记录每次计数的时间，并显示完整节奏曲线。"
+
+msgid "20s pacing"
+msgstr "20 秒节奏"
+
+msgid "loading…"
+msgstr "加载中……"
+
+msgid "20-second pacing preview"
+msgstr "20 秒节奏预览"
+
+msgid "Legacy run · no exact pacing timeline"
+msgstr "旧成绩 · 没有精确节奏时间线"
+
+msgid "Open the detail page for the full speed chart, comments, sharing and a phone-friendly MP4."
+msgstr "打开详情页可查看完整速度图、评论、分享和手机兼容 MP4。"
+
+msgid "%(count)s comments"
+msgstr "%(count)s 条评论"
+
+msgid "Voice 67 is being rebuilt."
+msgstr "Voice 67 正在重做。"
+
+msgid "Camera off"
+msgstr "摄像头未开启"
+
+msgid "Try again"
+msgstr "再来一次"
+
+msgid "The run is recorded locally with the live count on the video. Nothing uploads unless you submit it."
+msgstr "本局会在浏览器本地录制，并把实时计数写进视频。除非你主动提交，否则不会上传。"
+
+msgid "VIDEO LEADERBOARD"
+msgstr "视频排行榜"
+
+msgid "RESULT"
+msgstr "成绩"
+
+msgid "Run complete."
+msgstr "本局结束。"
+
+msgid "Add a comment with your run"
+msgstr "给这条成绩附一条评论"
+
+msgid "optional"
+msgstr "可选"
+
+msgid "This becomes the first OP comment under your HOF video. You can just type normally; Markdown is optional."
+msgstr "这会成为 HOF 视频下面第一条带 OP 标记的评论。正常打字就行，Markdown 完全可选。"
+
+msgid "Anything to say about this run?"
+msgstr "对这条成绩有什么想说的？"
+
+msgid "Shareable counter result"
+msgstr "可分享的计数成绩"
+
+msgid "Shareable Hall of Fame result"
+msgstr "可分享的 Hall of Fame 成绩"
+
+msgid "Submitting publishes this recording to the Hall of Fame. Anyone can watch, download and share it."
+msgstr "提交后，这段录像会公开发布到 Hall of Fame，任何人都可以观看、下载和分享。"

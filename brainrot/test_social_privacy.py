@@ -61,3 +61,23 @@ class SocialPrivacyTests(TestCase):
         active = [item for item in detail.context['entry'].reaction_items if item['emoji'] == '😋'][0]
         self.assertTrue(active['active'])
         self.assertEqual(active['count'], 1)
+
+    def test_guest_can_react_directly_from_leaderboard_with_csrf_enforced(self):
+        guest = Client(enforce_csrf_checks=True)
+        board = guest.get('/67/hall-of-fame/?mode=six_seven')
+        self.assertEqual(board.status_code, 200)
+        self.assertIn(settings.CSRF_COOKIE_NAME, board.cookies)
+        token = board.cookies[settings.CSRF_COOKIE_NAME].value
+
+        response = guest.post(
+            '/67/reactions/toggle/',
+            {
+                'target_type': 'entry',
+                'target_id': self.public_run.id,
+                'emoji': '😋',
+            },
+            HTTP_X_CSRFTOKEN=token,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['active'])

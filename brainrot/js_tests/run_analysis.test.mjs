@@ -6,7 +6,7 @@ const source = await readFile(
   new URL('../static/brainrot/run_analysis.js', import.meta.url),
   'utf8',
 );
-const { analyseTimeline, rollingRateSeries } = await import(
+const { analyseTimeline, rollingRateSeries, unitScale } = await import(
   `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`
 );
 
@@ -37,4 +37,11 @@ test('rolling series covers the complete 20 second run', () => {
   assert.equal(series[0].time, 0);
   assert.equal(series.at(-1).time, 20);
   assert.ok(series.find((point) => point.time === 5.25).rate > series.find((point) => point.time === 15).rate);
+});
+
+test('20-second pace display is a pure unit conversion', () => {
+  assert.equal(unitScale('per-second'), 1);
+  assert.equal(unitScale('per-20s'), 20);
+  const steady = Array.from({ length: 40 }, (_, index) => (index + 0.5) * 0.5);
+  assert.equal(analyseTimeline(steady).averageRate * unitScale('per-20s'), 40);
 });
