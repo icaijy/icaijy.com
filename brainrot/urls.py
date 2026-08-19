@@ -22,6 +22,7 @@ urlpatterns = [
     path('hall-of-fame/<int:entry_id>/delete/', views.delete_hall_of_fame_entry, name='delete_hall_of_fame_entry'),
     path('comments/preview/', comment_views.preview_comment, name='comment_preview'),
     path('comments/<int:comment_id>/delete/', comment_views.delete_comment, name='delete_comment'),
+    path('reactions/toggle/', comment_views.toggle_reaction, name='toggle_reaction'),
     path('challenge/<int:entry_id>/', voice_views.challenge_dispatch, name='challenge'),
     path('typing/', views.typing_test, name='typing_test'),
 ]
