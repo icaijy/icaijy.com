@@ -60,11 +60,13 @@ def _counter_context(rival=None, game_mode=HallOfFameEntry.GameMode.SIX_SEVEN):
 
 
 def _personal_best_map(user_ids, game_mode):
+    """Public PBs for public surfaces; private runs must not leak their scores."""
     if not user_ids:
         return {}
     rows = HallOfFameEntry.objects.filter(
         user_id__in=user_ids,
         game_mode=game_mode,
+        visibility=HallOfFameEntry.Visibility.PUBLIC,
     ).values('user_id').annotate(pb=Max('score'))
     return {row['user_id']: row['pb'] for row in rows}
 
@@ -126,10 +128,26 @@ def hall_of_fame_detail(request, entry_id):
         return JsonResponse({'error': _('This Hall of Fame entry is private.')}, status=404)
 
     comments = list(entry.comments.select_related('user', 'entry', 'entry__user').all())
-    pb_map = _personal_best_map(
-        {user_id for user_id in [entry.user_id, *[comment.user_id for comment in comments]] if user_id},
-        entry.game_mode,
-    )
+    relevant_user_ids = {
+        user_id
+        for user_id in [entry.user_id, *[comment.user_id for comment in comments]]
+        if user_id
+    }
+    pb_map = _personal_best_map(relevant_user_ids, entry.game_mode)
+
+    # On a private owner/admin view, it is safe and useful to include the owner's
+    # true PB across their public + private runs. Other users' badges remain public-only.
+    if (
+        entry.visibility == HallOfFameEntry.Visibility.PRIVATE
+        and entry.user_id
+        and _may_manage_entry(request.user, entry)
+    ):
+        owner_pb = HallOfFameEntry.objects.filter(
+            user_id=entry.user_id,
+            game_mode=entry.game_mode,
+        ).aggregate(pb=Max('score'))['pb']
+        pb_map[entry.user_id] = owner_pb
+
     entry.personal_best = pb_map.get(entry.user_id) if entry.user_id else None
     entry.is_personal_best = bool(entry.user_id and entry.score == entry.personal_best)
 
