@@ -1,0 +1,90 @@
+.hof-comments {
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.comment-card {
+  background: linear-gradient(180deg, rgba(255,255,255,.99), rgba(248,250,252,.97));
+}
+
+.comment-card:target {
+  outline: 3px solid rgba(99, 102, 241, .22);
+  box-shadow: 0 0 0 6px rgba(99, 102, 241, .08), 0 1rem 2.5rem rgba(15, 23, 42, .12) !important;
+}
+
+.comment-author {
+  overflow-wrap: anywhere;
+}
+
+.comment-markdown {
+  color: #1f2937;
+  overflow-wrap: anywhere;
+}
+
+.comment-markdown > :last-child,
+.markdown-preview > :last-child {
+  margin-bottom: 0;
+}
+
+.comment-markdown blockquote,
+.markdown-preview blockquote {
+  margin: .75rem 0;
+  padding: .55rem .85rem;
+  border-left: 4px solid #c7d2fe;
+  background: #f8fafc;
+  color: #475569;
+}
+
+.comment-markdown pre,
+.markdown-preview pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: .8rem 1rem;
+  border-radius: .75rem;
+  background: #111827;
+  color: #f8fafc;
+}
+
+.comment-markdown code:not(pre code),
+.markdown-preview code:not(pre code) {
+  padding: .12rem .32rem;
+  border-radius: .35rem;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.comment-markdown a,
+.markdown-preview a {
+  overflow-wrap: anywhere;
+}
+
+.comment-compose-card {
+  border: 1px solid rgba(99, 102, 241, .12);
+}
+
+.markdown-editor .markdown-toolbar .btn {
+  min-width: 2.35rem;
+}
+
+.markdown-textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.markdown-preview {
+  min-height: 8rem;
+  background: #fff;
+}
+
+.comment-empty,
+.border-dashed {
+  border-style: dashed !important;
+}
+
+@media (max-width: 576px) {
+  .comment-card .card-body,
+  .comment-compose-card .card-body {
+    padding: 1rem !important;
+  }
+}
