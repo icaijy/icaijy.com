@@ -4,6 +4,7 @@
 {% block title %}{% if game_mode == 'leg_claps' %}{% translate "Tung Tung Leg Claps Hall of Fame" %}{% elif game_mode == 'voice_67' %}{% translate "Six Seven Voice Speedrun Hall of Fame" %}{% else %}{% translate "67 Hall of Fame" %}{% endif %}{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'brainrot/comments.css' %}">
 <main class="container py-4 py-md-5">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:index' %}">← {% translate "All experiments" %}</a>
@@ -41,14 +42,14 @@
 
   {% if game_mode == 'voice_67' %}
     <div class="alert alert-warning border-0 shadow-sm mb-4">
-      <strong>Voice 67 is being rebuilt.</strong> {% translate "The old leaderboard is preserved, but challenges and new submissions are paused until the purpose-built continuous-speech model is ready." %}
+      <strong>{% translate "Voice 67 is being rebuilt." %}</strong> {% translate "The old leaderboard is preserved, but challenges and new submissions are paused until the purpose-built continuous-speech model is ready." %}
       <a class="alert-link ms-1" href="{% url 'brainrot:voice_counter' %}">{% translate "Read the update" %} →</a>
     </div>
   {% endif %}
 
   <div class="d-grid gap-3">
     {% for entry in entries %}
-    <article class="card shadow-sm">
+    <article class="card shadow-sm hof-list-card">
       <div class="card-body p-3 p-md-4">
         <div class="row g-3 align-items-center">
           <div class="col-auto"><span class="badge text-bg-light border text-dark fs-6">#{{ forloop.counter }}</span></div>
@@ -56,7 +57,9 @@
             <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
               <h2 class="h5 mb-0">{{ entry.public_name }}</h2>
               {% if entry.personal_best is not None %}
-                <span class="badge {% if entry.is_personal_best %}text-bg-warning{% else %}text-bg-light border text-dark{% endif %}">PB {{ entry.personal_best }}</span>
+                <span class="badge {% if entry.is_personal_best %}text-bg-warning{% else %}text-bg-light border text-dark{% endif %}">
+                  {% blocktranslate with pb=entry.personal_best %}PB {{ pb }}{% endblocktranslate %}
+                </span>
               {% endif %}
             </div>
             <div class="text-secondary small">
@@ -75,14 +78,40 @@
           </div>
         </div>
 
-        <div class="d-flex flex-wrap gap-2 mt-3">
-          <a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "Full details" %}</a>
-          <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:hall_of_fame_detail' entry.id %}#comments"><i class="fa-regular fa-comments me-1"></i>{{ entry.comment_count }}</a>
-          {% if entry.game_mode == 'voice_67' %}
-            <a class="btn btn-sm btn-outline-warning" href="{% url 'brainrot:voice_counter' %}">{% translate "Voice mode coming soon" %}</a>
-          {% else %}
-            <a class="btn btn-sm btn-primary" href="{% url 'brainrot:challenge' entry.id %}">{% translate "Challenge this run" %}</a>
-          {% endif %}
+        <div class="row g-3 mt-1 align-items-center">
+          <div class="col-12 col-lg-7">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "Full details" %}</a>
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:hall_of_fame_detail' entry.id %}#comments" title="{% translate 'Comments' %}">
+                <i class="fa-regular fa-comments me-1"></i>{{ entry.comment_count }}
+              </a>
+              {% if entry.game_mode == 'voice_67' %}
+                <a class="btn btn-sm btn-outline-warning" href="{% url 'brainrot:voice_counter' %}">{% translate "Voice mode coming soon" %}</a>
+              {% else %}
+                <a class="btn btn-sm btn-primary" href="{% url 'brainrot:challenge' entry.id %}">{% translate "Challenge this run" %}</a>
+              {% endif %}
+            </div>
+
+            <div class="mt-2">
+              {% include 'brainrot/_reactions.html' with target_type='entry' target_id=entry.id reaction_items=entry.reaction_items compact=True %}
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-5">
+            {% if entry.timeline_exact %}
+              <div class="hof-mini-analysis" data-mini-analysis data-speed-unit="{{ speed_unit }}" data-event-timeline="{{ entry.event_timeline|escape }}">
+                <div class="d-flex justify-content-between align-items-center gap-2 mb-1">
+                  <span class="small fw-semibold">{% translate "20s pacing" %}</span>
+                  <span class="small text-secondary" data-mini-pace-label>{% translate "loading…" %}</span>
+                </div>
+                <canvas class="hof-mini-chart" height="76" aria-label="{% translate '20-second pacing preview' %}"></canvas>
+              </div>
+            {% else %}
+              <div class="small text-secondary border rounded px-3 py-2">
+                {% translate "Legacy run · no exact pacing timeline" %}
+              </div>
+            {% endif %}
+          </div>
         </div>
 
         {% url 'brainrot:hall_of_fame_video' entry.id as preview_url %}
@@ -100,10 +129,10 @@
                   {% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds.{% endblocktranslate %}
                 {% endif %}
               </strong>
-              <p class="text-secondary small mt-2">{% translate "Open the detail page to see PB, reactions, pacing analysis, comments, sharing and the phone-friendly MP4." %}</p>
+              <p class="text-secondary small mt-2">{% translate "Open the detail page for the full speed chart, comments, sharing and a phone-friendly MP4." %}</p>
               <div class="d-flex flex-wrap gap-2">
                 <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "Open full run" %} →</a>
-                <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}#comments"><i class="fa-regular fa-comments me-1"></i>{{ entry.comment_count }} comments</a>
+                <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}#comments"><i class="fa-regular fa-comments me-1"></i>{% blocktranslate with count=entry.comment_count %}{{ count }} comments{% endblocktranslate %}</a>
                 <a href="{{ preview_url }}?download=1&amp;format=mp4"><i class="fa-solid fa-download me-1"></i>{% translate "Download MP4" %}</a>
               </div>
             </div>
@@ -127,4 +156,7 @@
     {% endfor %}
   </div>
 </main>
+<script src="{% url 'brainrot:javascript_catalog' %}"></script>
+<script type="module" src="{% static 'brainrot/reactions.js' %}"></script>
+<script type="module" src="{% static 'brainrot/hof_list.js' %}"></script>
 {% endblock %}
