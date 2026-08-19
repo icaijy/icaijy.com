@@ -30,7 +30,7 @@
           <div class="comment-markdown">{{ comment.rendered_body }}</div>
 
           <div class="d-flex flex-wrap gap-2 mt-3">
-            <button class="btn btn-sm btn-outline-secondary" type="button" data-comment-reply data-author="{{ comment.public_name }}">
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-comment-reply data-author="{{ comment.author_name }}">
               <i class="fa-solid fa-reply me-1"></i>Reply
             </button>
             {% if request.user.is_authenticated %}
