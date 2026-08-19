@@ -1,15 +1,19 @@
+import hashlib
+import hmac
 from datetime import timedelta
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.encoding import force_bytes
 from django.views.decorators.http import require_POST
 
 from .comment_markup import comment_max_length, normalise_comment_body, render_comment_markdown
 from .models import HallOfFameComment, HallOfFameEntry
-from .views import _anonymous_display_name, _may_manage_entry, _upload_client_key
+from .views import _anonymous_display_name, _may_manage_entry
 
 ANONYMOUS_COMMENT_LIMIT = 3
 AUTHENTICATED_COMMENT_LIMIT = 20
@@ -18,6 +22,23 @@ COMMENT_RATE_WINDOW = timedelta(minutes=10)
 
 def _entry_is_visible_to(entry, user):
     return entry.visibility == HallOfFameEntry.Visibility.PUBLIC or _may_manage_entry(user, entry)
+
+
+def _anonymous_comment_key(request):
+    """Stable per-browser anonymous key without persisting a raw network address.
+
+    School Wi-Fi can put many real users behind one public IP, so using the HOF
+    upload network key here would make one student's three comments exhaust the
+    quota for everybody. Django's anonymous session cookie gives each browser a
+    separate small quota; the stored value is an HMAC, not the session ID itself.
+    """
+    if not request.session.session_key:
+        request.session.create()
+    return hmac.new(
+        force_bytes(settings.SECRET_KEY),
+        force_bytes(f'hof-comment:{request.session.session_key}'),
+        hashlib.sha256,
+    ).hexdigest()
 
 
 def _rate_limit_state(request):
@@ -29,7 +50,7 @@ def _rate_limit_state(request):
         ).count()
         return recent, AUTHENTICATED_COMMENT_LIMIT, ''
 
-    client_key = _upload_client_key(request)
+    client_key = _anonymous_comment_key(request)
     recent = HallOfFameComment.objects.filter(
         user__isnull=True,
         client_key=client_key,
