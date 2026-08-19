@@ -1,0 +1,53 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: icaijy brainrot js\n"
+"Language: zh_Hans\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "projected 20s score"
+msgstr "预计 20 秒成绩"
+
+msgid "Live estimate from your overall pace and the last few seconds. It becomes more stable as the run continues."
+msgstr "根据全程节奏和最近几秒实时预测。随着比赛进行会逐渐稳定。"
+
+msgid "avg"
+msgstr "平均"
+
+msgid "Previewing…"
+msgstr "预览生成中……"
+
+msgid "Could not render preview."
+msgstr "无法生成预览。"
+
+msgid "Preview"
+msgstr "预览"
+
+msgid "quoted text"
+msgstr "引用内容"
+
+msgid "link text"
+msgstr "链接文字"
+
+msgid "bold text"
+msgstr "粗体文字"
+
+msgid "italic text"
+msgstr "斜体文字"
+
+msgid "code"
+msgstr "代码"
+
+msgid "Posting…"
+msgstr "发送中……"
+
+msgid "Could not post comment."
+msgstr "评论发送失败。"
+
+msgid "Post comment"
+msgstr "发表评论"
+
+msgid "Could not react."
+msgstr "Reaction 失败。"
