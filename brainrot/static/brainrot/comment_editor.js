@@ -121,6 +121,38 @@ function initialiseEditor(editor) {
 
 document.querySelectorAll('[data-markdown-editor]').forEach(initialiseEditor);
 
+// The mature pose runner owns the video upload FormData. Keep it untouched and
+// attach the optional submission comment only to that one HOF request.
+function installSubmissionCommentBridge() {
+  const app = document.getElementById('counter-app');
+  const textarea = document.getElementById('hof-submission-comment');
+  if (!app || !textarea || !app.dataset.submitUrl || window.__hofSubmissionCommentBridge) return;
+
+  const nativeFetch = window.fetch.bind(window);
+  const submitUrl = new URL(app.dataset.submitUrl, window.location.href).href;
+  window.__hofSubmissionCommentBridge = true;
+  window.fetch = (input, init = {}) => {
+    try {
+      const rawUrl = typeof input === 'string' || input instanceof URL
+        ? String(input)
+        : input?.url;
+      const requestUrl = rawUrl ? new URL(rawUrl, window.location.href).href : '';
+      if (
+        requestUrl === submitUrl
+        && init.body instanceof FormData
+        && !init.body.has('submission_comment')
+      ) {
+        const body = textarea.value.trim();
+        if (body) init.body.append('submission_comment', body);
+      }
+    } catch (error) {
+      console.warn('Could not attach the HOF submission comment.', error);
+    }
+    return nativeFetch(input, init);
+  };
+}
+installSubmissionCommentBridge();
+
 const commentBody = document.getElementById('hof-comment-body');
 document.querySelectorAll('[data-comment-reply]').forEach((button) => {
   button.addEventListener('click', () => {
