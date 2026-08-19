@@ -6,6 +6,7 @@ from contextlib import contextmanager
 
 from django.conf import settings
 from django.core.files import File
+from django.core.files.base import ContentFile
 
 
 class Mp4TranscodeError(RuntimeError):
@@ -21,34 +22,19 @@ def _ffmpeg_binary():
 
 def _transcode(source_path, output_path):
     command = [
-        _ffmpeg_binary(),
-        '-hide_banner',
-        '-loglevel', 'error',
-        '-y',
+        _ffmpeg_binary(), '-hide_banner', '-loglevel', 'error', '-y',
         '-i', source_path,
-        '-map', '0:v:0',
-        '-map', '0:a:0?',
-        '-sn',
+        '-map', '0:v:0', '-map', '0:a:0?', '-sn',
         '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
-        '-c:v', 'libx264',
-        '-preset', 'veryfast',
-        '-crf', '23',
-        '-profile:v', 'baseline',
-        '-level', '3.1',
-        '-pix_fmt', 'yuv420p',
-        '-c:a', 'aac',
-        '-b:a', '128k',
-        '-movflags', '+faststart',
-        '-map_metadata', '-1',
+        '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23',
+        '-profile:v', 'baseline', '-level', '3.1', '-pix_fmt', 'yuv420p',
+        '-c:a', 'aac', '-b:a', '128k',
+        '-movflags', '+faststart', '-map_metadata', '-1',
         output_path,
     ]
     try:
         completed = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            timeout=45,
-            check=False,
+            command, capture_output=True, text=True, timeout=45, check=False,
         )
     except subprocess.TimeoutExpired as exc:
         raise Mp4TranscodeError('Preparing the MP4 took too long.') from exc
@@ -59,31 +45,19 @@ def _transcode(source_path, output_path):
         raise Mp4TranscodeError(f'Could not prepare the MP4: {detail}')
 
 
-@contextmanager
-def transcode_upload_to_mp4(upload):
-    """Yield a Django File containing one canonical H.264/AAC MP4.
-
-    The uploaded source is copied to a temporary file because MediaRecorder
-    uploads may be in-memory files. Both temporary files are removed when the
-    context exits; callers must save the yielded file before then.
-    """
+def transcode_upload_to_content_file(upload):
+    """Return an in-memory canonical H.264/AAC MP4 for one submitted upload."""
     os.makedirs(settings.PRIVATE_MEDIA_ROOT, exist_ok=True)
     source = tempfile.NamedTemporaryFile(
         suffix=os.path.splitext(upload.name or '')[1] or '.video',
-        prefix='hof-source-',
-        dir=settings.PRIVATE_MEDIA_ROOT,
-        delete=False,
+        prefix='hof-source-', dir=settings.PRIVATE_MEDIA_ROOT, delete=False,
     )
     source_path = source.name
     output = tempfile.NamedTemporaryFile(
-        suffix='.mp4',
-        prefix='hof-mp4-',
-        dir=settings.PRIVATE_MEDIA_ROOT,
-        delete=False,
+        suffix='.mp4', prefix='hof-mp4-', dir=settings.PRIVATE_MEDIA_ROOT, delete=False,
     )
     output_path = output.name
     output.close()
-
     try:
         for chunk in upload.chunks():
             source.write(chunk)
@@ -92,13 +66,9 @@ def transcode_upload_to_mp4(upload):
             upload.seek(0)
         except (AttributeError, OSError):
             pass
-
         _transcode(source_path, output_path)
-        handle = open(output_path, 'rb')
-        try:
-            yield File(handle, name='recording.mp4')
-        finally:
-            handle.close()
+        with open(output_path, 'rb') as converted:
+            return ContentFile(converted.read(), name='recording.mp4')
     finally:
         try:
             source.close()
@@ -116,10 +86,7 @@ def transcode_path_to_mp4(source_path):
     """Yield the path of a temporary canonical MP4 converted from source_path."""
     os.makedirs(settings.PRIVATE_MEDIA_ROOT, exist_ok=True)
     output = tempfile.NamedTemporaryFile(
-        suffix='.mp4',
-        prefix='hof-backfill-',
-        dir=settings.PRIVATE_MEDIA_ROOT,
-        delete=False,
+        suffix='.mp4', prefix='hof-backfill-', dir=settings.PRIVATE_MEDIA_ROOT, delete=False,
     )
     output_path = output.name
     output.close()
