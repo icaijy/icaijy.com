@@ -11,6 +11,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Count
 from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -21,7 +22,8 @@ from django.utils.translation import gettext as _
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
-from .models import HallOfFameEntry, HallOfFameUploadAttempt
+from .comment_markup import comment_max_length, normalise_comment_body
+from .models import HallOfFameComment, HallOfFameEntry, HallOfFameUploadAttempt
 from .validators import validate_hall_of_fame_video
 
 
@@ -71,7 +73,7 @@ def hall_of_fame(request):
     entries = HallOfFameEntry.objects.filter(
         game_mode=game_mode,
         visibility=HallOfFameEntry.Visibility.PUBLIC,
-    ).select_related('user')[:67]
+    ).select_related('user').annotate(comment_count=Count('comments'))[:67]
     return render(request, 'brainrot/hall_of_fame.html', {
         'entries': entries,
         'game_mode': game_mode,
@@ -101,8 +103,11 @@ def hall_of_fame_detail(request, entry_id):
     entry = get_object_or_404(HallOfFameEntry.objects.select_related('user'), pk=entry_id)
     if entry.visibility != HallOfFameEntry.Visibility.PUBLIC and not _may_manage_entry(request.user, entry):
         return JsonResponse({'error': _('This Hall of Fame entry is private.')}, status=404)
+    comments = entry.comments.select_related('user', 'entry', 'entry__user').all()
     return render(request, 'brainrot/hall_of_fame_detail.html', {
         'entry': entry,
+        'comments': comments,
+        'comment_max_length': comment_max_length(request.user),
     })
 
 
@@ -238,6 +243,15 @@ def submit_hall_of_fame(request):
         return JsonResponse({'error': exc.messages[0]}, status=400)
 
     try:
+        submission_comment = normalise_comment_body(
+            request.POST.get('submission_comment', ''),
+            request.user,
+            allow_blank=True,
+        )
+    except ValidationError as exc:
+        return JsonResponse({'error': exc.messages[0]}, status=400)
+
+    try:
         event_timeline = _validated_event_timeline(request.POST.get('event_timeline', ''), score)
     except ValidationError as exc:
         return JsonResponse({'error': exc.messages[0]}, status=400)
@@ -264,6 +278,15 @@ def submit_hall_of_fame(request):
         entry._validated_extension = inspected.extension
         entry.video = upload
         entry.save()
+        if submission_comment:
+            HallOfFameComment.objects.create(
+                entry=entry,
+                user=owner,
+                author_name=owner.username[:32] if owner else display_name,
+                body=submission_comment,
+                client_key='' if owner else client_key,
+                is_submission_note=True,
+            )
         attempt.accepted = True
         attempt.save(update_fields=['accepted'])
 
