@@ -3,8 +3,12 @@ const ROLLING_WINDOW_SECONDS = 2;
 const SAMPLE_STEP_SECONDS = 0.25;
 const BURST_SECONDS = 5;
 
+function cleanTimeline(timeline) {
+  return [...timeline].map(Number).filter(Number.isFinite).sort((a, b) => a - b);
+}
+
 export function rollingRateSeries(timeline, duration = RUN_SECONDS) {
-  const sorted = [...timeline].map(Number).filter(Number.isFinite).sort((a, b) => a - b);
+  const sorted = cleanTimeline(timeline);
   const points = [];
   for (let time = 0; time <= duration + 1e-9; time += SAMPLE_STEP_SECONDS) {
     const centre = Math.min(duration, Number(time.toFixed(4)));
@@ -18,7 +22,7 @@ export function rollingRateSeries(timeline, duration = RUN_SECONDS) {
 }
 
 export function analyseTimeline(timeline, duration = RUN_SECONDS) {
-  const sorted = [...timeline].map(Number).filter(Number.isFinite).sort((a, b) => a - b);
+  const sorted = cleanTimeline(timeline);
   const series = rollingRateSeries(sorted, duration);
   const interior = series.filter((point) => point.time >= 1 && point.time <= duration - 1);
   const peak = (interior.length ? interior : series).reduce(
@@ -26,24 +30,24 @@ export function analyseTimeline(timeline, duration = RUN_SECONDS) {
     { time: 0, rate: 0 },
   );
 
-  let bestBurst = { start: 0, end: Math.min(BURST_SECONDS, duration), count: 0, rate: 0 };
-  let right = 0;
-  for (let left = 0; left < sorted.length; left += 1) {
-    if (right < left) right = left;
-    while (right < sorted.length && sorted[right] <= sorted[left] + BURST_SECONDS) right += 1;
-    const count = right - left;
-    if (count > bestBurst.count) {
-      const start = Math.min(sorted[left], Math.max(0, duration - BURST_SECONDS));
-      bestBurst = {
-        start,
-        end: Math.min(duration, start + BURST_SECONDS),
-        count,
-        rate: count / Math.min(BURST_SECONDS, duration),
-      };
+  const burstLength = Math.min(BURST_SECONDS, duration);
+  const latestStart = Math.max(0, duration - burstLength);
+  const candidateStarts = new Set([0, latestStart]);
+  sorted.forEach((event) => {
+    candidateStarts.add(Math.max(0, Math.min(latestStart, event)));
+    candidateStarts.add(Math.max(0, Math.min(latestStart, event - burstLength)));
+  });
+  let bestBurst = { start: 0, end: burstLength, count: 0, rate: 0 };
+  candidateStarts.forEach((start) => {
+    const end = start + burstLength;
+    const count = sorted.filter((event) => event >= start && event <= end).length;
+    if (count > bestBurst.count || (count === bestBurst.count && start < bestBurst.start)) {
+      bestBurst = { start, end, count, rate: count / Math.max(0.001, burstLength) };
     }
-  }
+  });
 
-  const firstHalfCount = sorted.filter((event) => event <= duration / 2).length;
+  const half = duration / 2;
+  const firstHalfCount = sorted.filter((event) => event <= half).length;
   const secondHalfCount = sorted.length - firstHalfCount;
   return {
     series,
@@ -51,8 +55,8 @@ export function analyseTimeline(timeline, duration = RUN_SECONDS) {
     peakRate: peak.rate,
     peakTime: peak.time,
     fastestBurst: bestBurst,
-    firstHalfRate: firstHalfCount / (duration / 2),
-    secondHalfRate: secondHalfCount / (duration / 2),
+    firstHalfRate: firstHalfCount / half,
+    secondHalfRate: secondHalfCount / half,
   };
 }
 
@@ -142,34 +146,40 @@ function drawChart(canvas, series, unit, hoverNode) {
   };
 }
 
-const timelineNode = document.getElementById('run-event-timeline');
-const analysisRoot = document.getElementById('run-speed-analysis');
-if (timelineNode && analysisRoot) {
-  const timeline = JSON.parse(timelineNode.textContent || '[]');
-  const unit = analysisRoot.dataset.speedUnit || 'moves/s';
-  const analysis = analyseTimeline(timeline);
+if (typeof document !== 'undefined') {
+  const timelineNode = document.getElementById('run-event-timeline');
+  const analysisRoot = document.getElementById('run-speed-analysis');
+  if (timelineNode && analysisRoot) {
+    const timeline = JSON.parse(timelineNode.textContent || '[]');
+    const unit = analysisRoot.dataset.speedUnit || 'moves/s';
+    const analysis = analyseTimeline(timeline);
 
-  const setText = (id, value) => {
-    const node = document.getElementById(id);
-    if (node) node.textContent = value;
-  };
-  setText('run-average-rate', `${formatRate(analysis.averageRate)} ${unit}`);
-  setText('run-peak-rate', `${formatRate(analysis.peakRate)} ${unit}`);
-  setText('run-peak-time', `around ${analysis.peakTime.toFixed(1)}s`);
-  setText('run-fastest-burst', `${analysis.fastestBurst.count} counts`);
-  setText(
-    'run-fastest-burst-time',
-    `${analysis.fastestBurst.start.toFixed(1)}–${analysis.fastestBurst.end.toFixed(1)}s · ${formatRate(analysis.fastestBurst.rate)} ${unit}`,
-  );
-  setText('run-first-half-rate', `${formatRate(analysis.firstHalfRate)} ${unit}`);
-  setText('run-second-half-rate', `${formatRate(analysis.secondHalfRate)} ${unit}`);
+    const setText = (id, value) => {
+      const node = document.getElementById(id);
+      if (node) node.textContent = value;
+    };
+    setText('run-average-rate', `${formatRate(analysis.averageRate)} ${unit}`);
+    setText('run-peak-rate', `${formatRate(analysis.peakRate)} ${unit}`);
+    setText('run-peak-time', `around ${analysis.peakTime.toFixed(1)}s`);
+    setText('run-fastest-burst', `${analysis.fastestBurst.count} counts`);
+    setText(
+      'run-fastest-burst-time',
+      `${analysis.fastestBurst.start.toFixed(1)}–${analysis.fastestBurst.end.toFixed(1)}s · ${formatRate(analysis.fastestBurst.rate)} ${unit}`,
+    );
+    setText('run-first-half-rate', `${formatRate(analysis.firstHalfRate)} ${unit}`);
+    setText('run-second-half-rate', `${formatRate(analysis.secondHalfRate)} ${unit}`);
 
-  const canvas = document.getElementById('run-speed-chart');
-  const hoverNode = document.getElementById('run-speed-hover');
-  if (canvas) {
-    const render = () => drawChart(canvas, analysis.series, unit, hoverNode);
-    render();
-    const observer = new ResizeObserver(render);
-    observer.observe(canvas.parentElement || canvas);
+    const canvas = document.getElementById('run-speed-chart');
+    const hoverNode = document.getElementById('run-speed-hover');
+    if (canvas) {
+      const render = () => drawChart(canvas, analysis.series, unit, hoverNode);
+      render();
+      if (typeof ResizeObserver !== 'undefined') {
+        const observer = new ResizeObserver(render);
+        observer.observe(canvas.parentElement || canvas);
+      } else {
+        window.addEventListener('resize', render, { passive: true });
+      }
+    }
   }
 }
