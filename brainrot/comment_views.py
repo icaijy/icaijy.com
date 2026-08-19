@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -45,9 +46,8 @@ def add_comment(request, entry_id):
 
     try:
         body = normalise_comment_body(request.POST.get('body'), request.user)
-    except Exception as exc:
-        message = getattr(exc, 'messages', None)
-        return JsonResponse({'error': message[0] if message else str(exc)}, status=400)
+    except ValidationError as exc:
+        return JsonResponse({'error': exc.messages[0]}, status=400)
 
     recent, limit, client_key = _rate_limit_state(request)
     if recent >= limit:
@@ -62,9 +62,8 @@ def add_comment(request, entry_id):
         user = None
         try:
             author_name = _anonymous_display_name(request.POST.get('display_name', ''))
-        except Exception as exc:
-            message = getattr(exc, 'messages', None)
-            return JsonResponse({'error': message[0] if message else str(exc)}, status=400)
+        except ValidationError as exc:
+            return JsonResponse({'error': exc.messages[0]}, status=400)
 
     comment = HallOfFameComment.objects.create(
         entry=entry,
@@ -93,9 +92,8 @@ def preview_comment(request):
 
     try:
         body = normalise_comment_body(raw_body, request.user)
-    except Exception as exc:
-        message = getattr(exc, 'messages', None)
-        return JsonResponse({'error': message[0] if message else str(exc)}, status=400)
+    except ValidationError as exc:
+        return JsonResponse({'error': exc.messages[0]}, status=400)
 
     return JsonResponse({
         'html': str(render_comment_markdown(body)),
