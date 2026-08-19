@@ -121,7 +121,7 @@ class HallOfFameCommentTests(TestCase):
         self.assertEqual(HallOfFameComment.objects.count(), 1)
 
     def test_owner_comment_is_marked_op_and_leaderboard_counts_comments(self):
-        HallOfFameComment.objects.create(
+        comment = HallOfFameComment.objects.create(
             entry=self.entry,
             user=self.owner,
             author_name=self.owner.username,
@@ -130,7 +130,7 @@ class HallOfFameCommentTests(TestCase):
         detail = self.client.get(f'/67/hall-of-fame/{self.entry.id}/')
         self.assertContains(detail, 'my technique is classified')
         self.assertContains(detail, '>OP<')
-        self.assertContains(detail, f'id="comment-1"')
+        self.assertContains(detail, f'id="comment-{comment.id}"')
 
         board = self.client.get('/67/hall-of-fame/')
         self.assertContains(board, f'/67/hall-of-fame/{self.entry.id}/#comments')
