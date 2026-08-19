@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
+from .video_mp4 import Mp4TranscodeError, replace_upload_with_mp4
+
 
 @dataclass(frozen=True)
 class ValidatedVideo:
@@ -135,6 +137,12 @@ def _probe_video(upload, expected_mime):
 
 
 def validate_hall_of_fame_video(upload):
+    """Validate an upload, then replace its payload with a canonical MP4.
+
+    The caller can save the same UploadedFile object after this function
+    returns. All accepted HOF submissions are therefore stored as H.264/AAC
+    MP4 rather than preserving browser-specific MediaRecorder containers.
+    """
     if upload.size <= 0 or upload.size > settings.HOF_MAX_UPLOAD_BYTES:
         max_mb = settings.HOF_MAX_UPLOAD_BYTES / (1024 * 1024)
         raise ValidationError(f'Video must be no larger than {max_mb:g} MB.')
@@ -149,5 +157,11 @@ def validate_hall_of_fame_video(upload):
         raise ValidationError('The declared MIME type does not match the video container.')
 
     duration = _probe_video(upload, mime_type)
+
+    try:
+        replace_upload_with_mp4(upload, source_extension=extension)
+    except Mp4TranscodeError as exc:
+        raise ValidationError(str(exc)) from exc
+
     upload.seek(0)
-    return ValidatedVideo(mime_type, extension, duration)
+    return ValidatedVideo('video/mp4', 'mp4', duration)
