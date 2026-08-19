@@ -153,6 +153,17 @@ function installSubmissionCommentBridge() {
 }
 installSubmissionCommentBridge();
 
+const submissionComment = document.getElementById('hof-submission-comment');
+if (submissionComment) {
+  const clearSubmissionComment = () => {
+    submissionComment.value = '';
+    submissionComment.dispatchEvent(new Event('input', { bubbles: true }));
+    submissionComment.closest('[data-markdown-editor]')?.showWrite?.();
+  };
+  document.getElementById('reset-run')?.addEventListener('click', clearSubmissionComment);
+  document.getElementById('discard-recording')?.addEventListener('click', clearSubmissionComment);
+}
+
 const commentBody = document.getElementById('hof-comment-body');
 document.querySelectorAll('[data-comment-reply]').forEach((button) => {
   button.addEventListener('click', () => {
