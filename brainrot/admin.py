@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import HallOfFameComment, HallOfFameEntry
+from .models import HallOfFameComment, HallOfFameEntry, HallOfFameReaction
 
 
 @admin.register(HallOfFameEntry)
@@ -55,3 +55,11 @@ class HallOfFameCommentAdmin(admin.ModelAdmin):
     @admin.display(description='Comment')
     def short_body(self, obj):
         return obj.body[:80]
+
+
+@admin.register(HallOfFameReaction)
+class HallOfFameReactionAdmin(admin.ModelAdmin):
+    list_display = ('emoji', 'target_key', 'user', 'created_at')
+    list_filter = ('emoji', 'created_at', 'entry__game_mode')
+    search_fields = ('target_key', 'reactor_key', 'user__username', 'entry__user__username', 'entry__display_name')
+    readonly_fields = ('entry', 'comment', 'user', 'target_key', 'reactor_key', 'emoji', 'created_at')
