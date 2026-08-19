@@ -16,7 +16,6 @@ class ValidatedVideo:
     mime_type: str
     extension: str
     duration_seconds: float
-    canonical_file: object = None
 
 
 def _packet_duration(path, ffprobe):
@@ -129,7 +128,7 @@ def _probe_video(upload, expected_mime):
 
 
 def validate_hall_of_fame_video(upload):
-    """Validate a browser upload and return one canonical MP4 ready for storage."""
+    """Validate a browser upload and replace it with a canonical MP4 payload."""
     if upload.size <= 0 or upload.size > settings.HOF_MAX_UPLOAD_BYTES:
         max_mb = settings.HOF_MAX_UPLOAD_BYTES / (1024 * 1024)
         raise ValidationError(f'Video must be no larger than {max_mb:g} MB.')
@@ -149,5 +148,12 @@ def validate_hall_of_fame_video(upload):
         canonical = transcode_upload_to_content_file(upload)
     except Mp4TranscodeError as exc:
         raise ValidationError(str(exc)) from exc
+
+    # Preserve the UploadedFile object expected by the existing submission view,
+    # but make its contents and metadata canonical MP4 before FileField.save().
+    upload.file = canonical
+    upload.name = canonical.name
+    upload.size = canonical.size
+    upload.content_type = 'video/mp4'
     upload.seek(0)
-    return ValidatedVideo('video/mp4', 'mp4', duration, canonical)
+    return ValidatedVideo('video/mp4', 'mp4', duration)
