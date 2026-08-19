@@ -6,7 +6,7 @@ from .models import HallOfFameEntry
 
 
 def hall_of_fame_video(request, entry_id):
-    """Stream the stored recording directly; persisted HOF videos are canonical MP4."""
+    """Stream the validated stored recording directly without server transcoding."""
     entry = get_object_or_404(HallOfFameEntry.objects.select_related('user'), pk=entry_id)
     may_view = (
         entry.visibility == HallOfFameEntry.Visibility.PUBLIC
