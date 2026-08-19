@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 
 from .comment_markup import render_comment_markdown
 from .models import HallOfFameComment, HallOfFameEntry
@@ -98,6 +98,26 @@ class HallOfFameCommentTests(TestCase):
         }, REMOTE_ADDR='203.0.113.13')
         self.assertEqual(blocked.status_code, 429)
         self.assertEqual(HallOfFameComment.objects.filter(author_name='Guest').count(), 3)
+
+    def test_guest_rate_limit_does_not_block_everyone_on_the_same_wifi(self):
+        shared_ip = '203.0.113.67'
+        for index in range(3):
+            response = self.client.post(self.comment_url(), {
+                'display_name': 'First Browser',
+                'body': f'first {index}',
+            }, REMOTE_ADDR=shared_ip)
+            self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.client.post(self.comment_url(), {
+            'display_name': 'First Browser',
+            'body': 'blocked fourth',
+        }, REMOTE_ADDR=shared_ip).status_code, 429)
+
+        second_browser = Client()
+        response = second_browser.post(self.comment_url(), {
+            'display_name': 'Second Browser',
+            'body': 'same school wifi, different browser',
+        }, REMOTE_ADDR=shared_ip)
+        self.assertEqual(response.status_code, 302)
 
     def test_logged_in_user_gets_larger_length_limit(self):
         self.client.force_login(self.commenter)
