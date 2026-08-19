@@ -1,4 +1,5 @@
 {% load i18n %}
+{% translate "Write something under this run…" as comment_placeholder %}
 <section class="hof-comments mt-5" id="comments" aria-labelledby="comments-title">
   <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
     <div>
@@ -72,7 +73,7 @@
             <div class="form-text">{% translate "Guest names are labelled as guest and cannot impersonate registered usernames." %}</div>
           </div>
         {% endif %}
-        {% include 'brainrot/_comment_editor.html' with textarea_id='hof-comment-body' field_name='body' max_length=comment_max_length rows=5 placeholder=_('Write something under this run…') required_field=True %}
+        {% include 'brainrot/_comment_editor.html' with textarea_id='hof-comment-body' field_name='body' max_length=comment_max_length rows=5 placeholder=comment_placeholder required_field=True %}
         <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
           <button class="btn btn-primary" type="submit" id="post-hof-comment"><i class="fa-regular fa-comment me-1"></i>{% translate "Post comment" %}</button>
           {% if request.user.is_authenticated %}
