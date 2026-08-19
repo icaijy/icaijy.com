@@ -120,6 +120,58 @@ class HallOfFameComment(models.Model):
         return bool(self.user_id and self.entry.user_id == self.user_id)
 
 
+class HallOfFameReaction(models.Model):
+    class Emoji(models.TextChoices):
+        YUM = '😋', '😋'
+        FIRE = '🔥', '🔥'
+        LAUGH = '😂', '😂'
+        SKULL = '💀', '💀'
+
+    # Every reaction keeps the owning entry for cascade cleanup. comment=None
+    # means the reaction is on the run itself; otherwise it targets that comment.
+    entry = models.ForeignKey(
+        HallOfFameEntry,
+        on_delete=models.CASCADE,
+        related_name='reactions',
+    )
+    comment = models.ForeignKey(
+        HallOfFameComment,
+        on_delete=models.CASCADE,
+        related_name='reactions',
+        null=True,
+        blank=True,
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='hall_of_fame_reactions',
+        null=True,
+        blank=True,
+    )
+    # target_key makes the uniqueness rule work for entry reactions even though
+    # SQL NULL semantics would otherwise allow duplicate (comment=NULL) rows.
+    target_key = models.CharField(max_length=32)
+    # u:<id> for accounts, g:<HMAC> for an anonymous browser session.
+    reactor_key = models.CharField(max_length=80)
+    emoji = models.CharField(max_length=8, choices=Emoji.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('target_key', 'reactor_key', 'emoji'),
+                name='hof_reaction_identity_uniq',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=('target_key', 'emoji'), name='hof_reaction_target_idx'),
+            models.Index(fields=('reactor_key', '-created_at'), name='hof_reaction_reactor_idx'),
+        ]
+
+    def __str__(self):
+        return f'{self.emoji} {self.target_key} by {self.reactor_key[:16]}'
+
+
 class HallOfFameUploadAttempt(models.Model):
     """Small audit/rate-limit row; failed uploads must count as attempts too."""
 
