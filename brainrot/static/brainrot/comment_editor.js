@@ -1,3 +1,5 @@
+const tr = (message) => typeof gettext === 'function' ? gettext(message) : message;
+
 function csrfToken(root = document) {
   const field = root.closest?.('form')?.querySelector('[name="csrfmiddlewaretoken"]')
     || document.querySelector('[name="csrfmiddlewaretoken"]');
@@ -21,7 +23,7 @@ function replaceSelection(textarea, before, after = before, placeholder = 'text'
 function quoteSelection(textarea) {
   const start = textarea.selectionStart ?? textarea.value.length;
   const end = textarea.selectionEnd ?? start;
-  const selected = textarea.value.slice(start, end) || 'quoted text';
+  const selected = textarea.value.slice(start, end) || tr('quoted text');
   const replacement = selected.split('\n').map((line) => `> ${line}`).join('\n');
   textarea.setRangeText(replacement, start, end, 'end');
   textarea.dispatchEvent(new Event('input', { bubbles: true }));
@@ -31,7 +33,7 @@ function quoteSelection(textarea) {
 function linkSelection(textarea) {
   const start = textarea.selectionStart ?? textarea.value.length;
   const end = textarea.selectionEnd ?? start;
-  const selected = textarea.value.slice(start, end) || 'link text';
+  const selected = textarea.value.slice(start, end) || tr('link text');
   const replacement = `[${selected}](https://example.com)`;
   textarea.setRangeText(replacement, start, end, 'end');
   const urlStart = start + selected.length + 3;
@@ -62,7 +64,7 @@ function initialiseEditor(editor) {
   const showPreview = async () => {
     errorNode.textContent = '';
     previewButton.disabled = true;
-    previewButton.textContent = 'Previewing…';
+    previewButton.textContent = tr('Previewing…');
     try {
       const form = new FormData();
       form.append('body', textarea.value);
@@ -76,7 +78,7 @@ function initialiseEditor(editor) {
         },
       });
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Could not render preview.');
+      if (!response.ok) throw new Error(payload.error || tr('Could not render preview.'));
       previewPanel.innerHTML = payload.html;
       textarea.hidden = true;
       previewPanel.hidden = false;
@@ -88,7 +90,7 @@ function initialiseEditor(editor) {
       errorNode.textContent = error.message;
     } finally {
       previewButton.disabled = false;
-      previewButton.textContent = 'Preview';
+      previewButton.textContent = tr('Preview');
     }
   };
 
@@ -96,9 +98,9 @@ function initialiseEditor(editor) {
     button.addEventListener('click', () => {
       showWrite();
       const action = button.dataset.mdAction;
-      if (action === 'bold') replaceSelection(textarea, '**', '**', 'bold text');
-      else if (action === 'italic') replaceSelection(textarea, '*', '*', 'italic text');
-      else if (action === 'code') replaceSelection(textarea, '`', '`', 'code');
+      if (action === 'bold') replaceSelection(textarea, '**', '**', tr('bold text'));
+      else if (action === 'italic') replaceSelection(textarea, '*', '*', tr('italic text'));
+      else if (action === 'code') replaceSelection(textarea, '`', '`', tr('code'));
       else if (action === 'quote') quoteSelection(textarea);
       else if (action === 'link') linkSelection(textarea);
     });
@@ -189,7 +191,7 @@ if (commentForm) {
     errorNode.textContent = '';
     if (button) {
       button.disabled = true;
-      button.textContent = 'Posting…';
+      button.textContent = tr('Posting…');
     }
     try {
       const response = await fetch(commentForm.action, {
@@ -202,14 +204,22 @@ if (commentForm) {
         },
       });
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Could not post comment.');
+      if (!response.ok) throw new Error(payload.error || tr('Could not post comment.'));
       window.location.href = payload.url;
     } catch (error) {
       errorNode.textContent = error.message;
       if (button) {
         button.disabled = false;
-        button.innerHTML = '<i class="fa-regular fa-comment me-1"></i>Post comment';
+        button.innerHTML = `<i class="fa-regular fa-comment me-1"></i>${tr('Post comment')}`;
       }
     }
+  });
+}
+
+// counter.html already loads this module for the optional submission note. Keep
+// live score projection isolated from the pose/recording runner itself.
+if (document.getElementById('counter-app')) {
+  import('./counter_prediction.js').catch((error) => {
+    console.warn('Could not load live 20-second score prediction.', error);
   });
 }
