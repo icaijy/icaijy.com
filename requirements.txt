@@ -16,6 +16,7 @@ idna==3.10
 ijudger==0.1.0
 kombu==5.5.4
 Markdown==3.7
+nh3==0.3.6
 packaging==25.0
 prompt_toolkit==3.0.52
 pymdown-extensions==10.16.1
