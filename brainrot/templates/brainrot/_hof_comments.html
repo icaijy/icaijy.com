@@ -1,0 +1,83 @@
+<section class="hof-comments mt-5" id="comments" aria-labelledby="comments-title">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div>
+      <div class="text-secondary small text-uppercase fw-semibold mb-1">HOF DISCUSSION THREAD</div>
+      <h2 class="h3 mb-0" id="comments-title"><i class="fa-regular fa-comments me-2"></i>Comments <span class="text-secondary">{{ comments|length }}</span></h2>
+    </div>
+    {% if request.user.is_authenticated %}
+      <span class="small text-secondary">Posting as <strong>{{ request.user.username }}</strong> · up to {{ comment_max_length }} characters</span>
+    {% else %}
+      <span class="small text-secondary">Guest comments · up to {{ comment_max_length }} characters · 3 per 10 minutes</span>
+    {% endif %}
+  </div>
+
+  {% if request.GET.commented %}
+    <div class="alert alert-success py-2" role="status">Comment posted. The scientific peer-review process has begun.</div>
+  {% endif %}
+
+  <div class="comment-thread d-grid gap-3 mb-4">
+    {% for comment in comments %}
+      <article class="comment-card card border-0 shadow-sm" id="comment-{{ comment.id }}">
+        <div class="card-body p-3 p-md-4">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <strong class="comment-author">{{ comment.public_name }}</strong>
+            {% if comment.is_original_poster %}<span class="badge text-bg-primary">OP</span>{% endif %}
+            {% if comment.is_submission_note %}<span class="badge text-bg-light border text-dark">submission note</span>{% endif %}
+            <span class="small text-secondary">{{ comment.created_at|date:'j M Y · H:i' }}</span>
+            <a class="small text-secondary ms-sm-auto text-decoration-none" href="#comment-{{ comment.id }}">#{{ forloop.counter }}</a>
+          </div>
+
+          <div class="comment-markdown">{{ comment.rendered_body }}</div>
+
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-comment-reply data-author="{{ comment.public_name }}">
+              <i class="fa-solid fa-reply me-1"></i>Reply
+            </button>
+            {% if request.user.is_authenticated %}
+              {% if request.user.is_superuser or comment.user_id == request.user.id or entry.user_id == request.user.id %}
+                <form method="post" action="{% url 'brainrot:delete_comment' comment.id %}" onsubmit="return confirm('Delete this comment?');">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                </form>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    {% empty %}
+      <div class="comment-empty card border-dashed">
+        <div class="card-body p-4 text-center text-secondary">
+          <div class="fs-3 mb-2">🦗</div>
+          <strong>No comments yet.</strong> Be the first person to conduct peer review on this extremely important specimen.
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="card shadow-sm comment-compose-card">
+    <div class="card-body p-3 p-md-4">
+      <h3 class="h5 mb-1">Join the discussion</h3>
+      <p class="small text-secondary mb-3">Talk trash, explain technique, congratulate the specimen, or post actual analysis for some reason.</p>
+      <form id="hof-comment-form" method="post" action="{% url 'brainrot:add_comment' entry.id %}">
+        {% csrf_token %}
+        {% if not request.user.is_authenticated %}
+          <div class="mb-3">
+            <label class="form-label" for="comment-display-name">Display name</label>
+            <input class="form-control" id="comment-display-name" name="display_name" maxlength="32" placeholder="Anonymous Swan">
+            <div class="form-text">Guest names are labelled as guest and cannot impersonate registered usernames.</div>
+          </div>
+        {% endif %}
+        {% include 'brainrot/_comment_editor.html' with textarea_id='hof-comment-body' field_name='body' max_length=comment_max_length rows=5 placeholder='Write something under this run…' required_field=True %}
+        <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+          <button class="btn btn-primary" type="submit" id="post-hof-comment"><i class="fa-regular fa-comment me-1"></i>Post comment</button>
+          {% if request.user.is_authenticated %}
+            <span class="small text-secondary">20 comments per 10 minutes.</span>
+          {% else %}
+            <span class="small text-secondary">3 comments per 10 minutes. Log in for a larger limit and self-delete controls.</span>
+          {% endif %}
+        </div>
+        <p class="small text-danger mt-2 mb-0" id="hof-comment-error" role="alert"></p>
+      </form>
+    </div>
+  </div>
+</section>
