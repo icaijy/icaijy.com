@@ -1,3 +1,5 @@
+const tr = (message) => typeof gettext === 'function' ? gettext(message) : message;
+
 function csrfToken() {
   const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
   return match ? decodeURIComponent(match[1]) : '';
@@ -25,7 +27,7 @@ async function toggleReaction(bar, button) {
       },
     });
     const payload = await response.json();
-    if (!response.ok) throw new Error(payload.error || 'Could not react.');
+    if (!response.ok) throw new Error(payload.error || tr('Could not react.'));
 
     bar.querySelectorAll('[data-reaction-count]').forEach((countNode) => {
       const key = countNode.dataset.reactionCount;
