@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
+from .video_mp4 import Mp4TranscodeError, transcode_upload_to_content_file
+
 
 @dataclass(frozen=True)
 class ValidatedVideo:
@@ -42,16 +44,12 @@ def _packet_duration(path, ffprobe):
         try:
             packet_duration = float(values[1]) if len(values) > 1 and values[1] else 0
         except ValueError:
-            # Firefox WebM commonly reports a valid PTS with duration_time=N/A.
-            # The PTS still contributes to the encoded packet span.
             packet_duration = 0
         first_pts = pts if first_pts is None else min(first_pts, pts)
         packet_end = pts + max(0, packet_duration)
         end_time = packet_end if end_time is None else max(end_time, packet_end)
     if first_pts is None or end_time is None:
         return 0
-    # MediaRecorder packets may retain timestamps from the long-lived camera
-    # stream. Duration is the packet span, not the final absolute PTS.
     return max(0, end_time - first_pts)
 
 
@@ -59,7 +57,6 @@ def _sniff_container(upload):
     upload.seek(0)
     header = upload.read(32)
     upload.seek(0)
-
     if header.startswith(b'\x1aE\xdf\xa3'):
         return 'video/webm', 'webm'
     if len(header) >= 12 and header[4:8] == b'ftyp':
@@ -112,10 +109,6 @@ def _probe_video(upload, expected_mime):
         except (TypeError, ValueError):
             container_duration = 0
 
-        # MediaRecorder may write a non-zero container duration based on the
-        # lifetime of the camera track rather than this recording. Packet PTS
-        # span reflects the actual encoded evidence and is therefore preferred
-        # whenever ffprobe can recover it.
         packet_duration = _packet_duration(path, ffprobe)
         duration = packet_duration if packet_duration > 1 else container_duration
         if duration <= 1 or duration > settings.HOF_MAX_VIDEO_SECONDS:
@@ -135,11 +128,12 @@ def _probe_video(upload, expected_mime):
 
 
 def validate_hall_of_fame_video(upload):
+    """Validate a browser upload and replace it with a canonical MP4 payload."""
     if upload.size <= 0 or upload.size > settings.HOF_MAX_UPLOAD_BYTES:
         max_mb = settings.HOF_MAX_UPLOAD_BYTES / (1024 * 1024)
         raise ValidationError(f'Video must be no larger than {max_mb:g} MB.')
 
-    mime_type, extension = _sniff_container(upload)
+    mime_type, _extension = _sniff_container(upload)
     supplied_type = (upload.content_type or '').split(';', 1)[0].lower()
     compatible_types = {
         'video/webm': {'video/webm', 'application/octet-stream'},
@@ -150,4 +144,16 @@ def validate_hall_of_fame_video(upload):
 
     duration = _probe_video(upload, mime_type)
     upload.seek(0)
-    return ValidatedVideo(mime_type, extension, duration)
+    try:
+        canonical = transcode_upload_to_content_file(upload)
+    except Mp4TranscodeError as exc:
+        raise ValidationError(str(exc)) from exc
+
+    # Preserve the UploadedFile object expected by the existing submission view,
+    # but make its contents and metadata canonical MP4 before FileField.save().
+    upload.file = canonical
+    upload.name = canonical.name
+    upload.size = canonical.size
+    upload.content_type = 'video/mp4'
+    upload.seek(0)
+    return ValidatedVideo('video/mp4', 'mp4', duration)

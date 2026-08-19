@@ -3,15 +3,10 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 
 from .models import HallOfFameEntry
-from .video_downloads import Mp4TranscodeError, open_compatible_mp4
-from .views import hall_of_fame_video as original_hall_of_fame_video
 
 
 def hall_of_fame_video(request, entry_id):
-    """Keep inline/legacy evidence untouched; normalise new downloads to MP4."""
-    if request.GET.get('format') != 'mp4':
-        return original_hall_of_fame_video(request, entry_id)
-
+    """Stream the stored recording directly; persisted HOF videos are canonical MP4."""
     entry = get_object_or_404(HallOfFameEntry.objects.select_related('user'), pk=entry_id)
     may_view = (
         entry.visibility == HallOfFameEntry.Visibility.PUBLIC
@@ -21,11 +16,7 @@ def hall_of_fame_video(request, entry_id):
     if not may_view:
         return JsonResponse({'error': _('Recording is not public.')}, status=404)
 
-    try:
-        handle, size = open_compatible_mp4(entry)
-    except Mp4TranscodeError as exc:
-        return JsonResponse({'error': str(exc)}, status=503)
-
+    extension = entry.video.name.rsplit('.', 1)[-1].lower() if '.' in entry.video.name else 'mp4'
     if entry.game_mode == HallOfFameEntry.GameMode.LEG_CLAPS:
         mode_slug = 'tung-tung-leg-claps'
     elif entry.game_mode == HallOfFameEntry.GameMode.VOICE_67:
@@ -33,9 +24,12 @@ def hall_of_fame_video(request, entry_id):
     else:
         mode_slug = '67'
 
-    response = FileResponse(handle, content_type='video/mp4')
-    response['Content-Length'] = size
-    response['Content-Disposition'] = f'attachment; filename="{mode_slug}-run-{entry.pk}.mp4"'
+    response = FileResponse(entry.video.open('rb'), content_type=entry.mime_type)
+    response['Content-Length'] = entry.video.size
+    disposition = 'attachment' if request.GET.get('download') == '1' else 'inline'
+    response['Content-Disposition'] = (
+        f'{disposition}; filename="{mode_slug}-run-{entry.pk}.{extension}"'
+    )
     response['X-Content-Type-Options'] = 'nosniff'
-    response['Cache-Control'] = 'private, no-store'
+    response['Cache-Control'] = 'private, max-age=300'
     return response

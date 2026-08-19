@@ -8,7 +8,7 @@ from .storage import private_media_storage
 
 
 def hall_of_fame_upload_path(instance, filename):
-    extension = getattr(instance, '_validated_extension', 'webm')
+    extension = getattr(instance, '_validated_extension', 'mp4')
     return f'hall_of_fame/{uuid.uuid4().hex}.{extension}'
 
 
