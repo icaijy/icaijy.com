@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Max
 from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -24,6 +24,7 @@ from django.views.decorators.http import require_POST
 
 from .comment_markup import comment_max_length, normalise_comment_body
 from .models import HallOfFameComment, HallOfFameEntry, HallOfFameUploadAttempt
+from .social import reaction_items, reactor_key
 from .validators import validate_hall_of_fame_video
 
 
@@ -58,6 +59,25 @@ def _counter_context(rival=None, game_mode=HallOfFameEntry.GameMode.SIX_SEVEN):
     return context
 
 
+def _personal_best_map(user_ids, game_mode):
+    if not user_ids:
+        return {}
+    rows = HallOfFameEntry.objects.filter(
+        user_id__in=user_ids,
+        game_mode=game_mode,
+    ).values('user_id').annotate(pb=Max('score'))
+    return {row['user_id']: row['pb'] for row in rows}
+
+
+def _attach_personal_bests(entries, game_mode):
+    user_ids = {entry.user_id for entry in entries if entry.user_id}
+    pb_map = _personal_best_map(user_ids, game_mode)
+    for entry in entries:
+        entry.personal_best = pb_map.get(entry.user_id) if entry.user_id else None
+        entry.is_personal_best = bool(entry.user_id and entry.score == entry.personal_best)
+    return pb_map
+
+
 @ensure_csrf_cookie
 def counter(request):
     game_mode = _normalise_game_mode(request.GET.get('mode'))
@@ -70,10 +90,11 @@ def typing_test(request):
 
 def hall_of_fame(request):
     game_mode = _normalise_game_mode(request.GET.get('mode'))
-    entries = HallOfFameEntry.objects.filter(
+    entries = list(HallOfFameEntry.objects.filter(
         game_mode=game_mode,
         visibility=HallOfFameEntry.Visibility.PUBLIC,
-    ).select_related('user').annotate(comment_count=Count('comments'))[:67]
+    ).select_related('user').annotate(comment_count=Count('comments'))[:67])
+    _attach_personal_bests(entries, game_mode)
     return render(request, 'brainrot/hall_of_fame.html', {
         'entries': entries,
         'game_mode': game_mode,
@@ -103,11 +124,33 @@ def hall_of_fame_detail(request, entry_id):
     entry = get_object_or_404(HallOfFameEntry.objects.select_related('user'), pk=entry_id)
     if entry.visibility != HallOfFameEntry.Visibility.PUBLIC and not _may_manage_entry(request.user, entry):
         return JsonResponse({'error': _('This Hall of Fame entry is private.')}, status=404)
-    comments = entry.comments.select_related('user', 'entry', 'entry__user').all()
+
+    comments = list(entry.comments.select_related('user', 'entry', 'entry__user').all())
+    pb_map = _personal_best_map(
+        {user_id for user_id in [entry.user_id, *[comment.user_id for comment in comments]] if user_id},
+        entry.game_mode,
+    )
+    entry.personal_best = pb_map.get(entry.user_id) if entry.user_id else None
+    entry.is_personal_best = bool(entry.user_id and entry.score == entry.personal_best)
+
+    identity = reactor_key(request)
+    entry.reaction_items = reaction_items(f'entry:{entry.pk}', identity)
+    for comment in comments:
+        comment.author_pb = pb_map.get(comment.user_id) if comment.user_id else None
+        comment.reaction_items = reaction_items(f'comment:{comment.pk}', identity)
+
+    timeline_exact = len(entry.event_timeline) == entry.score
+    speed_unit = {
+        HallOfFameEntry.GameMode.LEG_CLAPS: 'claps/s',
+        HallOfFameEntry.GameMode.VOICE_67: '67s/s',
+    }.get(entry.game_mode, 'moves/s')
+
     return render(request, 'brainrot/hall_of_fame_detail.html', {
         'entry': entry,
         'comments': comments,
         'comment_max_length': comment_max_length(request.user),
+        'timeline_exact': timeline_exact,
+        'speed_unit': speed_unit,
     })
 
 
