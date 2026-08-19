@@ -3,8 +3,8 @@ import nh3
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
-ANONYMOUS_COMMENT_MAX_LENGTH = 1000
-AUTHENTICATED_COMMENT_MAX_LENGTH = 4000
+ANONYMOUS_COMMENT_MAX_LENGTH = 2000
+AUTHENTICATED_COMMENT_MAX_LENGTH = 8000
 
 _ALLOWED_TAGS = {
     'p', 'br', 'strong', 'em', 'del', 'code', 'pre', 'blockquote',
