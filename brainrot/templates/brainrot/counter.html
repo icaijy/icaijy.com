@@ -9,6 +9,7 @@
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/vision_bundle.mjs" crossorigin>
 <link rel="preload" href="https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task" as="fetch" crossorigin>
 <link rel="stylesheet" href="{% static 'brainrot/counter_bootstrap.css' %}">
+<link rel="stylesheet" href="{% static 'brainrot/comments.css' %}">
 {% if turnstile_enabled %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}
 
 <main class="container py-4 py-md-5 counter-page" id="counter-app"
@@ -171,6 +172,16 @@
       {% endif %}
 
       {% if request.user.is_authenticated or anonymous_submission_available %}
+        <div class="border rounded p-3 mb-3 bg-light-subtle">
+          <h3 class="h6 mb-1"><i class="fa-regular fa-comment me-1"></i>Add a comment with your run <span class="text-secondary fw-normal">(optional)</span></h3>
+          <p class="small text-secondary mb-2">This becomes the first OP comment under your HOF video. You can just type normally; Markdown is optional.</p>
+          {% if request.user.is_authenticated %}
+            {% include 'brainrot/_comment_editor.html' with textarea_id='hof-submission-comment' field_name='submission_comment' max_length=4000 rows=4 placeholder='Anything to say about this run?' %}
+          {% else %}
+            {% include 'brainrot/_comment_editor.html' with textarea_id='hof-submission-comment' field_name='submission_comment' max_length=1000 rows=4 placeholder='Anything to say about this run?' %}
+          {% endif %}
+        </div>
+
         {% if turnstile_enabled %}<div class="cf-turnstile mb-3" data-sitekey="{{ turnstile_site_key }}"></div>{% endif %}
         <div class="d-flex flex-wrap gap-2">
           <button class="btn btn-primary" id="submit-hof" type="button">{% translate "Submit to Hall of Fame" %}</button>
@@ -223,4 +234,5 @@
 
 <script src="{% url 'brainrot:javascript_catalog' %}"></script>
 <script type="module" src="{% static 'brainrot/counter.js' %}"></script>
+<script type="module" src="{% static 'brainrot/comment_editor.js' %}"></script>
 {% endblock %}

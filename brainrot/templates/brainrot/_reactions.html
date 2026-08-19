@@ -1,0 +1,16 @@
+<div class="reaction-bar d-flex flex-wrap align-items-center gap-2"
+     data-reaction-bar
+     data-target-type="{{ target_type }}"
+     data-target-id="{{ target_id }}"
+     data-reaction-url="{% url 'brainrot:toggle_reaction' %}">
+  {% for reaction in reaction_items %}
+    <button class="reaction-button btn btn-sm {% if reaction.active %}btn-dark active{% else %}btn-outline-secondary{% endif %}"
+            type="button"
+            data-reaction-emoji="{{ reaction.emoji }}"
+            aria-pressed="{% if reaction.active %}true{% else %}false{% endif %}">
+      <span class="reaction-emoji" aria-hidden="true">{{ reaction.emoji }}</span>
+      <span data-reaction-count="{{ reaction.emoji }}">{{ reaction.count }}</span>
+    </button>
+  {% endfor %}
+  <span class="small text-secondary reaction-status" data-reaction-status role="status" aria-live="polite"></span>
+</div>

@@ -53,7 +53,12 @@
         <div class="row g-3 align-items-center">
           <div class="col-auto"><span class="badge text-bg-light border text-dark fs-6">#{{ forloop.counter }}</span></div>
           <div class="col">
-            <h2 class="h5 mb-1">{{ entry.public_name }}</h2>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+              <h2 class="h5 mb-0">{{ entry.public_name }}</h2>
+              {% if entry.personal_best is not None %}
+                <span class="badge {% if entry.is_personal_best %}text-bg-warning{% else %}text-bg-light border text-dark{% endif %}">PB {{ entry.personal_best }}</span>
+              {% endif %}
+            </div>
             <div class="text-secondary small">
               {% if entry.game_mode == 'leg_claps' %}
                 {% blocktranslate with score=entry.score date=entry.created_at|date:'j M Y' %}made {{ score }} leg claps in 20 seconds · {{ date }}{% endblocktranslate %}
@@ -72,6 +77,7 @@
 
         <div class="d-flex flex-wrap gap-2 mt-3">
           <a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "Full details" %}</a>
+          <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:hall_of_fame_detail' entry.id %}#comments"><i class="fa-regular fa-comments me-1"></i>{{ entry.comment_count }}</a>
           {% if entry.game_mode == 'voice_67' %}
             <a class="btn btn-sm btn-outline-warning" href="{% url 'brainrot:voice_counter' %}">{% translate "Voice mode coming soon" %}</a>
           {% else %}
@@ -94,9 +100,10 @@
                   {% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds.{% endblocktranslate %}
                 {% endif %}
               </strong>
-              <p class="text-secondary small mt-2">{% translate "Open the detail page to share this run or download a phone-friendly MP4." %}</p>
+              <p class="text-secondary small mt-2">{% translate "Open the detail page to see PB, reactions, pacing analysis, comments, sharing and the phone-friendly MP4." %}</p>
               <div class="d-flex flex-wrap gap-2">
                 <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "Open full run" %} →</a>
+                <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}#comments"><i class="fa-regular fa-comments me-1"></i>{{ entry.comment_count }} comments</a>
                 <a href="{{ preview_url }}?download=1&amp;format=mp4"><i class="fa-solid fa-download me-1"></i>{% translate "Download MP4" %}</a>
               </div>
             </div>
