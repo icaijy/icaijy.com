@@ -4,6 +4,7 @@
 {% block title %}{{ entry.public_name }} — {% if entry.game_mode == 'leg_claps' %}{% translate "Tung Tung Leg Claps Hall of Fame" %}{% elif entry.game_mode == 'voice_67' %}{% translate "Six Seven Voice Speedrun Hall of Fame" %}{% else %}{% translate "67 Hall of Fame" %}{% endif %}{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'brainrot/comments.css' %}">
 <main class="container py-4 py-md-5" id="hof-detail"
       data-entry-url="{{ request.build_absolute_uri }}"
       data-username="{{ entry.public_name }}"
@@ -89,7 +90,10 @@
       </aside>
     </div>
   </div>
+
+  {% include 'brainrot/_hof_comments.html' %}
 </main>
 <script src="{% url 'brainrot:javascript_catalog' %}"></script>
-<script type="module" src="{% static 'brainrot/hof_detail.js' %}?v=20260817.2"></script>
+<script type="module" src="{% static 'brainrot/hof_detail.js' %}"></script>
+<script type="module" src="{% static 'brainrot/comment_editor.js' %}"></script>
 {% endblock %}
