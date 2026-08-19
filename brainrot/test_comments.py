@@ -133,8 +133,9 @@ class HallOfFameCommentTests(TestCase):
         self.assertContains(detail, f'id="comment-{comment.id}"')
 
         board = self.client.get('/67/hall-of-fame/')
+        board_entry = list(board.context['entries'])[0]
+        self.assertEqual(board_entry.comment_count, 1)
         self.assertContains(board, f'/67/hall-of-fame/{self.entry.id}/#comments')
-        self.assertContains(board, '<i class="fa-regular fa-comments me-1"></i>1', html=True)
 
     def test_comment_delete_permissions(self):
         comment = HallOfFameComment.objects.create(
@@ -208,7 +209,7 @@ class SubmissionCommentTests(TestCase):
         self.assertEqual(comment.body, '**new PB** somehow')
 
         detail = self.client.get(f'/67/hall-of-fame/{entry.id}/')
-        self.assertContains(detail, '<strong>new PB</strong> somehow', html=True)
+        self.assertContains(detail, '<strong>new PB</strong> somehow')
         self.assertContains(detail, 'submission note')
         self.assertContains(detail, '>OP<')
 
