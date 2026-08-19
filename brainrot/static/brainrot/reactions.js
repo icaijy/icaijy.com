@@ -1,6 +1,8 @@
 const tr = (message) => typeof gettext === 'function' ? gettext(message) : message;
 
-function csrfToken() {
+function csrfToken(bar) {
+  const embedded = bar?.dataset.csrfToken || '';
+  if (embedded && embedded !== 'NOTPROVIDED') return embedded;
   const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
   return match ? decodeURIComponent(match[1]) : '';
 }
@@ -22,7 +24,7 @@ async function toggleReaction(bar, button) {
       body: form,
       credentials: 'same-origin',
       headers: {
-        'X-CSRFToken': csrfToken(),
+        'X-CSRFToken': csrfToken(bar),
         'X-Requested-With': 'XMLHttpRequest',
       },
     });
