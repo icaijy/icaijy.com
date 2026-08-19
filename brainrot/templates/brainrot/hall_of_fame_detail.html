@@ -36,6 +36,9 @@
       <div class="d-flex flex-wrap gap-2 mt-2">
         <span class="badge {% if entry.game_mode == 'leg_claps' %}text-bg-success{% elif entry.game_mode == 'voice_67' %}text-bg-danger{% else %}text-bg-primary{% endif %}">{{ entry.get_game_mode_display }}</span>
         <span class="badge {% if entry.visibility == 'public' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ entry.get_visibility_display }}</span>
+        {% if entry.personal_best is not None %}
+          <span class="badge {% if entry.is_personal_best %}text-bg-warning{% else %}text-bg-light border text-dark{% endif %}">{% if entry.is_personal_best %}PB · {% endif %}Best {{ entry.personal_best }}</span>
+        {% endif %}
         {% if entry.game_mode == 'voice_67' %}<span class="badge text-bg-warning">COMING SOON · detector rebuild</span>{% endif %}
       </div>
     </div>
@@ -57,7 +60,11 @@
               {% endif %}
             {% endif %}
           </div>
-          <p class="small text-secondary mt-2 mb-0">{% translate "Downloads are served as H.264/AAC MP4 for broad phone compatibility." %}</p>
+          <p class="small text-secondary mt-2">{% translate "Downloads are served as H.264/AAC MP4 for broad phone compatibility." %}</p>
+          <div class="border-top pt-3 mt-3">
+            <div class="small text-secondary mb-2">React to this run · no account required. Guest reactions are remembered in this browser.</div>
+            {% include 'brainrot/_reactions.html' with target_type='entry' target_id=entry.id reaction_items=entry.reaction_items %}
+          </div>
         </div>
       </div>
     </div>
@@ -77,6 +84,14 @@
             <p class="text-secondary small">{% translate "Distribute this evidence to researchers, rivals and confused relatives." %}</p>
           {% endif %}
 
+          {% if entry.personal_best is not None %}
+            <div class="border rounded p-3 mb-3 bg-light-subtle">
+              <div class="text-secondary small text-uppercase fw-semibold">{{ entry.user.username }} · {{ entry.get_game_mode_display }} PB</div>
+              <div class="display-6 fw-bold">{{ entry.personal_best }}</div>
+              {% if entry.is_personal_best %}<div class="small text-success fw-semibold">This run matches their personal best.</div>{% endif %}
+            </div>
+          {% endif %}
+
           {% if entry.visibility == 'public' %}
             <textarea class="form-control mb-2" id="hof-share-text" rows="6" readonly aria-label="Shareable Hall of Fame result"></textarea>
             <div class="d-grid gap-2">
@@ -91,9 +106,43 @@
     </div>
   </div>
 
+  <section class="mt-5" aria-labelledby="run-analysis-title">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+      <div>
+        <div class="text-secondary small text-uppercase fw-semibold mb-1">20-SECOND PACING ANALYSIS</div>
+        <h2 class="h3 mb-0" id="run-analysis-title">Speed over time</h2>
+      </div>
+      <span class="small text-secondary">2-second centred rolling rate</span>
+    </div>
+
+    {% if timeline_exact %}
+      <div class="card shadow-sm run-analysis-card" id="run-speed-analysis" data-speed-unit="{{ speed_unit }}">
+        <div class="card-body p-3 p-md-4">
+          <div class="row g-3 mb-3">
+            <div class="col-6 col-lg-3"><div class="run-analysis-stat border rounded p-3"><div class="small text-secondary">Average</div><div class="run-analysis-value" id="run-average-rate">—</div></div></div>
+            <div class="col-6 col-lg-3"><div class="run-analysis-stat border rounded p-3"><div class="small text-secondary">Peak 2s rate</div><div class="run-analysis-value" id="run-peak-rate">—</div><div class="small text-secondary" id="run-peak-time"></div></div></div>
+            <div class="col-6 col-lg-3"><div class="run-analysis-stat border rounded p-3"><div class="small text-secondary">Fastest 5s</div><div class="run-analysis-value" id="run-fastest-burst">—</div><div class="small text-secondary" id="run-fastest-burst-time"></div></div></div>
+            <div class="col-6 col-lg-3"><div class="run-analysis-stat border rounded p-3"><div class="small text-secondary">First → second half</div><div class="run-analysis-value"><span id="run-first-half-rate">—</span> → <span id="run-second-half-rate">—</span></div></div></div>
+          </div>
+          <div class="run-analysis-chart-wrap">
+            <canvas id="run-speed-chart" aria-label="Rolling speed over the 20 second run"></canvas>
+          </div>
+          <p class="small text-secondary mt-2 mb-0" id="run-speed-hover">Move across the chart to inspect the rolling rate.</p>
+        </div>
+      </div>
+      {{ entry.event_timeline|json_script:'run-event-timeline' }}
+    {% else %}
+      <div class="alert alert-light border shadow-sm mb-0">
+        This is a legacy run without an exact per-count event timeline, so a speed curve would be fake science. Newer runs record every count timestamp and get the full pacing graph.
+      </div>
+    {% endif %}
+  </section>
+
   {% include 'brainrot/_hof_comments.html' %}
 </main>
 <script src="{% url 'brainrot:javascript_catalog' %}"></script>
 <script type="module" src="{% static 'brainrot/hof_detail.js' %}"></script>
 <script type="module" src="{% static 'brainrot/comment_editor.js' %}"></script>
+<script type="module" src="{% static 'brainrot/reactions.js' %}"></script>
+{% if timeline_exact %}<script type="module" src="{% static 'brainrot/run_analysis.js' %}"></script>{% endif %}
 {% endblock %}
