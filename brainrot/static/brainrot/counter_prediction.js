@@ -3,6 +3,22 @@ const RECENT_WINDOW_SECONDS = 4;
 
 const tr = (message) => typeof gettext === 'function' ? gettext(message) : message;
 
+export function projectFinalScore(score, elapsed, recentRate = null, gameSeconds = GAME_SECONDS) {
+  const currentScore = Number(score);
+  const currentElapsed = Number(elapsed);
+  if (!Number.isFinite(currentScore) || !Number.isFinite(currentElapsed)) return null;
+  if (currentElapsed < 1.5 || currentScore < 1 || currentElapsed >= gameSeconds) return null;
+
+  const overallRate = currentScore / currentElapsed;
+  const effectiveRecentRate = Number.isFinite(recentRate) ? Math.max(0, recentRate) : overallRate;
+  const recentWeight = Math.min(0.45, Math.max(0, (currentElapsed - 4) / 20));
+  const projectedRate = overallRate * (1 - recentWeight) + effectiveRecentRate * recentWeight;
+  return Math.max(
+    currentScore,
+    Math.round(currentScore + projectedRate * (gameSeconds - currentElapsed)),
+  );
+}
+
 function ensureProjectionUi() {
   const scoreCard = document.querySelector('.score-card');
   const timer = document.getElementById('counter-time');
@@ -56,26 +72,25 @@ function initialisePrediction() {
       samples = samples.filter((sample) => sample.elapsed >= cutoff);
     }
 
-    if (elapsed < 1.5 || score < 1 || remaining <= 0 || remaining >= GAME_SECONDS) {
-      projectionNode.textContent = remaining <= 0 ? String(score) : '—';
+    if (remaining <= 0) {
+      projectionNode.textContent = String(score);
+      requestAnimationFrame(tick);
+      return;
+    }
+    if (remaining >= GAME_SECONDS) {
+      projectionNode.textContent = '—';
       requestAnimationFrame(tick);
       return;
     }
 
-    const overallRate = score / elapsed;
-    let recentRate = overallRate;
+    let recentRate = null;
     const oldest = samples.find((sample) => sample.elapsed >= Math.max(0, elapsed - RECENT_WINDOW_SECONDS));
     if (oldest && elapsed - oldest.elapsed >= 1) {
       recentRate = Math.max(0, (score - oldest.score) / (elapsed - oldest.elapsed));
     }
 
-    // Early on, trust the full-run average because a 4-second window is noisy.
-    // Later, recent pace gets enough weight to reflect a genuine surge/fade.
-    const recentWeight = Math.min(0.45, Math.max(0, (elapsed - 4) / 20));
-    const projectedRate = overallRate * (1 - recentWeight) + recentRate * recentWeight;
-    const projected = Math.max(score, Math.round(score + projectedRate * (GAME_SECONDS - elapsed)));
-    projectionNode.textContent = String(projected);
-
+    const projected = projectFinalScore(score, elapsed, recentRate);
+    projectionNode.textContent = projected === null ? '—' : String(projected);
     requestAnimationFrame(tick);
   }
 
