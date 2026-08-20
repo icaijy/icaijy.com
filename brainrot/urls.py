@@ -15,6 +15,8 @@ urlpatterns = [
     path('submit/', views.submit_hall_of_fame, name='submit_hall_of_fame'),
 
     path('daily/', economy_views.daily, name='daily'),
+    path('daily-mini/', economy_views.daily_preview, name='daily_preview'),
+    path('comments/', economy_views.latest_comments, name='latest_comments'),
     path('wealth/', economy_views.wealth, name='wealth'),
     path('shop/', economy_views.shop, name='shop'),
     path('inventory/', economy_views.inventory, name='inventory'),

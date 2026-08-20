@@ -14,6 +14,12 @@
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css" />
     <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'monokai.css' %}" />
+    <style>
+      .daily-mini-widget{position:fixed;right:1rem;bottom:1rem;width:min(280px,calc(100vw - 2rem));z-index:1020;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border:1px solid rgba(15,23,42,.16);border-radius:14px;box-shadow:0 18px 45px rgba(15,23,42,.18);overflow:hidden}
+      .daily-mini-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.7rem .85rem;background:#0f172a;color:#fff;text-decoration:none}
+      .daily-mini-head:hover{color:#d8ff62}.daily-mini-list{padding:.55rem .75rem .7rem}.daily-mini-row{display:grid;grid-template-columns:2rem minmax(0,1fr) auto;align-items:center;gap:.35rem;padding:.23rem 0;font-size:.84rem}.daily-mini-rank{color:#64748b;font-variant-numeric:tabular-nums}.daily-mini-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.daily-mini-lock{font-size:.68rem}
+      @media (max-width: 767.98px){.daily-mini-widget{right:.65rem;bottom:.65rem;width:230px}.daily-mini-list{max-height:150px;overflow:auto}}
+    </style>
     {% block extra_head %}{% endblock %}
   </head>
 
@@ -28,9 +34,7 @@
           </span>
         </a>
 
-        <a class="site-67-shortcut d-lg-none" href="{% url 'brainrot:counter' %}?mode=six_seven" aria-label="Play 67 Counter">
-          <span>67</span>
-        </a>
+        <a class="site-67-shortcut d-lg-none" href="{% url 'brainrot:counter' %}?mode=six_seven" aria-label="Play 67 Counter"><span>67</span></a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#siteNavbar" aria-controls="siteNavbar" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
@@ -39,21 +43,16 @@
         <div class="collapse navbar-collapse" id="siteNavbar">
           <ul class="navbar-nav me-auto align-items-lg-center gap-lg-1">
             <li class="nav-item d-none d-lg-block">
-              <a class="site-67-shortcut" href="{% url 'brainrot:counter' %}?mode=six_seven">
-                <span>67</span>
-                <small>{% trans "Play" %}</small>
-              </a>
+              <a class="site-67-shortcut" href="{% url 'brainrot:counter' %}?mode=six_seven"><span>67</span><small>{% trans "Play" %}</small></a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'brainrot:hall_of_fame' %}"><i class="fa-solid fa-ranking-star me-1"></i> 67 HOF</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'brainrot:index' %}"><i class="fa-solid fa-gamepad me-1"></i> {% trans "Games" %}</a>
-            </li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:hall_of_fame' %}"><i class="fa-solid fa-ranking-star me-1"></i> HOF</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:daily' %}"><i class="fa-solid fa-calendar-day me-1"></i> Daily</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:latest_comments' %}"><i class="fa-regular fa-comments me-1"></i> Comments</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:shop' %}"><i class="fa-solid fa-bag-shopping me-1"></i> Shop</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:wealth' %}"><i class="fa-solid fa-sack-dollar me-1"></i> Rich</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:index' %}"><i class="fa-solid fa-gamepad me-1"></i> {% trans "Games" %}</a></li>
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="projectsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fa-solid fa-folder-open me-1"></i> {% trans "Projects" %}
-              </a>
+              <a class="nav-link dropdown-toggle" href="#" id="projectsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-solid fa-folder-open me-1"></i> {% trans "Projects" %}</a>
               <ul class="dropdown-menu site-dropdown" aria-labelledby="projectsDropdown">
                 <li><a class="dropdown-item" href="{% url 'blog' %}"><i class="fa-solid fa-blog me-2"></i>{% trans "Blog" %}</a></li>
                 <li><a class="dropdown-item" href="/orac-leaderboards"><i class="fa-solid fa-ranking-star me-2"></i>ORAC Leaderboards</a></li>
@@ -66,9 +65,7 @@
 
           <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fa-solid fa-language me-1"></i> {% if CURRENT_LANGUAGE == 'zh-hans' %}中文{% else %}EN{% endif %}
-              </a>
+              <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-solid fa-language me-1"></i> {% if CURRENT_LANGUAGE == 'zh-hans' %}中文{% else %}EN{% endif %}</a>
               <ul class="dropdown-menu dropdown-menu-end site-dropdown" aria-labelledby="languageDropdown">
                 <li>
                   <form method="post" action="{% url 'set_language' %}">
@@ -83,11 +80,11 @@
 
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fa-solid fa-user me-1"></i>
-                {% if request.user.is_authenticated %}{{ request.user.username }}{% else %}{% trans "Account" %}{% endif %}
+                <i class="fa-solid fa-user me-1"></i>{% if request.user.is_authenticated %}{{ request.user.username }}{% else %}{% trans "Account" %}{% endif %}
               </a>
               <ul class="dropdown-menu dropdown-menu-end site-dropdown" aria-labelledby="userDropdown">
                 {% if request.user.is_authenticated %}
+                  <li><a class="dropdown-item" href="{% url 'brainrot:inventory' %}"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>My Cosmetics</a></li>
                   <li><a class="dropdown-item" href="{% url 'brainrot:my_hall_of_fame' %}"><i class="fa-solid fa-medal me-2"></i>{% translate "My 67 Hall of Fame" %}</a></li>
                   <li><hr class="dropdown-divider" /></li>
                   <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket me-2"></i>{% trans "Logout" %}</a></li>
@@ -102,9 +99,16 @@
       </div>
     </nav>
 
-    <div class="content">
-      {% block content %}{% endblock %}
-    </div>
+    <div class="content">{% block content %}{% endblock %}</div>
+
+    {% if request.resolver_match.namespace == 'brainrot' and request.resolver_match.url_name != 'daily' %}
+      <aside class="daily-mini-widget" id="daily-mini-widget" data-endpoint="{% url 'brainrot:daily_preview' %}">
+        <a class="daily-mini-head" href="{% url 'brainrot:daily' %}"><strong><i class="fa-solid fa-bolt me-1"></i> Today's 67</strong><span class="small">full board →</span></a>
+        <div class="daily-mini-list" data-daily-mini-list>
+          <div class="small text-secondary" data-daily-mini-status>Loading today's scientific standings…</div>
+        </div>
+      </aside>
+    {% endif %}
 
     <footer class="site-footer">
       <div class="container-xl d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
@@ -121,12 +125,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
     <script>document.addEventListener('DOMContentLoaded', () => window.hljs?.highlightAll());</script>
+    {% if request.resolver_match.namespace == 'brainrot' and request.resolver_match.url_name != 'daily' %}<script type="module" src="{% static 'brainrot/daily_widget.js' %}"></script>{% endif %}
     <script type="text/x-mathjax-config">
-      MathJax.Hub.Config({
-        config: ['MMLorHTML.js'],
-        jax: ['input/TeX', 'output/HTML-CSS', 'output/NativeMML'],
-        extensions: ['MathMenu.js', 'MathZoom.js']
-      })
+      MathJax.Hub.Config({config: ['MMLorHTML.js'],jax: ['input/TeX', 'output/HTML-CSS', 'output/NativeMML'],extensions: ['MathMenu.js', 'MathZoom.js']})
     </script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
     {% block extra_scripts %}{% endblock %}

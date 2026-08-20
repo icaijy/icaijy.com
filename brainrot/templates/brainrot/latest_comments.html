@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}Latest 67 Comments{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% url 'brainrot:cosmetics_css' %}">
+<main class="container py-4 py-md-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+    <div>
+      <div class="text-secondary small text-uppercase fw-semibold">LIVE PEER REVIEW FEED</div>
+      <h1 class="display-5 fw-bold mb-1">Latest comments</h1>
+      <p class="lead text-secondary mb-0">Who is saying what under which extremely important HOF specimen.</p>
+    </div>
+    <a class="btn btn-outline-dark" href="{% url 'brainrot:hall_of_fame' %}">Hall of Fame →</a>
+  </div>
+
+  <div class="d-grid gap-3">
+    {% for comment in comments %}
+      <article class="card shadow-sm {% if comment.comment_cosmetic %}cosmetic-{{ comment.comment_cosmetic.id }}{% endif %}" id="comment-{{ comment.id }}">
+        <div class="card-body p-3 p-md-4">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <strong class="{% if comment.username_cosmetic %}cosmetic-{{ comment.username_cosmetic.id }}{% endif %}">{{ comment.public_name }}</strong>
+            {% if comment.badge_cosmetic %}<span class="badge cosmetic-{{ comment.badge_cosmetic.id }}">{{ comment.badge_cosmetic.badge_text|default:comment.badge_cosmetic.name }}</span>{% endif %}
+            {% if comment.is_original_poster %}<span class="badge text-bg-primary">OP</span>{% endif %}
+            {% if comment.is_submission_note %}<span class="badge text-bg-light border text-dark">submission note</span>{% endif %}
+            <span class="small text-secondary ms-sm-auto">{{ comment.created_at|date:'j M Y · H:i' }}</span>
+          </div>
+          <div class="mb-3">{{ comment.rendered_body }}</div>
+          <div class="small text-secondary d-flex flex-wrap gap-2 align-items-center">
+            <span>{{ comment.entry.get_game_mode_display }}</span>
+            <span>·</span>
+            <strong>{{ comment.entry.score }}</strong>
+            <span>·</span>
+            <span>{{ comment.entry.public_name }}</span>
+            <a class="ms-sm-auto" href="{% url 'brainrot:hall_of_fame_detail' comment.entry_id %}?comment_sort=newest#comment-{{ comment.id }}">Open thread →</a>
+          </div>
+        </div>
+      </article>
+    {% empty %}
+      <div class="alert alert-light border">No public comments yet. Civilization remains silent.</div>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}
