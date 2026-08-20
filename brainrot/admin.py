@@ -1,4 +1,6 @@
+from django import forms
 from django.contrib import admin
+from django.core.files.uploadedfile import UploadedFile
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
@@ -14,16 +16,57 @@ from .models import (
     HallOfFameReaction,
     UserCosmetic,
 )
+from .validators import validate_hall_of_fame_video
+
+
+class HallOfFameEntryAdminForm(forms.ModelForm):
+    """Admin upload path for manually restored / legacy HOF recordings.
+
+    Browser submissions populate MIME type, duration and timeline before saving.
+    A manual admin upload does not have that client-side metadata, so inspect the
+    uploaded file here and intentionally allow an empty event timeline.
+    """
+
+    class Meta:
+        model = HallOfFameEntry
+        fields = '__all__'
+        exclude = (
+            'mime_type', 'duration_seconds', 'event_timeline', 'metrics',
+            'asset_value_67', 'asset_revision',
+        )
+
+    def clean_video(self):
+        upload = self.cleaned_data.get('video')
+        if isinstance(upload, UploadedFile):
+            validated = validate_hall_of_fame_video(upload)
+            self._validated_video = validated
+            # upload_to() reads this from the model instance when Django writes
+            # the file, so a WebM uploaded through admin does not get an .mp4 name.
+            self.instance._validated_extension = validated.extension
+        return upload
+
+    def save(self, commit=True):
+        entry = super().save(commit=False)
+        validated = getattr(self, '_validated_video', None)
+        if validated is not None:
+            entry.mime_type = validated.mime_type
+            entry.duration_seconds = validated.duration_seconds
+            entry._validated_extension = validated.extension
+        if commit:
+            entry.save()
+            self.save_m2m()
+        return entry
 
 
 @admin.register(HallOfFameEntry)
 class HallOfFameEntryAdmin(admin.ModelAdmin):
+    form = HallOfFameEntryAdminForm
     list_display = ('submitter', 'game_mode', 'score', 'visibility', 'asset_value_67', 'duration_seconds', 'created_at', 'review_video')
     list_filter = ('game_mode', 'visibility', 'created_at')
     search_fields = ('user__username', 'display_name')
     list_editable = ('score', 'visibility')
     readonly_fields = (
-        'user', 'mime_type', 'duration_seconds', 'event_timeline', 'metrics',
+        'mime_type', 'duration_seconds', 'event_timeline', 'metrics',
         'asset_value_67', 'asset_revision', 'created_at', 'review_video',
     )
     actions = ('make_public', 'make_private')
