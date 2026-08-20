@@ -1,8 +1,6 @@
 {% extends 'base.html' %}
 {% load static i18n %}
-
-{% block title %}{% if game_mode == 'leg_claps' %}{% translate "Tung Tung Leg Claps" %}{% else %}67 Counter{% endif %}{% endblock %}
-
+{% block title %}{% if game_mode == 'leg_claps' %}Tung Tung Leg Claps{% elif game_mode == 'combine' %}67 × Tung Tung Combine{% else %}67 Counter{% endif %}{% endblock %}
 {% block content %}
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
@@ -12,224 +10,61 @@
 <link rel="stylesheet" href="{% static 'brainrot/comments.css' %}">
 {% if turnstile_enabled %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}
 
-<main class="container py-4 py-md-5 counter-page" id="counter-app"
-      data-submit-url="{% url 'brainrot:submit_hall_of_fame' %}"
-      data-hall-url="{% url 'brainrot:hall_of_fame' %}"
-      data-max-upload-mb="{{ max_upload_mb }}"
-      data-game-mode="{{ game_mode }}"
-      data-mode-locked="{% if rival %}true{% else %}false{% endif %}"
-      {% if rival %}data-rival-name="{{ rival.public_name }}" data-rival-score="{{ rival.score }}"{% endif %}>
-
+<main class="container py-4 py-md-5 counter-page" id="counter-app" data-submit-url="{% url 'brainrot:submit_hall_of_fame' %}" data-hall-url="{% url 'brainrot:hall_of_fame' %}" data-max-upload-mb="{{ max_upload_mb }}" data-game-mode="{{ game_mode }}" data-mode-locked="{% if rival %}true{% else %}false{% endif %}" {% if rival %}data-rival-name="{{ rival.public_name }}" data-rival-score="{{ rival.score }}"{% endif %}>
   <div class="counter-mode-copy" hidden>
-    <span id="six-seven-title">67 Counter</span>
-    <span id="leg-claps-title">{% translate "Tung Tung Leg Claps" %}</span>
-    <span id="six-seven-description">{% translate "Move your arms up and down in the 6–7 pattern. Make as many counted moves as you can in 20 seconds." %}</span>
-    <span id="leg-claps-description">{% translate "Count each time Tung Tung's knees swing inward from a clearly open position. The knees must open again before another clap." %}</span>
-    <span id="six-seven-score-label">{% translate "6️⃣7️⃣ moves counted" %}</span>
-    <span id="leg-claps-score-label">{% translate "leg claps counted" %}</span>
-    <span id="six-seven-result-unit">{% translate "6️⃣7️⃣ moves in 20 seconds" %}</span>
-    <span id="leg-claps-result-unit">{% translate "leg claps in 20 seconds" %}</span>
-    <span id="six-seven-placeholder">67</span>
-    <span id="leg-claps-placeholder">TT</span>
+    <span id="six-seven-title">67 Counter</span><span id="leg-claps-title">Tung Tung Leg Claps</span><span id="combine-title">67 × Tung Tung Combine</span>
+    <span id="six-seven-description">Move your arms up and down in the 6–7 pattern. Make as many counted moves as you can in 20 seconds.</span>
+    <span id="leg-claps-description">Count each time the knees swing inward from a clearly open position.</span>
+    <span id="combine-description">Do both at once. Your Combo Score is 67 count × Leg Clap count, so neglecting either side is financially and athletically disastrous.</span>
+    <span id="six-seven-score-label">6️⃣7️⃣ moves counted</span><span id="leg-claps-score-label">leg claps counted</span><span id="combine-score-label">COMBO SCORE</span>
+    <span id="six-seven-result-unit">6️⃣7️⃣ moves in 20 seconds</span><span id="leg-claps-result-unit">leg claps in 20 seconds</span><span id="combine-result-unit">combo points in 20 seconds</span>
+    <span id="six-seven-placeholder">67</span><span id="leg-claps-placeholder">TT</span><span id="combine-placeholder">×</span>
   </div>
 
-  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:index' %}">← 67 Games</a>
-    <a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:hall_of_fame' %}?mode={{ game_mode }}">
-      <i class="fa-solid fa-ranking-star me-1"></i> {% translate "Hall of Fame" %}
-    </a>
-  </div>
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4"><a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:index' %}">← 67 Games</a><div class="d-flex gap-2"><a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:daily' %}?mode={{ game_mode }}">Daily</a><a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:hall_of_fame' %}?mode={{ game_mode }}"><i class="fa-solid fa-ranking-star me-1"></i> Hall of Fame</a></div></div>
+
+  {% if not rival %}<div class="btn-group flex-wrap mb-4" role="group" aria-label="Counter mode"><button class="btn btn-outline-primary {% if game_mode == 'six_seven' %}active{% endif %}" data-counter-mode="six_seven" type="button">67 Counter</button><button class="btn btn-outline-success {% if game_mode == 'leg_claps' %}active{% endif %}" data-counter-mode="leg_claps" type="button">Leg Claps</button><button class="btn btn-outline-warning {% if game_mode == 'combine' %}active{% endif %}" data-counter-mode="combine" type="button">Combine</button></div>{% endif %}
 
   <header class="counter-heading mb-4">
-    {% if rival %}
-      <span class="badge text-bg-dark mode-badge mb-2">{% translate "Challenge mode:" %} {{ rival.get_game_mode_display }}</span>
-      <h1 class="display-5 mb-2">YOU vs {{ rival.public_name }}</h1>
-      <p class="lead text-secondary mb-0">
-        {% if game_mode == 'leg_claps' %}
-          {% blocktranslate with name=rival.public_name score=rival.score %}{{ name }} made {{ score }} Tung Tung Leg Claps in 20 seconds. Their video will play beside yours.{% endblocktranslate %}
-        {% else %}
-          {% blocktranslate with name=rival.public_name score=rival.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds. Their video will play beside yours.{% endblocktranslate %}
-        {% endif %}
-      </p>
-    {% else %}
-      <span class="badge {% if game_mode == 'leg_claps' %}text-bg-success{% else %}text-bg-primary{% endif %} mode-badge mb-2">20 seconds · camera</span>
-      <h1 class="display-5 mb-2" id="counter-title">{% if game_mode == 'leg_claps' %}{% translate "Tung Tung Leg Claps" %}{% else %}67 Counter{% endif %}</h1>
-      <p class="lead text-secondary mb-0" id="counter-description">{% if game_mode == 'leg_claps' %}{% translate "Count each time Tung Tung's knees swing inward from a clearly open position. The knees must open again before another clap." %}{% else %}{% translate "Move your arms up and down in the 6–7 pattern. Make as many counted moves as you can in 20 seconds." %}{% endif %}</p>
-    {% endif %}
+    {% if rival %}<span class="badge text-bg-dark mode-badge mb-2">Challenge mode: {{ rival.get_game_mode_display }}</span><h1 class="display-5 mb-2">YOU vs {{ rival.public_name }}</h1><p class="lead text-secondary mb-0">Beat {{ rival.score }} in the same 20-second mode.</p>
+    {% else %}<span class="badge {% if game_mode == 'leg_claps' %}text-bg-success{% elif game_mode == 'combine' %}text-bg-warning{% else %}text-bg-primary{% endif %} mode-badge mb-2">20 seconds · camera</span><h1 class="display-5 mb-2" id="counter-title">{% if game_mode == 'leg_claps' %}Tung Tung Leg Claps{% elif game_mode == 'combine' %}67 × Tung Tung Combine{% else %}67 Counter{% endif %}</h1><p class="lead text-secondary mb-0" id="counter-description">{% if game_mode == 'combine' %}Do both movements simultaneously. Combo Score = 67 count × Leg Clap count.{% elif game_mode == 'leg_claps' %}Count each inward knee clap after a clear reopen.{% else %}Move your arms up and down in the 6–7 pattern. Make as many counted moves as you can in 20 seconds.{% endif %}</p>{% endif %}
   </header>
 
-  <div class="alert alert-info py-2 px-3 small" role="note">
-    <strong>{% translate "Camera privacy:" %}</strong>
-    {% translate "Pose detection and recording run in this browser. Every run is recorded locally from the countdown, but nothing uploads unless you choose to submit it. Submitting publishes the video for everyone to watch; resetting or closing discards it." %}
-  </div>
+  <div class="alert alert-info py-2 px-3 small"><strong>Camera privacy:</strong> Pose detection and recording run locally in this browser. Nothing uploads until you submit. Registered users may save a run private; guest submissions are public.</div>
 
   <div class="row g-4 align-items-start">
-    <div class="{% if rival %}col-12 col-xl-9{% else %}col-12 col-lg-8{% endif %}">
-      <div class="row g-3">
-        {% if rival %}
-        <div class="col-12 col-md-6">
-          <section class="camera-card h-100">
-            <div class="camera-stage rival-stage">
-              <video id="rival-video" muted playsinline preload="auto" src="{% url 'brainrot:hall_of_fame_video' rival.id %}"></video>
-              <div class="rival-score-pill">
-                <span>{{ rival.public_name }}</span>
-                <strong id="rival-score">0</strong>
-              </div>
-            </div>
-            <div class="detector-status ready">
-              <span class="status-dot"></span>
-              <span>{% if rival_timeline_exact %}{% translate "Recorded event timeline ready" %}{% else %}{% translate "Legacy run · estimated count pace" %}{% endif %}</span>
-            </div>
-          </section>
-        </div>
-        {% endif %}
-
-        <div class="{% if rival %}col-12 col-md-6{% else %}col-12{% endif %}">
-          <section class="camera-card">
-            <div class="camera-stage" id="camera-stage">
-              <video id="camera" playsinline muted></video>
-              <canvas id="pose-overlay"></canvas>
-              <div class="camera-placeholder" id="camera-placeholder">
-                <span class="counter-placeholder-mark" id="counter-placeholder-mark">{% if game_mode == 'leg_claps' %}TT{% else %}67{% endif %}</span>
-                <span>{% translate "Camera off" %}</span>
-              </div>
-              <div class="countdown" id="countdown" aria-live="assertive"></div>
-              <div class="live-pill" id="live-pill" hidden>● {% translate "RECORDING LOCALLY" %}</div>
-            </div>
-            <div class="detector-status" id="detector-status">
-              <span class="status-dot"></span>
-              <span>{% translate "Preloading pose model — camera remains off" %}</span>
-            </div>
-          </section>
-        </div>
-      </div>
-    </div>
+    <div class="{% if rival %}col-12 col-xl-9{% else %}col-12 col-lg-8{% endif %}"><div class="row g-3">
+      {% if rival %}<div class="col-12 col-md-6"><section class="camera-card h-100"><div class="camera-stage rival-stage"><video id="rival-video" muted playsinline preload="auto" src="{% url 'brainrot:hall_of_fame_video' rival.id %}"></video><div class="rival-score-pill"><span>{{ rival.public_name }}</span><strong id="rival-score">0</strong></div></div><div class="detector-status ready"><span class="status-dot"></span><span>Opponent evidence ready</span></div></section></div>{% endif %}
+      <div class="{% if rival %}col-12 col-md-6{% else %}col-12{% endif %}"><section class="camera-card"><div class="camera-stage" id="camera-stage"><video id="camera" playsinline muted></video><canvas id="pose-overlay"></canvas><div class="camera-placeholder" id="camera-placeholder"><span class="counter-placeholder-mark" id="counter-placeholder-mark">{% if game_mode == 'leg_claps' %}TT{% elif game_mode == 'combine' %}×{% else %}67{% endif %}</span><span>Camera off</span></div><div class="countdown" id="countdown" aria-live="assertive"></div><div class="live-pill" id="live-pill" hidden>● RECORDING LOCALLY</div></div><div class="detector-status" id="detector-status"><span class="status-dot"></span><span>Preloading pose model — camera remains off</span></div></section></div>
+    </div></div>
 
     <aside class="{% if rival %}col-12 col-xl-3{% else %}col-12 col-lg-4{% endif %}">
-      <section class="score-card p-3 p-md-4 mb-3">
-        <div class="text-secondary small text-uppercase fw-semibold" id="score-label">{% if game_mode == 'leg_claps' %}{% translate "leg claps counted" %}{% else %}{% translate "6️⃣7️⃣ moves counted" %}{% endif %}</div>
-        <div class="score-value my-2" id="score">0</div>
-        <div class="d-flex justify-content-between align-items-end border-top pt-3 mb-3">
-          <span class="text-secondary small text-uppercase fw-semibold">{% translate "time remaining" %}</span>
-          <strong class="timer-value" id="counter-time">20.0</strong>
-        </div>
-
-        {% if rival %}
-        <div class="alert alert-light border py-2 px-3 small">
-          <span class="text-secondary">{% translate "score to beat" %}</span>
-          <strong class="float-end">{{ rival.score }}</strong><br>
-          <a href="{% url 'brainrot:hall_of_fame_detail' rival.id %}">{% translate "View HOF entry" %}</a>
-        </div>
-        {% endif %}
-
-        <div class="d-grid gap-2">
-          <button class="btn btn-primary" id="enable-camera">{% translate "Enable camera" %}</button>
-          <button class="btn btn-primary" id="start-run" disabled hidden>{% translate "Detector is still loading…" %}</button>
-          <button class="btn btn-outline-secondary" id="reset-run" hidden>{% translate "Try again" %}</button>
-        </div>
-        <p class="small text-secondary mt-3 mb-0">{% translate "The run is recorded locally with the live count on the video. Nothing uploads unless you submit it." %}</p>
-        <p class="counter-error text-danger small mt-2 mb-0" id="counter-error" role="alert"></p>
+      <section class="score-card p-3 p-md-4 mb-3"><div class="text-secondary small text-uppercase fw-semibold" id="score-label">{% if game_mode == 'combine' %}COMBO SCORE{% elif game_mode == 'leg_claps' %}leg claps counted{% else %}6️⃣7️⃣ moves counted{% endif %}</div><div class="score-value my-2" id="score">0</div>
+        <div id="combo-breakdown" class="border rounded p-2 mb-3 text-center" {% if game_mode != 'combine' %}hidden{% endif %}><strong>67 <span id="combo-six-score">0</span></strong> × <strong>TT <span id="combo-leg-score">0</span></strong></div>
+        <div class="d-flex justify-content-between align-items-end border-top pt-3 mb-3"><span class="text-secondary small text-uppercase fw-semibold">time remaining</span><strong class="timer-value" id="counter-time">20.0</strong></div>
+        {% if rival %}<div class="alert alert-light border py-2 px-3 small"><span class="text-secondary">score to beat</span><strong class="float-end">{{ rival.score }}</strong></div>{% endif %}
+        <div class="d-grid gap-2"><button class="btn btn-primary" id="enable-camera">Enable camera</button><button class="btn btn-primary" id="start-run" disabled hidden>Detector is still loading…</button><button class="btn btn-outline-secondary" id="reset-run" hidden>Try again</button></div><p class="small text-secondary mt-3 mb-0">The live score is burned into the locally recorded video.</p><p class="counter-error text-danger small mt-2 mb-0" id="counter-error" role="alert"></p>
       </section>
-
-      <a class="hof-card d-flex align-items-center gap-3 p-3 text-decoration-none text-body" id="counter-hof-portal" href="{% url 'brainrot:hall_of_fame' %}?mode={{ game_mode }}">
-        <span class="hof-mark" id="counter-hof-mark">{% if game_mode == 'leg_claps' %}TT{% else %}67{% endif %}</span>
-        <span>
-          <small class="text-secondary d-block">{% translate "VIDEO LEADERBOARD" %}</small>
-          <strong>{% translate "Hall of Fame" %} →</strong>
-        </span>
-      </a>
-      {% if request.user.is_authenticated %}
-      <a class="d-block small mt-2" href="{% url 'brainrot:my_hall_of_fame' %}">{% if request.user.is_superuser %}{% translate "Manage all submitted runs" %}{% else %}{% translate "Manage my submitted runs" %}{% endif %}</a>
-      {% endif %}
+      <a class="hof-card d-flex align-items-center gap-3 p-3 text-decoration-none text-body" id="counter-hof-portal" href="{% url 'brainrot:hall_of_fame' %}?mode={{ game_mode }}"><span class="hof-mark" id="counter-hof-mark">{% if game_mode == 'leg_claps' %}TT{% elif game_mode == 'combine' %}×{% else %}67{% endif %}</span><span><small class="text-secondary d-block">VIDEO LEADERBOARD</small><strong>Hall of Fame →</strong></span></a>
+      {% if request.user.is_authenticated %}<a class="d-block small mt-2" href="{% url 'brainrot:my_hall_of_fame' %}">Manage my submitted runs</a>{% endif %}
     </aside>
   </div>
 
-  <section class="result-card p-3 p-md-4 mt-4" id="counter-result" hidden>
-    <div class="mb-4">
-      <div class="text-secondary small text-uppercase fw-semibold">{% translate "RESULT" %}</div>
-      <h2 class="h3 mt-1 mb-2"><span id="result-score">0</span> <span id="result-unit">{% if game_mode == 'leg_claps' %}{% translate "leg claps in 20 seconds" %}{% else %}{% translate "6️⃣7️⃣ moves in 20 seconds" %}{% endif %}</span></h2>
-      <p class="mb-0" id="result-copy">{% translate "Run complete." %}</p>
+  <section class="result-card p-3 p-md-4 mt-4" id="counter-result" hidden><div class="mb-4"><div class="text-secondary small text-uppercase fw-semibold">RESULT</div><h2 class="h3 mt-1 mb-2"><span id="result-score">0</span> <span id="result-unit">{% if game_mode == 'combine' %}combo points in 20 seconds{% elif game_mode == 'leg_claps' %}leg claps in 20 seconds{% else %}6️⃣7️⃣ moves in 20 seconds{% endif %}</span></h2><p class="fw-semibold" id="result-combo-breakdown" {% if game_mode != 'combine' %}hidden{% endif %}></p><p class="mb-0" id="result-copy">Run complete.</p></div>
+
+    <div class="recording-review mb-4" id="recording-review" hidden><video id="recording-preview" controls playsinline></video><p class="small text-secondary mt-2">The recording remains local unless you submit it below.</p><div class="d-flex flex-wrap gap-2 mb-3"><a class="btn btn-outline-secondary" id="download-recording" hidden>Download counted video</a></div>
+      {% if not request.user.is_authenticated and anonymous_submission_available %}<label class="anonymous-name-field form-label" for="hof-display-name"><span>Anonymous display name</span><input class="form-control mt-1" id="hof-display-name" maxlength="32" placeholder="Anonymous Swan"></label><p class="small text-secondary">Guest runs are public and labelled “guest”.</p>
+      {% elif request.user.is_authenticated %}<p class="small text-secondary">Submitting as <strong>{{ request.user.username }}</strong>. For the main 67 mode, public HOF assets are worth more 67 Coin than private ones; deleting or privatising assets later can put your balance into debt.</p><label class="form-label" for="hof-visibility">HOF visibility</label><select class="form-select mb-3" id="hof-visibility"><option value="public" selected>Public — higher main-67 asset value</option><option value="private">Private — lower main-67 asset value</option></select>
+      {% else %}<p class="small text-secondary">Anonymous submission is temporarily unavailable.</p>{% endif %}
+
+      {% if request.user.is_authenticated or anonymous_submission_available %}{% translate "Anything to say about this run?" as submission_comment_placeholder %}<div class="border rounded p-3 mb-3 bg-light-subtle"><h3 class="h6 mb-1"><i class="fa-regular fa-comment me-1"></i>Add a comment with your run <span class="text-secondary fw-normal">(optional)</span></h3>{% include 'brainrot/_comment_editor.html' with textarea_id='hof-submission-comment' field_name='submission_comment' rows=4 placeholder=submission_comment_placeholder %}</div>{% if turnstile_enabled %}<div class="cf-turnstile mb-3" data-sitekey="{{ turnstile_site_key }}"></div>{% endif %}<div class="d-flex flex-wrap gap-2"><button class="btn btn-primary" id="submit-hof" type="button">Submit run</button><button class="btn btn-outline-danger" id="discard-recording" type="button">Discard recording</button></div>{% else %}<div class="d-flex flex-wrap gap-2"><a class="btn btn-primary" href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in to submit this run</a><button class="btn btn-outline-danger" id="discard-recording" type="button">Discard recording</button></div>{% endif %}<p class="small mt-2 mb-0" id="upload-status" role="status"></p>
     </div>
 
-    <div class="recording-review mb-4" id="recording-review" hidden>
-      <video id="recording-preview" controls playsinline></video>
-      <p class="small text-secondary mt-2">{% translate "The recording remains local unless you submit it below. The downloaded and uploaded video includes the live count. Closing or resetting discards it." %}</p>
-      <div class="d-flex flex-wrap gap-2 mb-3">
-        <a class="btn btn-outline-secondary" id="download-recording" hidden>{% translate "Download counted video" %}</a>
-      </div>
-
-      {% if not request.user.is_authenticated and anonymous_submission_available %}
-        <label class="anonymous-name-field form-label" for="hof-display-name">
-          <span>{% translate "Anonymous display name" %}</span>
-          <input class="form-control mt-1" id="hof-display-name" maxlength="32" placeholder="Anonymous Swan">
-        </label>
-        <p class="small text-secondary">{% translate "Guest runs are labelled “guest” and cannot impersonate registered usernames. Guest submissions have no self-service privacy or delete controls; contact me with the public HOF link for changes." %}
-          <a href="{% url 'login' %}?next={{ request.path|urlencode }}">{% translate "Log in before another run" %}</a> {% translate "if you want ownership controls." %}</p>
-      {% elif request.user.is_authenticated %}
-        <p class="small text-secondary">{% blocktranslate with username=request.user.username %}Submitting as <strong>{{ username }}</strong>. New submissions are public, but you can later make the run private or delete it from My HOF.{% endblocktranslate %}</p>
-      {% else %}
-        <p class="small text-secondary">{% translate "Anonymous submission is temporarily unavailable because the production human-verification gate is not configured." %}</p>
-      {% endif %}
-
-      {% if request.user.is_authenticated or anonymous_submission_available %}
-        {% translate "Anything to say about this run?" as submission_comment_placeholder %}
-        <div class="border rounded p-3 mb-3 bg-light-subtle">
-          <h3 class="h6 mb-1"><i class="fa-regular fa-comment me-1"></i>{% translate "Add a comment with your run" %} <span class="text-secondary fw-normal">({% translate "optional" %})</span></h3>
-          <p class="small text-secondary mb-2">{% translate "This becomes the first OP comment under your HOF video. You can just type normally; Markdown is optional." %}</p>
-          {% include 'brainrot/_comment_editor.html' with textarea_id='hof-submission-comment' field_name='submission_comment' rows=4 placeholder=submission_comment_placeholder %}
-        </div>
-
-        {% if turnstile_enabled %}<div class="cf-turnstile mb-3" data-sitekey="{{ turnstile_site_key }}"></div>{% endif %}
-        <div class="d-flex flex-wrap gap-2">
-          <button class="btn btn-primary" id="submit-hof" type="button">{% translate "Submit to Hall of Fame" %}</button>
-          <button class="btn btn-outline-danger" id="discard-recording" type="button">{% translate "Discard recording" %}</button>
-        </div>
-      {% else %}
-        <div class="d-flex flex-wrap gap-2">
-          <a class="btn btn-primary" href="{% url 'login' %}?next={{ request.path|urlencode }}">{% translate "Log in to submit this run" %}</a>
-          <button class="btn btn-outline-danger" id="discard-recording" type="button">{% translate "Discard recording" %}</button>
-        </div>
-      {% endif %}
-      <p class="small mt-2 mb-0" id="upload-status" role="status"></p>
-    </div>
-
-    <div class="counter-share border-top pt-4" id="counter-share">
-      <h3 class="h5">🎉 {% translate "Share your result!" %}</h3>
-      <textarea class="form-control mb-2" id="counter-share-text" rows="5" readonly aria-label="{% translate 'Shareable counter result' %}"></textarea>
-      <button class="btn btn-outline-primary" id="copy-counter-share" type="button">{% translate "Copy to clipboard" %}</button>
-      <p class="small text-secondary mt-2 mb-0" id="copy-counter-status" role="status" aria-live="polite"></p>
-    </div>
+    <div class="counter-share border-top pt-4"><h3 class="h5">🎉 Share your result!</h3><textarea class="form-control mb-2" id="counter-share-text" rows="5" readonly></textarea><button class="btn btn-outline-primary" id="copy-counter-share" type="button">Copy to clipboard</button><p class="small text-secondary mt-2 mb-0" id="copy-counter-status"></p></div>
   </section>
 </main>
 
-<div class="publication-modal" id="publication-modal" hidden role="dialog" aria-modal="true" aria-labelledby="publication-modal-title">
-  <div class="publication-modal-backdrop" data-close-publication-modal></div>
-  <section class="publication-modal-card">
-    <button class="publication-modal-close" type="button" data-close-publication-modal aria-label="{% translate 'Close' %}">×</button>
-    <div class="text-secondary small text-uppercase fw-semibold mb-2">{% translate "PUBLICATION CONSENT" %}</div>
-    <h2 class="h4" id="publication-modal-title">{% translate "Your video will be public" %}</h2>
-    <p>{% translate "Submitting publishes this recording to the Hall of Fame. Anyone can watch, download and share it." %}</p>
-    {% if request.user.is_authenticated %}
-      <p class="small text-secondary">{% translate "Because you are logged in, you can make it private or delete it later from My HOF." %}</p>
-    {% else %}
-      <p class="small text-secondary">{% translate "Guest submissions cannot be privately managed or deleted by you later. Contact the site owner with the HOF link if you need it removed." %}</p>
-    {% endif %}
-    <label class="publication-consent-check">
-      <input class="form-check-input" type="checkbox" id="publication-consent">
-      <span>{% translate "I understand that my video will be published for anyone to watch." %}</span>
-    </label>
-    <div class="publication-modal-actions">
-      <button class="btn btn-outline-secondary" id="cancel-publication" type="button">{% translate "Not now" %}</button>
-      <button class="btn btn-primary" id="confirm-publication" type="button" disabled>{% translate "Publish this video" %}</button>
-    </div>
-  </section>
-</div>
-
-{% if rival %}
-{{ rival_timeline|json_script:'rival-event-timeline' }}
-{% endif %}
-
-<script src="{% url 'brainrot:javascript_catalog' %}"></script>
-<script type="module" src="{% static 'brainrot/counter.js' %}"></script>
-<script type="module" src="{% static 'brainrot/comment_editor.js' %}"></script>
+<div class="publication-modal" id="publication-modal" hidden role="dialog" aria-modal="true" aria-labelledby="publication-modal-title"><div class="publication-modal-backdrop" data-close-publication-modal></div><section class="publication-modal-card"><button class="publication-modal-close" type="button" data-close-publication-modal>×</button><div class="text-secondary small text-uppercase fw-semibold mb-2">PUBLICATION CONSENT</div><h2 class="h4" id="publication-modal-title">Your video will be public</h2><p>Public submission means anyone can watch, download and share this recording. You can later make it private or delete it; if it backs 67 Coin, doing so can reduce your balance below zero.</p><label class="publication-consent-check"><input class="form-check-input" type="checkbox" id="publication-consent"><span>I understand that this video will be published for anyone to watch.</span></label><div class="publication-modal-actions"><button class="btn btn-outline-secondary" id="cancel-publication" type="button">Not now</button><button class="btn btn-primary" id="confirm-publication" type="button" disabled>Publish this video</button></div></section></div>
+{% if rival %}{{ rival_timeline|json_script:'rival-event-timeline' }}{% endif %}
+<script src="{% url 'brainrot:javascript_catalog' %}"></script><script type="module" src="{% static 'brainrot/counter.js' %}"></script><script type="module" src="{% static 'brainrot/comment_editor.js' %}"></script>
 {% endblock %}

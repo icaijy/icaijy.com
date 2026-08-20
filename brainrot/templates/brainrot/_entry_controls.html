@@ -1,28 +1,9 @@
 {% load i18n %}
-{% if request.user.is_authenticated %}
-  {% if request.user.is_superuser or entry.user_id == request.user.id %}
-  <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
-    <span class="badge {% if entry.visibility == 'public' %}text-bg-success{% else %}text-bg-secondary{% endif %}">
-      {% if entry.visibility == 'public' %}{% translate "Public" %}{% else %}{% translate "Private" %}{% endif %}
-    </span>
-    <form method="post" action="{% url 'brainrot:set_hall_of_fame_visibility' entry.id %}">
-      {% csrf_token %}
-      <input type="hidden" name="next" value="{{ request.get_full_path }}">
-      {% if entry.visibility == 'public' %}
-      <input type="hidden" name="visibility" value="private">
-      <button class="btn btn-sm btn-outline-secondary" type="submit">{% translate "Make private" %}</button>
-      {% else %}
-      <input type="hidden" name="visibility" value="public">
-      <button class="btn btn-sm btn-outline-success" type="submit">{% translate "Publish" %}</button>
-      {% endif %}
-    </form>
-    {% translate "Delete this Hall of Fame entry and its video permanently?" as delete_confirmation %}
-    <form method="post" action="{% url 'brainrot:delete_hall_of_fame_entry' entry.id %}"
-          onsubmit="return confirm('{{ delete_confirmation|escapejs }}');">
-      {% csrf_token %}
-      <input type="hidden" name="next" value="{% url 'brainrot:my_hall_of_fame' %}?deleted=1">
-      <button class="btn btn-sm btn-outline-danger" type="submit">{% translate "Delete" %}</button>
-    </form>
-  </div>
-  {% endif %}
-{% endif %}
+{% if request.user.is_authenticated %}{% if request.user.is_superuser or entry.user_id == request.user.id %}
+<div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+  <span class="badge {% if entry.visibility == 'public' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{% if entry.visibility == 'public' %}Public{% else %}Private{% endif %}</span>
+  {% if entry.game_mode == 'six_seven' and entry.user_id %}<span class="small text-secondary">Current 67 asset value: <strong>{{ entry.asset_value_67 }}</strong></span>{% endif %}
+  <form method="post" action="{% url 'brainrot:set_hall_of_fame_visibility' entry.id %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">{% if entry.visibility == 'public' %}<input type="hidden" name="visibility" value="private"><button class="btn btn-sm btn-outline-secondary" type="submit" onclick="return confirm('Make this run private? Main-67 HOF backing will be revalued downward and your balance may become negative.');">Make private</button>{% else %}<input type="hidden" name="visibility" value="public"><button class="btn btn-sm btn-outline-success" type="submit">Publish</button>{% endif %}</form>
+  <form method="post" action="{% url 'brainrot:delete_hall_of_fame_entry' entry.id %}" onsubmit="return confirm('Delete this HOF entry and video permanently? Any 67 Coin backing from this run disappears too, even if that puts the account into debt.');">{% csrf_token %}<input type="hidden" name="next" value="{% url 'brainrot:my_hall_of_fame' %}?deleted=1"><button class="btn btn-sm btn-outline-danger" type="submit">Delete</button></form>
+</div>
+{% endif %}{% endif %}

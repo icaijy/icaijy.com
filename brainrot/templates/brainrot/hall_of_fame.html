@@ -1,159 +1,76 @@
 {% extends 'base.html' %}
 {% load static i18n %}
-
-{% block title %}{% if game_mode == 'leg_claps' %}{% translate "Tung Tung Leg Claps Hall of Fame" %}{% elif game_mode == 'voice_67' %}{% translate "Six Seven Voice Speedrun Hall of Fame" %}{% else %}{% translate "67 Hall of Fame" %}{% endif %}{% endblock %}
-
+{% block title %}{% if game_mode == 'leg_claps' %}{% translate "Tung Tung Leg Claps Hall of Fame" %}{% elif game_mode == 'combine' %}67 × Tung Tung Hall of Fame{% elif game_mode == 'voice_67' %}{% translate "Six Seven Voice Speedrun Hall of Fame" %}{% else %}{% translate "67 Hall of Fame" %}{% endif %}{% endblock %}
 {% block content %}
 <link rel="stylesheet" href="{% static 'brainrot/comments.css' %}">
+<link rel="stylesheet" href="{% url 'brainrot:cosmetics_css' %}">
 <main class="container py-4 py-md-5">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:index' %}">← {% translate "All experiments" %}</a>
-    {% if request.user.is_authenticated %}
-      <a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:my_hall_of_fame' %}">{% if request.user.is_superuser %}{% translate "Manage HOF" %}{% else %}{% translate "My HOF" %}{% endif %}</a>
-    {% endif %}
+    <div class="d-flex gap-2"><a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:daily' %}?mode={{ game_mode }}">Daily</a>{% if request.user.is_authenticated %}<a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:my_hall_of_fame' %}">{% if request.user.is_superuser %}{% translate "Manage HOF" %}{% else %}{% translate "My HOF" %}{% endif %}</a>{% endif %}</div>
   </div>
 
   <div class="row g-4 align-items-end mb-4">
-    <div class="col-12 col-lg-8">
-      <div class="text-secondary small text-uppercase fw-semibold mb-2">{% translate "PUBLIC 20-SECOND VIDEO LEADERBOARD" %}</div>
-      <h1 class="display-5 fw-bold mb-2">
-        {% if game_mode == 'leg_claps' %}{% translate "Leg Claps Hall of Fame" %}
-        {% elif game_mode == 'voice_67' %}{% translate "Voice 67 Hall of Fame" %}
-        {% else %}{% translate "67 Hall of Fame" %}{% endif %}
-      </h1>
-      <p class="lead text-secondary mb-0">
-        {% if game_mode == 'leg_claps' %}
-          {% translate "See who made the most inward knee claps in 20 seconds, watch each run, then challenge it yourself. Each clap requires the knees to open again before the next count." %}
-        {% elif game_mode == 'voice_67' %}
-          {% translate "Historical Voice 67 runs remain watchable while the high-speed detector is rebuilt. New voice runs are temporarily coming soon." %}
-        {% else %}
-          {% translate "See who made the most 6️⃣7️⃣ moves in 20 seconds, watch each run, then challenge it yourself. Guest names are visibly labelled and cannot copy registered usernames." %}
-        {% endif %}
-      </p>
+    <div class="col-12 col-lg-7">
+      <div class="text-secondary small text-uppercase fw-semibold mb-2">PUBLIC 20-SECOND VIDEO SPECIMENS</div>
+      <h1 class="display-5 fw-bold mb-2">{% if game_mode == 'leg_claps' %}Leg Claps Hall of Fame{% elif game_mode == 'combine' %}67 × Tung Tung Combine{% elif game_mode == 'voice_67' %}Voice 67 Hall of Fame{% else %}67 Hall of Fame{% endif %}</h1>
+      <p class="lead text-secondary mb-0">{% if game_mode == 'combine' %}Do both movements at once. Combo Score = 67 count × Leg Clap count.{% elif game_mode == 'leg_claps' %}Most inward knee claps in 20 seconds.{% elif game_mode == 'voice_67' %}Historical Voice 67 runs while the detector is rebuilt.{% else %}Most 6️⃣7️⃣ moves in 20 seconds. Now with financially questionable HOF-backed currency.{% endif %}</p>
     </div>
-    <div class="col-12 col-lg-4 text-lg-end">
-      <div class="btn-group flex-wrap" role="group" aria-label="{% translate 'Leaderboard mode' %}">
-        <a class="btn {% if game_mode == 'six_seven' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'brainrot:hall_of_fame' %}?mode=six_seven">67 Counter</a>
-        <a class="btn {% if game_mode == 'leg_claps' %}btn-success{% else %}btn-outline-success{% endif %}" href="{% url 'brainrot:hall_of_fame' %}?mode=leg_claps">{% translate "Tung Tung Leg Claps" %}</a>
-        <a class="btn {% if game_mode == 'voice_67' %}btn-warning{% else %}btn-outline-warning{% endif %}" href="{% url 'brainrot:hall_of_fame' %}?mode=voice_67">{% translate "Voice 67" %}</a>
+    <div class="col-12 col-lg-5 text-lg-end">
+      <div class="btn-group flex-wrap mb-2" role="group">
+        <a class="btn {% if game_mode == 'six_seven' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?mode=six_seven&sort={{ sort }}">67</a>
+        <a class="btn {% if game_mode == 'leg_claps' %}btn-success{% else %}btn-outline-success{% endif %}" href="?mode=leg_claps&sort={{ sort }}">Leg Claps</a>
+        <a class="btn {% if game_mode == 'combine' %}btn-warning{% else %}btn-outline-warning{% endif %}" href="?mode=combine&sort={{ sort }}">Combine</a>
+        <a class="btn {% if game_mode == 'voice_67' %}btn-secondary{% else %}btn-outline-secondary{% endif %}" href="?mode=voice_67&sort={{ sort }}">Voice</a>
       </div>
+      <div><div class="btn-group btn-group-sm"><a class="btn {% if sort == 'new' %}btn-dark{% else %}btn-outline-dark{% endif %}" href="?mode={{ game_mode }}&sort=new">New</a><a class="btn {% if sort == 'top' %}btn-dark{% else %}btn-outline-dark{% endif %}" href="?mode={{ game_mode }}&sort=top">Top</a></div></div>
     </div>
   </div>
 
-  {% if game_mode == 'voice_67' %}
-    <div class="alert alert-warning border-0 shadow-sm mb-4">
-      <strong>{% translate "Voice 67 is being rebuilt." %}</strong> {% translate "The old leaderboard is preserved, but challenges and new submissions are paused until the purpose-built continuous-speech model is ready." %}
-      <a class="alert-link ms-1" href="{% url 'brainrot:voice_counter' %}">{% translate "Read the update" %} →</a>
-    </div>
-  {% endif %}
+  {% if game_mode == 'voice_67' %}<div class="alert alert-warning"><strong>Voice 67 is being rebuilt.</strong> Existing runs remain archived; new submissions are paused.</div>{% endif %}
 
   <div class="d-grid gap-3">
     {% for entry in entries %}
-    <article class="card shadow-sm hof-list-card">
-      <div class="card-body p-3 p-md-4">
+    <article class="card shadow-sm hof-list-card {% if entry.hof_cosmetic %}cosmetic-{{ entry.hof_cosmetic.id }}{% endif %}">
+      <div class="card-body p-3 p-md-4 position-relative">
         <div class="row g-3 align-items-center">
-          <div class="col-auto"><span class="badge text-bg-light border text-dark fs-6">#{{ forloop.counter }}</span></div>
+          <div class="col-auto"><span class="badge text-bg-light border text-dark fs-6">{% if sort == 'top' %}#{{ forloop.counter }}{% else %}NEW{% endif %}</span></div>
           <div class="col">
             <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-              <h2 class="h5 mb-0">{{ entry.public_name }}</h2>
-              {% if entry.personal_best is not None %}
-                <span class="badge {% if entry.is_personal_best %}text-bg-warning{% else %}text-bg-light border text-dark{% endif %}">
-                  {% blocktranslate with pb=entry.personal_best %}PB {{ pb }}{% endblocktranslate %}
-                </span>
-              {% endif %}
+              <h2 class="h5 mb-0 {% if entry.username_cosmetic %}cosmetic-{{ entry.username_cosmetic.id }}{% endif %}">{{ entry.public_name }}</h2>
+              {% if entry.badge_cosmetic %}<span class="badge cosmetic-{{ entry.badge_cosmetic.id }}">{{ entry.badge_cosmetic.badge_text|default:entry.badge_cosmetic.name }}</span>{% endif %}
+              {% if entry.personal_best is not None %}<span class="badge {% if entry.is_personal_best %}text-bg-warning{% else %}text-bg-light border text-dark{% endif %}">PB {{ entry.personal_best }}</span>{% endif %}
             </div>
-            <div class="text-secondary small">
-              {% if entry.game_mode == 'leg_claps' %}
-                {% blocktranslate with score=entry.score date=entry.created_at|date:'j M Y' %}made {{ score }} leg claps in 20 seconds · {{ date }}{% endblocktranslate %}
-              {% elif entry.game_mode == 'voice_67' %}
-                {% blocktranslate with score=entry.score date=entry.created_at|date:'j M Y' %}said “six seven” {{ score }} times in 20 seconds · {{ date }}{% endblocktranslate %}
-              {% else %}
-                {% blocktranslate with score=entry.score date=entry.created_at|date:'j M Y' %}made {{ score }} 6️⃣7️⃣ moves in 20 seconds · {{ date }}{% endblocktranslate %}
-              {% endif %}
-            </div>
+            <div class="text-secondary small">{{ entry.created_at|date:'j M Y · H:i' }} · {{ entry.get_game_mode_display }}</div>
+            {% if entry.game_mode == 'combine' %}<div class="small mt-1"><strong>{{ entry.combo_six_seven }} × {{ entry.combo_leg_claps }}</strong> component counts</div>{% endif %}
           </div>
-          <div class="col-auto text-end">
-            <div class="display-6 fw-bold">{{ entry.score }}</div>
-            <small class="text-secondary">{% if entry.game_mode == 'leg_claps' %}{% translate "claps" %}{% elif entry.game_mode == 'voice_67' %}{% translate "67s" %}{% else %}{% translate "moves" %}{% endif %}</small>
-          </div>
+          <div class="col-auto text-end"><div class="display-6 fw-bold">{{ entry.score }}</div><small class="text-secondary">{% if entry.game_mode == 'combine' %}combo{% elif entry.game_mode == 'leg_claps' %}claps{% elif entry.game_mode == 'voice_67' %}67s{% else %}moves{% endif %}</small></div>
         </div>
 
         <div class="row g-3 mt-1 align-items-center">
           <div class="col-12 col-lg-7">
             <div class="d-flex flex-wrap align-items-center gap-2">
-              <a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "Full details" %}</a>
-              <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:hall_of_fame_detail' entry.id %}#comments" title="{% translate 'Comments' %}">
-                <i class="fa-regular fa-comments me-1"></i>{{ entry.comment_count }}
-              </a>
-              {% if entry.game_mode == 'voice_67' %}
-                <a class="btn btn-sm btn-outline-warning" href="{% url 'brainrot:voice_counter' %}">{% translate "Voice mode coming soon" %}</a>
-              {% else %}
-                <a class="btn btn-sm btn-primary" href="{% url 'brainrot:challenge' entry.id %}">{% translate "Challenge this run" %}</a>
-              {% endif %}
+              <a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">Full details</a>
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:hall_of_fame_detail' entry.id %}#comments"><i class="fa-regular fa-comments me-1"></i>{{ entry.comment_count }}</a>
+              {% if entry.game_mode == 'voice_67' %}<a class="btn btn-sm btn-outline-warning" href="{% url 'brainrot:voice_counter' %}">Voice mode coming soon</a>{% elif entry.game_mode != 'combine' %}<a class="btn btn-sm btn-primary" href="{% url 'brainrot:challenge' entry.id %}">Challenge this run</a>{% endif %}
             </div>
-
-            <div class="mt-2">
-              {% include 'brainrot/_reactions.html' with target_type='entry' target_id=entry.id reaction_items=entry.reaction_items compact=True %}
-            </div>
+            <div class="mt-2">{% include 'brainrot/_reactions.html' with target_type='entry' target_id=entry.id reaction_items=entry.reaction_items compact=True %}</div>
           </div>
-
           <div class="col-12 col-lg-5">
             {% if entry.timeline_exact %}
-              <div class="hof-mini-analysis" data-mini-analysis data-speed-unit="{{ speed_unit }}" data-event-timeline="{{ entry.event_timeline|escape }}">
-                <div class="d-flex justify-content-between align-items-center gap-2 mb-1">
-                  <span class="small fw-semibold">{% translate "20s pacing" %}</span>
-                  <span class="small text-secondary" data-mini-pace-label>{% translate "loading…" %}</span>
-                </div>
-                <canvas class="hof-mini-chart" height="76" aria-label="{% translate '20-second pacing preview' %}"></canvas>
-              </div>
-            {% else %}
-              <div class="small text-secondary border rounded px-3 py-2">
-                {% translate "Legacy run · no exact pacing timeline" %}
-              </div>
-            {% endif %}
+              <div class="hof-mini-analysis" data-mini-analysis data-speed-unit="{{ speed_unit }}" data-event-timeline="{{ entry.event_timeline|escape }}"><div class="d-flex justify-content-between align-items-center gap-2 mb-1"><span class="small fw-semibold">20s pacing</span><span class="small text-secondary" data-mini-pace-label>loading…</span></div><canvas class="hof-mini-chart" height="76"></canvas></div>
+            {% elif entry.game_mode == 'combine' %}
+              <div class="small border rounded px-3 py-2"><strong>Combo formula:</strong> {{ entry.combo_six_seven }} × {{ entry.combo_leg_claps }} = {{ entry.score }}</div>
+            {% else %}<div class="small text-secondary border rounded px-3 py-2">Legacy run · no exact pacing timeline</div>{% endif %}
           </div>
         </div>
 
         {% url 'brainrot:hall_of_fame_video' entry.id as preview_url %}
-        <details class="mt-3">
-          <summary class="text-primary fw-semibold" style="cursor:pointer">{% translate "Watch video preview" %}</summary>
-          <div class="row g-3 mt-1 align-items-start">
-            <div class="col-12 col-lg-6"><video class="w-100 rounded bg-dark" controls preload="none" playsinline src="{{ preview_url }}"></video></div>
-            <div class="col-12 col-lg-6">
-              <strong>
-                {% if entry.game_mode == 'leg_claps' %}
-                  {% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} Tung Tung Leg Claps in 20 seconds.{% endblocktranslate %}
-                {% elif entry.game_mode == 'voice_67' %}
-                  {% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} clearly said “six seven” {{ score }} times in 20 seconds.{% endblocktranslate %}
-                {% else %}
-                  {% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds.{% endblocktranslate %}
-                {% endif %}
-              </strong>
-              <p class="text-secondary small mt-2">{% translate "Open the detail page for the full speed chart, comments, sharing and a phone-friendly MP4." %}</p>
-              <div class="d-flex flex-wrap gap-2">
-                <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">{% translate "Open full run" %} →</a>
-                <a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}#comments"><i class="fa-regular fa-comments me-1"></i>{% blocktranslate with count=entry.comment_count %}{{ count }} comments{% endblocktranslate %}</a>
-                <a href="{{ preview_url }}?download=1&amp;format=mp4"><i class="fa-solid fa-download me-1"></i>{% translate "Download MP4" %}</a>
-              </div>
-            </div>
-          </div>
-        </details>
+        <details class="mt-3"><summary class="text-primary fw-semibold" style="cursor:pointer">Watch video preview</summary><div class="row g-3 mt-1"><div class="col-12 col-lg-6"><video class="w-100 rounded bg-dark" controls preload="none" playsinline src="{{ preview_url }}"></video></div><div class="col-12 col-lg-6"><p class="small text-secondary">Open the detail page for comments, sharing and analysis.</p><a href="{{ preview_url }}?download=1">Download recording</a></div></div></details>
         {% if request.user.is_superuser %}{% include 'brainrot/_entry_controls.html' %}{% endif %}
       </div>
     </article>
-    {% empty %}
-    <div class="card border-dashed">
-      <div class="card-body p-4 text-center">
-        <h2 class="h4">{% translate "No legends yet." %}</h2>
-        <p class="text-secondary">{% translate "The scientific community has uploaded absolutely nothing." %}</p>
-        {% if game_mode == 'voice_67' %}
-          <a href="{% url 'brainrot:voice_counter' %}" class="btn btn-warning">{% translate "Voice mode coming soon" %}</a>
-        {% else %}
-          <a href="{% url 'brainrot:counter' %}?mode={{ game_mode }}" class="btn btn-primary">{% translate "Submit the first specimen" %}</a>
-        {% endif %}
-      </div>
-    </div>
-    {% endfor %}
+    {% empty %}<div class="card border-dashed"><div class="card-body p-4 text-center"><h2 class="h4">No legends yet.</h2>{% if game_mode != 'voice_67' %}<a href="{% url 'brainrot:counter' %}?mode={{ game_mode }}" class="btn btn-primary">Submit the first specimen</a>{% endif %}</div></div>{% endfor %}
   </div>
 </main>
 <script src="{% url 'brainrot:javascript_catalog' %}"></script>

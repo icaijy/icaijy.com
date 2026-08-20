@@ -1,158 +1,41 @@
 {% extends 'base.html' %}
 {% load static i18n %}
-
-{% block title %}{{ entry.public_name }} — {% if entry.game_mode == 'leg_claps' %}{% translate "Tung Tung Leg Claps Hall of Fame" %}{% elif entry.game_mode == 'voice_67' %}{% translate "Six Seven Voice Speedrun Hall of Fame" %}{% else %}{% translate "67 Hall of Fame" %}{% endif %}{% endblock %}
-
+{% block title %}{{ entry.public_name }} — {{ entry.get_game_mode_display }} HOF{% endblock %}
 {% block content %}
 <link rel="stylesheet" href="{% static 'brainrot/comments.css' %}">
-<main class="container py-4 py-md-5" id="hof-detail"
-      data-entry-url="{{ request.build_absolute_uri }}"
-      data-username="{{ entry.public_name }}"
-      data-score="{{ entry.score }}"
-      data-game-mode="{{ entry.game_mode }}">
-  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:hall_of_fame' %}?mode={{ entry.game_mode }}">← {% translate "Hall of Fame" %}</a>
-    <a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:index' %}">{% translate "All experiments" %}</a>
-  </div>
+<link rel="stylesheet" href="{% url 'brainrot:cosmetics_css' %}">
+<main class="container py-4 py-md-5" id="hof-detail" data-entry-url="{{ request.build_absolute_uri }}" data-username="{{ entry.public_name }}" data-score="{{ entry.score }}" data-game-mode="{{ entry.game_mode }}" data-combo-six="{{ entry.combo_six_seven }}" data-combo-legs="{{ entry.combo_leg_claps }}">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4"><a class="btn btn-sm btn-outline-secondary" href="{% url 'brainrot:hall_of_fame' %}?mode={{ entry.game_mode }}">← Hall of Fame</a><a class="btn btn-sm btn-outline-dark" href="{% url 'brainrot:index' %}">All experiments</a></div>
 
   <div class="row g-4 align-items-start mb-4">
     <div class="col-12 col-lg-8">
-      <div class="text-secondary small text-uppercase fw-semibold mb-2">{% blocktranslate with id=entry.id %}ARCHIVED HUMAN PERFORMANCE SPECIMEN #{{ id }}{% endblocktranslate %}</div>
+      <div class="text-secondary small text-uppercase fw-semibold mb-2">ARCHIVED HUMAN PERFORMANCE SPECIMEN #{{ entry.id }}</div>
       <div class="d-flex flex-wrap align-items-end gap-3">
         <h1 class="display-2 fw-bold mb-0">{{ entry.score }}</h1>
-        <div class="pb-2">
-          <div class="fw-bold">
-            {% if entry.game_mode == 'leg_claps' %}
-              {% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} Tung Tung Leg Claps in 20 seconds.{% endblocktranslate %}
-            {% elif entry.game_mode == 'voice_67' %}
-              {% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} clearly said “six seven” {{ score }} times in 20 seconds.{% endblocktranslate %}
-            {% else %}
-              {% blocktranslate with name=entry.public_name score=entry.score %}{{ name }} made {{ score }} 6️⃣7️⃣ moves in 20 seconds.{% endblocktranslate %}
-            {% endif %}
-          </div>
-          <div class="text-secondary small">{{ entry.created_at|date:'j M Y · H:i' }} · {% blocktranslate with duration=entry.duration_seconds|floatformat:2 %}{{ duration }} seconds{% endblocktranslate %}</div>
-        </div>
+        <div class="pb-2"><div class="fw-bold">{% if entry.game_mode == 'combine' %}<span class="{% if entry.username_cosmetic %}cosmetic-{{ entry.username_cosmetic.id }}{% endif %}">{{ entry.public_name }}</span> scored {{ entry.score }} = {{ entry.combo_six_seven }} 6️⃣7️⃣ × {{ entry.combo_leg_claps }} Leg Claps in 20 seconds.{% elif entry.game_mode == 'leg_claps' %}<span class="{% if entry.username_cosmetic %}cosmetic-{{ entry.username_cosmetic.id }}{% endif %}">{{ entry.public_name }}</span> made {{ entry.score }} Tung Tung Leg Claps in 20 seconds.{% elif entry.game_mode == 'voice_67' %}<span class="{% if entry.username_cosmetic %}cosmetic-{{ entry.username_cosmetic.id }}{% endif %}">{{ entry.public_name }}</span> said “six seven” {{ entry.score }} times in 20 seconds.{% else %}<span class="{% if entry.username_cosmetic %}cosmetic-{{ entry.username_cosmetic.id }}{% endif %}">{{ entry.public_name }}</span> made {{ entry.score }} 6️⃣7️⃣ moves in 20 seconds.{% endif %}{% if entry.badge_cosmetic %} <span class="badge cosmetic-{{ entry.badge_cosmetic.id }}">{{ entry.badge_cosmetic.badge_text|default:entry.badge_cosmetic.name }}</span>{% endif %}</div><div class="text-secondary small">{{ entry.created_at|date:'j M Y · H:i' }} · {{ entry.duration_seconds|floatformat:2 }} seconds</div></div>
       </div>
-      <div class="d-flex flex-wrap gap-2 mt-2">
-        <span class="badge {% if entry.game_mode == 'leg_claps' %}text-bg-success{% elif entry.game_mode == 'voice_67' %}text-bg-danger{% else %}text-bg-primary{% endif %}">{{ entry.get_game_mode_display }}</span>
-        <span class="badge {% if entry.visibility == 'public' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ entry.get_visibility_display }}</span>
-        {% if entry.personal_best is not None %}
-          <span class="badge {% if entry.is_personal_best %}text-bg-warning{% else %}text-bg-light border text-dark{% endif %}">
-            {% if entry.is_personal_best %}{% translate "PB" %} · {% endif %}{% blocktranslate with pb=entry.personal_best %}Best {{ pb }}{% endblocktranslate %}
-          </span>
-        {% endif %}
-        {% if entry.game_mode == 'voice_67' %}<span class="badge text-bg-warning">{% translate "COMING SOON · detector rebuild" %}</span>{% endif %}
-      </div>
+      <div class="d-flex flex-wrap gap-2 mt-2"><span class="badge text-bg-primary">{{ entry.get_game_mode_display }}</span><span class="badge {% if entry.visibility == 'public' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ entry.get_visibility_display }}</span>{% if entry.personal_best is not None %}<span class="badge {% if entry.is_personal_best %}text-bg-warning{% else %}text-bg-light border text-dark{% endif %}">{% if entry.is_personal_best %}PB · {% endif %}Best {{ entry.personal_best }}</span>{% endif %}{% if entry.game_mode == 'six_seven' and entry.user_id %}<span class="badge text-bg-light border text-dark">HOF asset: {{ entry.asset_value_67 }} × 67</span>{% endif %}</div>
     </div>
   </div>
 
   {% url 'brainrot:hall_of_fame_video' entry.id as evidence_url %}
   <div class="row g-4">
-    <div class="col-12 col-lg-8">
-      <div class="card shadow-sm">
-        <div class="card-body p-3">
-          <video class="w-100 rounded bg-dark" controls preload="metadata" playsinline src="{{ evidence_url }}"></video>
-          <div class="d-flex flex-wrap gap-2 mt-3">
-            <a class="btn btn-outline-secondary" href="{{ evidence_url }}?download=1&amp;format=mp4"><i class="fa-solid fa-download me-1"></i> {% translate "Download MP4" %}</a>
-            {% if entry.visibility == 'public' %}
-              {% if entry.game_mode == 'voice_67' %}
-                <a class="btn btn-outline-warning" href="{% url 'brainrot:voice_counter' %}">{% translate "Voice challenge coming soon" %}</a>
-              {% else %}
-                <a class="btn btn-primary" href="{% url 'brainrot:challenge' entry.id %}">{% translate "Challenge this specimen" %}</a>
-              {% endif %}
-            {% endif %}
-          </div>
-          <p class="small text-secondary mt-2">{% translate "Downloads are served as H.264/AAC MP4 for broad phone compatibility." %}</p>
-          <div class="border-top pt-3 mt-3">
-            <div class="small text-secondary mb-2">{% translate "React to this run · no account required. Guest reactions are remembered in this browser." %}</div>
-            {% include 'brainrot/_reactions.html' with target_type='entry' target_id=entry.id reaction_items=entry.reaction_items %}
-          </div>
-        </div>
-      </div>
-    </div>
+    <div class="col-12 col-lg-8"><div class="card shadow-sm {% if entry.hof_cosmetic %}cosmetic-{{ entry.hof_cosmetic.id }}{% endif %}"><div class="card-body p-3"><video class="w-100 rounded bg-dark" controls preload="metadata" playsinline src="{{ evidence_url }}"></video><div class="d-flex flex-wrap gap-2 mt-3"><a class="btn btn-outline-secondary" href="{{ evidence_url }}?download=1"><i class="fa-solid fa-download me-1"></i> Download recording</a>{% if entry.visibility == 'public' and entry.game_mode != 'voice_67' and entry.game_mode != 'combine' %}<a class="btn btn-primary" href="{% url 'brainrot:challenge' entry.id %}">Challenge this specimen</a>{% endif %}</div><div class="border-top pt-3 mt-3"><div class="small text-secondary mb-2">React to this run · no account required.</div>{% include 'brainrot/_reactions.html' with target_type='entry' target_id=entry.id reaction_items=entry.reaction_items %}</div></div></div></div>
 
-    <div class="col-12 col-lg-4">
-      <aside class="card shadow-sm">
-        <div class="card-body p-3 p-md-4">
-          <div class="text-secondary small text-uppercase fw-semibold mb-2">{% if entry.visibility == 'public' %}{% translate "PUBLIC REPLICATION MATERIAL" %}{% else %}{% translate "PRIVATE OWNER VIEW" %}{% endif %}</div>
-          <h2 class="h4">{% if entry.visibility == 'public' %}{% translate "Share this run" %}{% else %}{% translate "Private run" %}{% endif %}</h2>
-          {% if entry.visibility == 'private' %}
-            <p class="text-secondary small">{% translate "Only you and site superusers can open this page or video. Publish it to restore its Hall of Fame listing and share link." %}</p>
-          {% elif entry.user_id and request.user == entry.user %}
-            <p class="text-secondary small">{% translate "This is your permanent Hall of Fame link. Deploy it responsibly." %}</p>
-          {% elif not entry.user_id %}
-            <p class="text-secondary small">{% translate "This is a guest submission and has no self-service access. To request privacy changes or removal, contact the site owner and include this page's URL." %}</p>
-          {% else %}
-            <p class="text-secondary small">{% translate "Distribute this evidence to researchers, rivals and confused relatives." %}</p>
-          {% endif %}
-
-          {% if entry.personal_best is not None %}
-            <div class="border rounded p-3 mb-3 bg-light-subtle">
-              <div class="text-secondary small text-uppercase fw-semibold">{% blocktranslate with username=entry.user.username mode=entry.get_game_mode_display %}{{ username }} · {{ mode }} PB{% endblocktranslate %}</div>
-              <div class="display-6 fw-bold">{{ entry.personal_best }}</div>
-              {% if entry.is_personal_best %}<div class="small text-success fw-semibold">{% translate "This run matches their personal best." %}</div>{% endif %}
-            </div>
-          {% endif %}
-
-          {% if entry.visibility == 'public' %}
-            <textarea class="form-control mb-2" id="hof-share-text" rows="6" readonly aria-label="{% translate 'Shareable Hall of Fame result' %}"></textarea>
-            <div class="d-grid gap-2">
-              <button class="btn btn-primary" id="share-hof" type="button">{% translate "Share result!" %}</button>
-              <button class="btn btn-outline-secondary" id="copy-hof-link" type="button">{% translate "Copy share message" %}</button>
-            </div>
-          {% endif %}
-          {% include 'brainrot/_entry_controls.html' %}
-          <p class="small text-secondary mt-2 mb-0" id="hof-share-status" role="status" aria-live="polite"></p>
-        </div>
-      </aside>
-    </div>
+    <div class="col-12 col-lg-4"><aside class="card shadow-sm"><div class="card-body p-3 p-md-4"><div class="text-secondary small text-uppercase fw-semibold mb-2">{% if entry.visibility == 'public' %}PUBLIC REPLICATION MATERIAL{% else %}PRIVATE OWNER VIEW{% endif %}</div><h2 class="h4">{% if entry.visibility == 'public' %}Share this run{% else %}Private run{% endif %}</h2>
+      {% if entry.game_mode == 'combine' %}<div class="border rounded p-3 mb-3"><div class="small text-secondary text-uppercase">Combo components</div><div class="fs-3 fw-bold">{{ entry.combo_six_seven }} × {{ entry.combo_leg_claps }} = {{ entry.score }}</div></div>{% endif %}
+      {% if entry.personal_best is not None %}<div class="border rounded p-3 mb-3 bg-light-subtle"><div class="text-secondary small text-uppercase fw-semibold">{{ entry.user.username }} · {{ entry.get_game_mode_display }} PB</div><div class="display-6 fw-bold">{{ entry.personal_best }}</div></div>{% endif %}
+      {% if entry.visibility == 'public' %}<textarea class="form-control mb-2" id="hof-share-text" rows="6" readonly></textarea><div class="d-grid gap-2"><button class="btn btn-primary" id="share-hof" type="button">Share result!</button><button class="btn btn-outline-secondary" id="copy-hof-link" type="button">Copy share message</button></div>{% endif %}
+      {% include 'brainrot/_entry_controls.html' %}<p class="small text-secondary mt-2 mb-0" id="hof-share-status" role="status"></p>
+    </div></aside></div>
   </div>
 
-  <section class="mt-5" aria-labelledby="run-analysis-title">
-    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
-      <div>
-        <div class="text-secondary small text-uppercase fw-semibold mb-1">{% translate "20-SECOND PACING ANALYSIS" %}</div>
-        <h2 class="h3 mb-0" id="run-analysis-title">{% translate "Speed over time" %}</h2>
-      </div>
-      {% if timeline_exact %}
-        <div class="text-end">
-          <div class="small text-secondary mb-1">{% translate "Display unit" %}</div>
-          <div class="btn-group btn-group-sm" role="group" aria-label="{% translate 'Speed display unit' %}">
-            <button class="btn btn-dark" type="button" data-speed-mode="per-second" aria-pressed="true">{{ speed_unit }}</button>
-            <button class="btn btn-outline-dark" type="button" data-speed-mode="per-20s" aria-pressed="false">{{ speed_unit_20 }}</button>
-          </div>
-        </div>
-      {% else %}
-        <span class="small text-secondary">{% translate "2-second centred rolling rate" %}</span>
-      {% endif %}
-    </div>
-
-    {% if timeline_exact %}
-      <div class="card shadow-sm run-analysis-card" id="run-speed-analysis"
-           data-unit-per-second="{{ speed_unit }}"
-           data-unit-per-20="{{ speed_unit_20 }}">
-        <div class="card-body p-3 p-md-4">
-          <div class="row g-3 mb-3">
-            <div class="col-6 col-lg-3"><div class="run-analysis-stat border rounded p-3"><div class="small text-secondary">{% translate "Average" %}</div><div class="run-analysis-value" id="run-average-rate">—</div></div></div>
-            <div class="col-6 col-lg-3"><div class="run-analysis-stat border rounded p-3"><div class="small text-secondary">{% translate "Peak 2s rate" %}</div><div class="run-analysis-value" id="run-peak-rate">—</div><div class="small text-secondary" id="run-peak-time"></div></div></div>
-            <div class="col-6 col-lg-3"><div class="run-analysis-stat border rounded p-3"><div class="small text-secondary">{% translate "Fastest 5s" %}</div><div class="run-analysis-value" id="run-fastest-burst">—</div><div class="small text-secondary" id="run-fastest-burst-time"></div></div></div>
-            <div class="col-6 col-lg-3"><div class="run-analysis-stat border rounded p-3"><div class="small text-secondary">{% translate "First → second half" %}</div><div class="run-analysis-value"><span id="run-first-half-rate">—</span> → <span id="run-second-half-rate">—</span></div></div></div>
-          </div>
-          <div class="small text-secondary mb-2">{% translate "2-second centred rolling rate. Switch to the 20-second pace unit to read each local speed as an equivalent full-run score." %}</div>
-          <div class="run-analysis-chart-wrap">
-            <canvas id="run-speed-chart" aria-label="{% translate 'Rolling speed over the 20 second run' %}"></canvas>
-          </div>
-          <p class="small text-secondary mt-2 mb-0" id="run-speed-hover"
-             data-default-text="{% translate 'Move across the chart to inspect the speed at that time.' %}">{% translate "Move across the chart to inspect the speed at that time." %}</p>
-        </div>
-      </div>
-      {{ entry.event_timeline|json_script:'run-event-timeline' }}
-    {% else %}
-      <div class="alert alert-light border shadow-sm mb-0">
-        {% translate "This is a legacy run without an exact per-count event timeline, so a speed curve would be fake science. Newer runs record every count timestamp and get the full pacing graph." %}
-      </div>
-    {% endif %}
-  </section>
+  {% if entry.game_mode == 'combine' %}
+    <section class="mt-5"><div class="text-secondary small text-uppercase fw-semibold mb-1">COMBO ANALYSIS</div><h2 class="h3">Two counters, one extremely important product</h2><div class="card shadow-sm"><div class="card-body"><div class="row g-3 text-center"><div class="col-4"><div class="small text-secondary">67 moves</div><div class="display-6 fw-bold">{{ entry.combo_six_seven }}</div></div><div class="col-4"><div class="small text-secondary">Leg claps</div><div class="display-6 fw-bold">{{ entry.combo_leg_claps }}</div></div><div class="col-4"><div class="small text-secondary">Product</div><div class="display-6 fw-bold">{{ entry.score }}</div></div></div></div></div></section>
+  {% else %}
+    <section class="mt-5" aria-labelledby="run-analysis-title"><div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3"><div><div class="text-secondary small text-uppercase fw-semibold mb-1">20-SECOND PACING ANALYSIS</div><h2 class="h3 mb-0" id="run-analysis-title">Speed over time</h2></div>{% if timeline_exact %}<div class="btn-group btn-group-sm"><button class="btn btn-dark" type="button" data-speed-mode="per-second">{{ speed_unit }}</button><button class="btn btn-outline-dark" type="button" data-speed-mode="per-20s">{{ speed_unit_20 }}</button></div>{% endif %}</div>
+    {% if timeline_exact %}<div class="card shadow-sm run-analysis-card" id="run-speed-analysis" data-unit-per-second="{{ speed_unit }}" data-unit-per-20="{{ speed_unit_20 }}"><div class="card-body p-3 p-md-4"><div class="row g-3 mb-3"><div class="col-6 col-lg-3"><div class="border rounded p-3"><div class="small text-secondary">Average</div><div class="run-analysis-value" id="run-average-rate">—</div></div></div><div class="col-6 col-lg-3"><div class="border rounded p-3"><div class="small text-secondary">Peak 2s rate</div><div class="run-analysis-value" id="run-peak-rate">—</div><div class="small text-secondary" id="run-peak-time"></div></div></div><div class="col-6 col-lg-3"><div class="border rounded p-3"><div class="small text-secondary">Fastest 5s</div><div class="run-analysis-value" id="run-fastest-burst">—</div><div class="small text-secondary" id="run-fastest-burst-time"></div></div></div><div class="col-6 col-lg-3"><div class="border rounded p-3"><div class="small text-secondary">First → second half</div><div><span id="run-first-half-rate">—</span> → <span id="run-second-half-rate">—</span></div></div></div></div><div class="run-analysis-chart-wrap"><canvas id="run-speed-chart"></canvas></div><p class="small text-secondary mt-2 mb-0" id="run-speed-hover">Move across the chart to inspect the speed at that time.</p></div></div>{{ entry.event_timeline|json_script:'run-event-timeline' }}{% else %}<div class="alert alert-light border">Legacy run without an exact count timeline.</div>{% endif %}</section>
+  {% endif %}
 
   {% include 'brainrot/_hof_comments.html' %}
 </main>

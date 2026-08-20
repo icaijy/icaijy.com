@@ -7,16 +7,20 @@ if (detail) {
   const status = document.getElementById('hof-share-status');
   const url = detail.dataset.entryUrl;
   const score = Number(detail.dataset.score);
-  const isLegClaps = detail.dataset.gameMode === 'leg_claps';
-  const isVoice = detail.dataset.gameMode === 'voice_67';
-  const blocks = score > 0
-    ? `${'🟩'.repeat(Math.min(score, 20))}${score > 20 ? ` +${score - 20}` : ''}`
-    : '⬜';
-  const fallbackHeadline = isLegClaps
-    ? `${detail.dataset.username} made ${score} Tung Tung Leg Claps in 20 seconds! 🥒`
-    : isVoice
-      ? `${detail.dataset.username} clearly said “six seven” ${score} times in 20 seconds! 🗣️`
-      : `${detail.dataset.username} made ${score} 6️⃣7️⃣ moves in 20 seconds! 🔥`;
+  const mode = detail.dataset.gameMode;
+  const isLegClaps = mode === 'leg_claps';
+  const isVoice = mode === 'voice_67';
+  const isCombine = mode === 'combine';
+  const comboSix = Number(detail.dataset.comboSix || 0);
+  const comboLegs = Number(detail.dataset.comboLegs || 0);
+  const blocks = score > 0 ? `${'🟩'.repeat(Math.min(score, 20))}${score > 20 ? ` +${score - 20}` : ''}` : '⬜';
+  const fallbackHeadline = isCombine
+    ? `${detail.dataset.username} scored ${score}: ${comboSix} 6️⃣7️⃣ × ${comboLegs} Tung Tung Leg Claps! 🤡`
+    : isLegClaps
+      ? `${detail.dataset.username} made ${score} Tung Tung Leg Claps in 20 seconds! 🥒`
+      : isVoice
+        ? `${detail.dataset.username} clearly said “six seven” ${score} times in 20 seconds! 🗣️`
+        : `${detail.dataset.username} made ${score} 6️⃣7️⃣ moves in 20 seconds! 🔥`;
   const headline = detail.querySelector('.pb-2 .fw-bold')?.textContent.trim() || fallbackHeadline;
   const text = `${headline}\n${blocks}\n${url}`;
   if (shareText) shareText.value = text;
@@ -24,21 +28,14 @@ if (detail) {
   async function copyShareMessage() {
     if (!shareText || !copyButton) return;
     try {
-      if (navigator.clipboard?.writeText && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
-      } else {
+      if (navigator.clipboard?.writeText && window.isSecureContext) await navigator.clipboard.writeText(text);
+      else {
         shareText.select();
         shareText.setSelectionRange(0, shareText.value.length);
         if (!document.execCommand('copy')) throw new Error('Copy command was rejected.');
       }
       copyButton.textContent = tr('Copied! 🎉');
-      if (status) {
-        status.textContent = isLegClaps
-          ? tr('Full result copied! The knee evidence is ready for deployment.')
-          : isVoice
-            ? tr('Full result copied! The voice evidence is ready for deployment.')
-            : tr('Full result copied! The 6️⃣7️⃣ evidence is ready for deployment.');
-      }
+      if (status) status.textContent = tr('Full result copied. Extremely important evidence is ready for deployment.');
     } catch (error) {
       shareText.select();
       if (status) status.textContent = tr('Automatic copy failed. Select the message and copy it manually.');

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}My 67 Cosmetics{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% url 'brainrot:cosmetics_css' %}">
+<main class="container py-4 py-md-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+    <div><div class="text-secondary small text-uppercase fw-semibold">WARDROBE OF POOR DECISIONS</div><h1 class="display-5 fw-bold mb-1">My Cosmetics</h1></div>
+    <div class="text-end"><strong class="{% if balance_67 < 0 %}text-danger{% endif %}">{{ balance_67 }} × 67</strong><div class="text-secondary">{{ balance_61 }} × 61</div></div>
+  </div>
+  {% if messages %}{% for message in messages %}<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %}">{{ message }}</div>{% endfor %}{% endif %}
+  <div class="d-flex gap-2 mb-4"><a class="btn btn-primary" href="{% url 'brainrot:shop' %}">Shop</a><a class="btn btn-outline-dark" href="{% url 'brainrot:wealth' %}">Rich List</a></div>
+  <div class="row g-3">
+    {% for row in rows %}
+      <div class="col-12 col-md-6">
+        <div class="card h-100 {% if row.cosmetic.category == 'hof' or row.cosmetic.category == 'comment' %}cosmetic-{{ row.cosmetic.id }}{% endif %}">
+          <div class="card-body">
+            <div class="d-flex justify-content-between gap-2"><div><div class="small text-secondary text-uppercase">{{ row.cosmetic.get_category_display }}</div><h2 class="h5">{{ row.cosmetic.name }}</h2></div>{% if row.is_equipped %}<span class="badge text-bg-success align-self-start">EQUIPPED</span>{% endif %}</div>
+            {% if row.cosmetic.category == 'username' %}<div class="fs-4 cosmetic-{{ row.cosmetic.id }}">icaijy</div>{% elif row.cosmetic.category == 'badge' %}<span class="badge cosmetic-{{ row.cosmetic.id }}">{{ row.cosmetic.badge_text|default:row.cosmetic.name }}</span>{% endif %}
+            <p class="small text-secondary mt-2">{% if row.expires_at is None %}PERMANENT{% elif row.is_expired %}<span class="text-danger">Expired {{ row.expires_at|date:'j M Y' }}</span>{% else %}Expires {{ row.expires_at|date:'j M Y · H:i' }}{% endif %}</p>
+            {% if row.is_active %}
+              {% if row.is_equipped %}<form method="post" action="{% url 'brainrot:unequip_cosmetic' row.cosmetic.category %}">{% csrf_token %}<button class="btn btn-outline-secondary">Unequip</button></form>
+              {% else %}<form method="post" action="{% url 'brainrot:equip_cosmetic' row.cosmetic.id %}">{% csrf_token %}<button class="btn btn-dark">Equip</button></form>{% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% empty %}<div class="col-12"><div class="alert alert-light border">You own no CSS. A devastating but reversible condition.</div></div>{% endfor %}
+  </div>
+</main>
+{% endblock %}

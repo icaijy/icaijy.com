@@ -1,6 +1,6 @@
-import json
 import hashlib
 import hmac
+import json
 import math
 import unicodedata
 from datetime import timedelta
@@ -23,12 +23,14 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
 from .comment_markup import comment_max_length, normalise_comment_body
+from .economy import decorate_user_objects, settle_missing_days
 from .models import HallOfFameComment, HallOfFameEntry, HallOfFameUploadAttempt
 from .social import reaction_items_map, reactor_key
 from .validators import validate_hall_of_fame_video
 
 
 def index(request):
+    settle_missing_days()
     return render(request, 'brainrot/index.html')
 
 
@@ -49,8 +51,8 @@ def _counter_context(rival=None, game_mode=HallOfFameEntry.GameMode.SIX_SEVEN):
     }
     if rival is not None:
         timeline = rival.event_timeline
-        timeline_exact = len(timeline) == rival.score
-        if not timeline_exact and rival.score:
+        timeline_exact = rival.game_mode != HallOfFameEntry.GameMode.COMBINE and len(timeline) == rival.score
+        if not timeline_exact and rival.score and rival.game_mode != HallOfFameEntry.GameMode.COMBINE:
             timeline = [round((index + 1) * 20 / (rival.score + 1), 3) for index in range(rival.score)]
         context.update({
             'rival_timeline': timeline,
@@ -60,7 +62,7 @@ def _counter_context(rival=None, game_mode=HallOfFameEntry.GameMode.SIX_SEVEN):
 
 
 def _personal_best_map(user_ids, game_mode):
-    """Public PBs for public surfaces; private runs must not leak their scores."""
+    """Public PBs for public surfaces; private runs must not leak on HOF pages."""
     if not user_ids:
         return {}
     rows = HallOfFameEntry.objects.filter(
@@ -85,11 +87,14 @@ def _speed_units(game_mode):
         return 'claps/s', 'claps/20s'
     if game_mode == HallOfFameEntry.GameMode.VOICE_67:
         return '67s/s', '67s/20s'
+    if game_mode == HallOfFameEntry.GameMode.COMBINE:
+        return 'combo/s', 'combo/20s'
     return 'moves/s', 'moves/20s'
 
 
 @ensure_csrf_cookie
 def counter(request):
+    settle_missing_days()
     game_mode = _normalise_game_mode(request.GET.get('mode'))
     return render(request, 'brainrot/counter.html', _counter_context(game_mode=game_mode))
 
@@ -99,7 +104,12 @@ def typing_test(request):
 
 
 def hall_of_fame(request):
+    settle_missing_days()
     game_mode = _normalise_game_mode(request.GET.get('mode'))
+    sort = request.GET.get('sort', 'new')
+    if sort not in {'top', 'new'}:
+        sort = 'new'
+    ordering = ('-created_at', '-id') if sort == 'new' else ('-score', 'created_at', 'id')
     entries = list(
         HallOfFameEntry.objects.filter(
             game_mode=game_mode,
@@ -107,23 +117,26 @@ def hall_of_fame(request):
         )
         .select_related('user')
         .annotate(comment_count=Count('comments'))
-        # Keep the leaderboard contract explicit. Aggregation/annotation must never
-        # be allowed to change the ranking order accidentally.
-        .order_by('-score', 'created_at', 'id')[:67]
+        .order_by(*ordering)[:67]
     )
     _attach_personal_bests(entries, game_mode)
+    decorate_user_objects(entries)
 
     identity = reactor_key(request, create=False)
     targets = [f'entry:{entry.pk}' for entry in entries]
     reactions = reaction_items_map(targets, identity)
     for entry in entries:
-        entry.timeline_exact = len(entry.event_timeline) == entry.score
+        entry.timeline_exact = (
+            entry.game_mode != HallOfFameEntry.GameMode.COMBINE
+            and len(entry.event_timeline) == entry.score
+        )
         entry.reaction_items = reactions.get(f'entry:{entry.pk}', [])
 
     speed_unit, speed_unit_20 = _speed_units(game_mode)
     return render(request, 'brainrot/hall_of_fame.html', {
         'entries': entries,
         'game_mode': game_mode,
+        'sort': sort,
         'speed_unit': speed_unit,
         'speed_unit_20': speed_unit_20,
     })
@@ -134,8 +147,10 @@ def my_hall_of_fame(request):
     entries = HallOfFameEntry.objects.select_related('user')
     if not request.user.is_superuser:
         entries = entries.filter(user=request.user)
+    entries = list(entries[:67])
+    decorate_user_objects(entries)
     return render(request, 'brainrot/my_hall_of_fame.html', {
-        'entries': entries[:67],
+        'entries': entries,
         'superuser_mode': request.user.is_superuser,
     })
 
@@ -153,7 +168,11 @@ def hall_of_fame_detail(request, entry_id):
     if entry.visibility != HallOfFameEntry.Visibility.PUBLIC and not _may_manage_entry(request.user, entry):
         return JsonResponse({'error': _('This Hall of Fame entry is private.')}, status=404)
 
-    comments = list(entry.comments.select_related('user', 'entry', 'entry__user').all())
+    comment_sort = request.GET.get('comment_sort', 'newest')
+    if comment_sort not in {'newest', 'oldest'}:
+        comment_sort = 'newest'
+    comment_order = ('-created_at', '-id') if comment_sort == 'newest' else ('created_at', 'id')
+    comments = list(entry.comments.select_related('user', 'entry', 'entry__user').order_by(*comment_order))
     relevant_user_ids = {
         user_id
         for user_id in [entry.user_id, *[comment.user_id for comment in comments]]
@@ -161,8 +180,6 @@ def hall_of_fame_detail(request, entry_id):
     }
     pb_map = _personal_best_map(relevant_user_ids, entry.game_mode)
 
-    # On a private owner/admin view, it is safe and useful to include the owner's
-    # true PB across their public + private runs. Other users' badges remain public-only.
     if (
         entry.visibility == HallOfFameEntry.Visibility.PRIVATE
         and entry.user_id
@@ -186,12 +203,16 @@ def hall_of_fame_detail(request, entry_id):
         comment.author_pb = pb_map.get(comment.user_id) if comment.user_id else None
         comment.reaction_items = reactions[f'comment:{comment.pk}']
 
-    timeline_exact = len(entry.event_timeline) == entry.score
+    decorate_user_objects([entry])
+    decorate_user_objects(comments)
+
+    timeline_exact = entry.game_mode != HallOfFameEntry.GameMode.COMBINE and len(entry.event_timeline) == entry.score
     speed_unit, speed_unit_20 = _speed_units(entry.game_mode)
 
     return render(request, 'brainrot/hall_of_fame_detail.html', {
         'entry': entry,
         'comments': comments,
+        'comment_sort': comment_sort,
         'comment_max_length': comment_max_length(request.user),
         'timeline_exact': timeline_exact,
         'speed_unit': speed_unit,
@@ -205,16 +226,9 @@ def challenge(request, entry_id):
     return render(request, 'brainrot/counter.html', _counter_context(rival, rival.game_mode))
 
 
-def _validated_event_timeline(raw_timeline, score):
-    if not raw_timeline:
-        return []
-    try:
-        timeline = json.loads(raw_timeline)
-    except (TypeError, json.JSONDecodeError):
-        raise ValidationError('The counter timeline is not valid JSON.')
-    if not isinstance(timeline, list) or len(timeline) != score or len(timeline) > 500:
+def _clean_timeline(timeline, expected_score):
+    if not isinstance(timeline, list) or len(timeline) != expected_score or len(timeline) > 500:
         raise ValidationError('The counter timeline does not match the submitted score.')
-
     cleaned = []
     for value in timeline:
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
@@ -224,6 +238,44 @@ def _validated_event_timeline(raw_timeline, score):
             raise ValidationError('The counter timeline contains an invalid timestamp.')
         cleaned.append(timestamp)
     return cleaned
+
+
+def _validated_event_timeline(raw_timeline, score):
+    if not raw_timeline:
+        return []
+    try:
+        timeline = json.loads(raw_timeline)
+    except (TypeError, json.JSONDecodeError):
+        raise ValidationError('The counter timeline is not valid JSON.')
+    return _clean_timeline(timeline, score)
+
+
+def _validated_combo_metrics(raw_metrics, score):
+    try:
+        metrics = json.loads(raw_metrics or '{}')
+    except (TypeError, json.JSONDecodeError):
+        raise ValidationError('The combine metrics are not valid JSON.')
+    if not isinstance(metrics, dict):
+        raise ValidationError('The combine metrics are invalid.')
+    try:
+        six_seven = int(metrics.get('six_seven'))
+        leg_claps = int(metrics.get('leg_claps'))
+    except (TypeError, ValueError):
+        raise ValidationError('The combine component scores are invalid.')
+    if not 0 <= six_seven <= 500 or not 0 <= leg_claps <= 500:
+        raise ValidationError('The combine component score is outside the plausible range.')
+    if six_seven * leg_claps != score:
+        raise ValidationError('The combine score does not match its component scores.')
+    timelines = metrics.get('timelines') or {}
+    if not isinstance(timelines, dict):
+        raise ValidationError('The combine timelines are invalid.')
+    clean_six = _clean_timeline(timelines.get('six_seven', []), six_seven)
+    clean_legs = _clean_timeline(timelines.get('leg_claps', []), leg_claps)
+    return {
+        'six_seven': six_seven,
+        'leg_claps': leg_claps,
+        'timelines': {'six_seven': clean_six, 'leg_claps': clean_legs},
+    }
 
 
 def _turnstile_is_valid(request):
@@ -309,7 +361,17 @@ def submit_hall_of_fame(request):
     if not _turnstile_is_valid(request):
         return JsonResponse({'error': 'Human verification failed. Please try again.'}, status=400)
 
-    if request.POST.get('publication_consent') != 'yes':
+    game_mode = request.POST.get('game_mode') or HallOfFameEntry.GameMode.SIX_SEVEN
+    if game_mode not in HallOfFameEntry.GameMode.values:
+        return JsonResponse({'error': _('Invalid counter mode.')}, status=400)
+
+    visibility = request.POST.get('visibility', HallOfFameEntry.Visibility.PUBLIC)
+    if owner is None:
+        visibility = HallOfFameEntry.Visibility.PUBLIC
+    elif visibility not in HallOfFameEntry.Visibility.values:
+        return JsonResponse({'error': _('Invalid visibility.')}, status=400)
+
+    if visibility == HallOfFameEntry.Visibility.PUBLIC and request.POST.get('publication_consent') != 'yes':
         return JsonResponse({
             'error': _('You must confirm that this video will be published for anyone to watch.'),
         }, status=400)
@@ -318,12 +380,9 @@ def submit_hall_of_fame(request):
         score = int(request.POST.get('score', ''))
     except (TypeError, ValueError):
         return JsonResponse({'error': 'Invalid score.'}, status=400)
-    if score < 0 or score > 500:
+    score_limit = 250000 if game_mode == HallOfFameEntry.GameMode.COMBINE else 500
+    if score < 0 or score > score_limit:
         return JsonResponse({'error': 'Score is outside the scientifically plausible range.'}, status=400)
-
-    game_mode = request.POST.get('game_mode') or HallOfFameEntry.GameMode.SIX_SEVEN
-    if game_mode not in HallOfFameEntry.GameMode.values:
-        return JsonResponse({'error': _('Invalid counter mode.')}, status=400)
 
     try:
         display_name = '' if owner else _anonymous_display_name(request.POST.get('display_name', ''))
@@ -340,7 +399,12 @@ def submit_hall_of_fame(request):
         return JsonResponse({'error': exc.messages[0]}, status=400)
 
     try:
-        event_timeline = _validated_event_timeline(request.POST.get('event_timeline', ''), score)
+        if game_mode == HallOfFameEntry.GameMode.COMBINE:
+            metrics = _validated_combo_metrics(request.POST.get('metrics', ''), score)
+            event_timeline = []
+        else:
+            metrics = {}
+            event_timeline = _validated_event_timeline(request.POST.get('event_timeline', ''), score)
     except ValidationError as exc:
         return JsonResponse({'error': exc.messages[0]}, status=400)
 
@@ -361,7 +425,8 @@ def submit_hall_of_fame(request):
             mime_type=inspected.mime_type,
             duration_seconds=inspected.duration_seconds,
             event_timeline=event_timeline,
-            visibility=HallOfFameEntry.Visibility.PUBLIC,
+            metrics=metrics,
+            visibility=visibility,
         )
         entry._validated_extension = inspected.extension
         entry.video = upload
@@ -379,13 +444,15 @@ def submit_hall_of_fame(request):
         attempt.save(update_fields=['accepted'])
 
     entry_url = reverse('brainrot:hall_of_fame_detail', args=(entry.pk,))
+    if visibility == HallOfFameEntry.Visibility.PRIVATE:
+        message = _('Saved privately. It still backs fewer 67 Coins and only you or site staff can open the run.')
+    elif owner:
+        message = _('Published to the Hall of Fame. Public main-67 runs back more 67 Coins.')
+    else:
+        message = _('Published as a guest. To remove it later, send the public link to the site owner.')
     return JsonResponse({
         'ok': True,
-        'message': (
-            _('Published to the Hall of Fame. You can manage it from My HOF.')
-            if owner
-            else _('Published as a guest. To remove it later, send the public link to the site owner.')
-        ),
+        'message': message,
         'hall_of_fame_url': reverse('brainrot:hall_of_fame'),
         'entry_url': entry_url,
     }, status=201)
@@ -444,7 +511,12 @@ def hall_of_fame_video(request, entry_id):
     response = FileResponse(entry.video.open('rb'), content_type=entry.mime_type)
     response['Content-Length'] = entry.video.size
     disposition = 'attachment' if request.GET.get('download') == '1' else 'inline'
-    mode_slug = 'leg-claps' if entry.game_mode == HallOfFameEntry.GameMode.LEG_CLAPS else '67'
+    if entry.game_mode == HallOfFameEntry.GameMode.LEG_CLAPS:
+        mode_slug = 'leg-claps'
+    elif entry.game_mode == HallOfFameEntry.GameMode.COMBINE:
+        mode_slug = '67-tung-combine'
+    else:
+        mode_slug = '67'
     response['Content-Disposition'] = f'{disposition}; filename="{mode_slug}-run-{entry.pk}.{entry.video.name.rsplit(".", 1)[-1]}"'
     response['X-Content-Type-Options'] = 'nosniff'
     response['Cache-Control'] = 'private, max-age=300'

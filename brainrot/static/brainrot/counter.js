@@ -8,9 +8,6 @@ import {
 const app = document.getElementById('counter-app');
 if (app) {
   const tr = (message) => typeof gettext === 'function' ? gettext(message) : message;
-  const fmt = (message, values) => typeof interpolate === 'function'
-    ? interpolate(tr(message), values, true)
-    : Object.entries(values).reduce((text, [key, value]) => text.replaceAll(`%(${key})s`, value), message);
   const video = document.getElementById('camera');
   const canvas = document.getElementById('pose-overlay');
   const context = canvas.getContext('2d');
@@ -35,6 +32,7 @@ if (app) {
   const recordingDownload = document.getElementById('download-recording');
   const submitButton = document.getElementById('submit-hof');
   const displayNameInput = document.getElementById('hof-display-name');
+  const visibilityInput = document.getElementById('hof-visibility');
   const discardButton = document.getElementById('discard-recording');
   const uploadStatus = document.getElementById('upload-status');
   const publicationModal = document.getElementById('publication-modal');
@@ -51,6 +49,10 @@ if (app) {
   const hallMark = document.getElementById('counter-hof-mark');
   const hallPortal = document.getElementById('counter-hof-portal');
   const modeButtons = [...document.querySelectorAll('[data-counter-mode]')];
+  const comboBreakdown = document.getElementById('combo-breakdown');
+  const comboSixScore = document.getElementById('combo-six-score');
+  const comboLegScore = document.getElementById('combo-leg-score');
+  const resultBreakdown = document.getElementById('result-combo-breakdown');
 
   const GAME_SECONDS = 20;
   const COUNTDOWN_STEP_MS = 1000;
@@ -61,6 +63,7 @@ if (app) {
   const rivalTimeline = rivalTimelineNode ? JSON.parse(rivalTimelineNode.textContent) : [];
   const rivalName = app.dataset.rivalName || '';
   const rivalFinalScore = Number(app.dataset.rivalScore || 0);
+
   let currentMode = Object.values(GAME_MODES).includes(app.dataset.gameMode)
     ? app.dataset.gameMode
     : GAME_MODES.SIX_SEVEN;
@@ -80,6 +83,9 @@ if (app) {
   let endTime = 0;
   let score = 0;
   let eventTimeline = [];
+  let sixSevenScore = 0;
+  let legClapScore = 0;
+  let comboTimelines = { six_seven: [], leg_claps: [] };
   let runStartedAt = 0;
   let rivalTimelineIndex = 0;
   let rivalReady = !rivalVideo;
@@ -181,24 +187,45 @@ if (app) {
     return document.getElementById(`${prefix}-${field}`)?.textContent.trim() || '';
   }
 
+  function modePrefix(mode) {
+    if (mode === GAME_MODES.LEG_CLAPS) return 'leg-claps';
+    if (mode === GAME_MODES.COMBINE) return 'combine';
+    return 'six-seven';
+  }
+
   function modeConfig(mode = currentMode) {
-    const prefix = mode === GAME_MODES.LEG_CLAPS ? 'leg-claps' : 'six-seven';
+    const prefix = modePrefix(mode);
+    const configs = {
+      [GAME_MODES.SIX_SEVEN]: { hudLabel: '67 COUNT', downloadSlug: '67-run' },
+      [GAME_MODES.LEG_CLAPS]: { hudLabel: 'LEG CLAPS', downloadSlug: 'tung-tung-leg-claps' },
+      [GAME_MODES.COMBINE]: { hudLabel: 'COMBO SCORE', downloadSlug: '67-tung-combine' },
+    };
     return {
       title: modeNode(prefix, 'title'),
       description: modeNode(prefix, 'description'),
       scoreLabel: modeNode(prefix, 'score-label'),
       resultUnit: modeNode(prefix, 'result-unit'),
       mark: modeNode(prefix, 'placeholder'),
-      hudLabel: mode === GAME_MODES.LEG_CLAPS ? 'LEG CLAPS' : '67 COUNT',
       hudBrand: 'icaijy.com',
-      downloadSlug: mode === GAME_MODES.LEG_CLAPS ? 'tung-tung-leg-claps' : '67-run',
+      ...configs[mode],
     };
   }
 
   function armedStatus() {
-    return currentMode === GAME_MODES.LEG_CLAPS
-      ? tr('Detector ready — step into frame')
-      : tr('Armed — step back until shoulders and wrists are visible');
+    if (currentMode === GAME_MODES.LEG_CLAPS) return tr('Detector ready — step into frame');
+    if (currentMode === GAME_MODES.COMBINE) return tr('Armed — step back until shoulders, wrists, hips and knees are visible');
+    return tr('Armed — step back until shoulders and wrists are visible');
+  }
+
+  function updateComboUI() {
+    const isCombo = currentMode === GAME_MODES.COMBINE;
+    if (comboBreakdown) comboBreakdown.hidden = !isCombo;
+    if (comboSixScore) comboSixScore.textContent = String(sixSevenScore);
+    if (comboLegScore) comboLegScore.textContent = String(legClapScore);
+    if (resultBreakdown) {
+      resultBreakdown.hidden = !isCombo;
+      resultBreakdown.textContent = isCombo ? `${sixSevenScore} × ${legClapScore} = ${score}` : '';
+    }
   }
 
   function updateModeUI({ updateUrl = true } = {}) {
@@ -216,6 +243,7 @@ if (app) {
       button.classList.toggle('active', active);
       button.setAttribute('aria-pressed', String(active));
     });
+    updateComboUI();
     const hallUrl = new URL(app.dataset.hallUrl, window.location.origin);
     hallUrl.searchParams.set('mode', currentMode);
     hallPortal.href = hallUrl.href;
@@ -244,6 +272,12 @@ if (app) {
   }
 
   function shareableResult() {
+    const pageUrl = rivalName ? new URL(window.location.href) : new URL('/67/counter/', window.location.origin);
+    pageUrl.searchParams.set('mode', currentMode);
+    if (currentMode === GAME_MODES.COMBINE) {
+      const headline = `I got ${score} Combo Score in 20 seconds: ${sixSevenScore} 6️⃣7️⃣ moves × ${legClapScore} Tung Tung Leg Claps.`;
+      return `${headline}\n67 × TUNG TUNG COMBINE\n${pageUrl.href}`;
+    }
     const isLegClaps = currentMode === GAME_MODES.LEG_CLAPS;
     const headline = rivalName
       ? isLegClaps
@@ -255,8 +289,6 @@ if (app) {
     const blocks = score > 0
       ? `${'🟩'.repeat(Math.min(score, 67))}${score > 67 ? ` +${score - 67}` : ''}`
       : '⬜';
-    const pageUrl = rivalName ? new URL(window.location.href) : new URL('/67/counter/', window.location.origin);
-    pageUrl.searchParams.set('mode', currentMode);
     const gameName = isLegClaps ? 'TUNG TUNG LEG CLAPS' : '67 COUNTER';
     return `${headline}\n${blocks}\n${gameName}\n${pageUrl.href}`;
   }
@@ -276,19 +308,12 @@ if (app) {
     } catch (error) {
       copyShareStatus.textContent = tr('Automatic copy failed. Select the text and copy it manually.');
     }
-    window.setTimeout(() => {
-      copyShareButton.textContent = tr('Copy to clipboard');
-    }, 1500);
+    window.setTimeout(() => { copyShareButton.textContent = tr('Copy to clipboard'); }, 1500);
   }
 
   function preferredRecordingType() {
     if (!window.MediaRecorder) return '';
-    const candidates = [
-      'video/webm;codecs=vp8',
-      'video/webm',
-      'video/mp4;codecs=avc1',
-      'video/mp4',
-    ];
+    const candidates = ['video/webm;codecs=vp8', 'video/webm', 'video/mp4;codecs=avc1', 'video/mp4'];
     return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || '';
   }
 
@@ -301,7 +326,6 @@ if (app) {
     }
     context.clearRect(0, 0, width, height);
     if (!landmarks) return;
-
     const geometry = OVERLAY_GEOMETRY[currentMode];
     context.lineWidth = Math.max(3, width / 180);
     context.strokeStyle = '#d8ff62';
@@ -327,12 +351,33 @@ if (app) {
     return landmarksAreVisible(currentMode, landmarks);
   }
 
+  function eventTimestamp(now) {
+    return Number(Math.max(0, (now - runStartedAt) / 1000).toFixed(3));
+  }
+
   function observeGesture(landmarks, now) {
     if (!running || now >= endTime) return;
+    if (currentMode === GAME_MODES.COMBINE) {
+      const counted = gestureTracker.observe(landmarks, now);
+      if (counted.sixSeven) {
+        sixSevenScore += 1;
+        comboTimelines.six_seven.push(eventTimestamp(now));
+      }
+      if (counted.legClaps) {
+        legClapScore += 1;
+        comboTimelines.leg_claps.push(eventTimestamp(now));
+      }
+      if (counted.sixSeven || counted.legClaps) {
+        score = sixSevenScore * legClapScore;
+        scoreEl.textContent = String(score);
+        updateComboUI();
+      }
+      return;
+    }
     if (gestureTracker.observe(landmarks, now)) {
       score += 1;
-      scoreEl.textContent = score;
-      eventTimeline.push(Number(Math.max(0, (now - runStartedAt) / 1000).toFixed(3)));
+      scoreEl.textContent = String(score);
+      eventTimeline.push(eventTimestamp(now));
     }
   }
 
@@ -341,7 +386,8 @@ if (app) {
     if (video.readyState >= 2 && video.currentTime !== lastVideoTime) {
       lastVideoTime = video.currentTime;
       try {
-        const result = landmarker.detectForVideo(video, performance.now());
+        const now = performance.now();
+        const result = landmarker.detectForVideo(video, now);
         const landmarks = result.landmarks?.[0] || null;
         drawPose(landmarks);
         if (sufficientlyVisible(landmarks)) readyFrames = Math.min(readyFrames + 1, 12);
@@ -350,9 +396,8 @@ if (app) {
 
         if (!running && !countdownActive) {
           if (armed) {
-            if (poseReady) {
-              beginRun();
-            } else {
+            if (poseReady) beginRun();
+            else {
               setStatus(armedStatus(), 'busy');
               startButton.textContent = tr('Waiting for your pose…');
             }
@@ -366,7 +411,7 @@ if (app) {
             setStatus(tr("Detector ready — click I'm ready, then step into frame"), 'ready');
           }
         }
-        observeGesture(landmarks, performance.now());
+        observeGesture(landmarks, now);
       } catch (error) {
         showError(`${tr('Pose detector paused:')} ${error.message}`);
       }
@@ -416,7 +461,6 @@ if (app) {
   function startRecording() {
     const type = preferredRecordingType();
     if (!type) throw new Error('This browser cannot record a compatible WebM/MP4 video.');
-
     recordingCanvas = document.createElement('canvas');
     recordingCanvas.width = video.videoWidth || 640;
     recordingCanvas.height = video.videoHeight || 480;
@@ -432,7 +476,6 @@ if (app) {
       drawRecordingHud();
       recordingFrame = requestAnimationFrame(drawRecordingFrame);
     };
-
     try {
       drawRecordingFrame();
       recordingStream = recordingCanvas.captureStream(30);
@@ -460,7 +503,7 @@ if (app) {
     const time = running ? Math.max(0, (endTime - performance.now()) / 1000).toFixed(1) : '20.0';
     recordingContext.save();
     recordingContext.fillStyle = 'rgba(15, 23, 42, .82)';
-    recordingContext.fillRect(padding, padding, scoreSize * 2.25, scoreSize * 1.42);
+    recordingContext.fillRect(padding, padding, scoreSize * 2.8, scoreSize * (currentMode === GAME_MODES.COMBINE ? 1.78 : 1.42));
     recordingContext.fillStyle = '#d8ff62';
     recordingContext.font = `900 ${scoreSize}px Inter, Arial, sans-serif`;
     recordingContext.textBaseline = 'top';
@@ -468,6 +511,11 @@ if (app) {
     recordingContext.fillStyle = '#ffffff';
     recordingContext.font = `800 ${labelSize}px Inter, Arial, sans-serif`;
     recordingContext.fillText(activeModeConfig.hudLabel, padding * 1.55, padding * 1.15 + scoreSize);
+    if (currentMode === GAME_MODES.COMBINE) {
+      recordingContext.fillStyle = '#d8ff62';
+      recordingContext.font = `800 ${labelSize * .95}px ui-monospace, monospace`;
+      recordingContext.fillText(`67 ${sixSevenScore} × TT ${legClapScore}`, padding * 1.55, padding * 1.15 + scoreSize + labelSize * 1.35);
+    }
 
     recordingContext.textAlign = 'right';
     recordingContext.fillStyle = 'rgba(15, 23, 42, .76)';
@@ -531,7 +579,7 @@ if (app) {
   function updateGameClock() {
     if (!running) return;
     const remaining = Math.max(0, (endTime - performance.now()) / 1000);
-    if (rivalVideo) {
+    if (rivalVideo && currentMode !== GAME_MODES.COMBINE) {
       const rivalGameTime = Math.max(0, rivalVideo.currentTime - RECORDING_LEAD_SECONDS);
       while (rivalTimelineIndex < rivalTimeline.length && rivalTimeline[rivalTimelineIndex] <= rivalGameTime) {
         rivalTimelineIndex += 1;
@@ -546,6 +594,16 @@ if (app) {
     gameLoop = requestAnimationFrame(updateGameClock);
   }
 
+  function resetScores() {
+    score = 0;
+    eventTimeline = [];
+    sixSevenScore = 0;
+    legClapScore = 0;
+    comboTimelines = { six_seven: [], leg_claps: [] };
+    scoreEl.textContent = '0';
+    updateComboUI();
+  }
+
   function armRun() {
     if (!landmarker || running || countdownActive || armed) return;
     showError('');
@@ -553,8 +611,7 @@ if (app) {
     resetButton.hidden = true;
     startButton.disabled = true;
     startButton.textContent = tr('Waiting for your pose…');
-    score = 0;
-    eventTimeline = [];
+    resetScores();
     runStartedAt = 0;
     rivalTimelineIndex = 0;
     if (rivalScoreEl) rivalScoreEl.textContent = '0';
@@ -563,7 +620,6 @@ if (app) {
       if (rivalVideo.readyState) rivalVideo.currentTime = 0;
     }
     gestureTracker.reset();
-    scoreEl.textContent = '0';
     timeEl.textContent = GAME_SECONDS.toFixed(1);
     armed = true;
     setModeControlsDisabled(true);
@@ -582,7 +638,6 @@ if (app) {
     countdownActive = true;
     startButton.hidden = true;
     setStatus(tr('Pose locked — countdown commencing'), 'ready');
-
     try {
       if (rivalVideo) {
         rivalVideo.currentTime = 0;
@@ -603,7 +658,6 @@ if (app) {
       startButton.textContent = READY_LABEL;
       return;
     }
-
     for (const value of ['3', '2', '1']) {
       countdownEl.textContent = value;
       await delay(COUNTDOWN_STEP_MS);
@@ -632,23 +686,25 @@ if (app) {
     if (rivalScoreEl) rivalScoreEl.textContent = rivalFinalScore;
     const blob = await stopRecording();
     setModeControlsDisabled(false);
-
-    resultScore.textContent = score;
-    resultCopy.textContent = rivalName
-      ? score > rivalFinalScore
+    resultScore.textContent = String(score);
+    if (currentMode === GAME_MODES.COMBINE) {
+      resultCopy.textContent = `Combo Score ${score}: ${sixSevenScore} × ${legClapScore}.`;
+    } else if (rivalName) {
+      resultCopy.textContent = score > rivalFinalScore
         ? `You beat ${rivalName} by ${score - rivalFinalScore}.`
         : score === rivalFinalScore
           ? `You tied ${rivalName}.`
-          : `${rivalName} is ahead by ${rivalFinalScore - score}.`
-      : currentMode === GAME_MODES.LEG_CLAPS
-        ? score > 0
-          ? `Counted ${score} leg claps.`
-          : tr('No leg claps were counted.')
-        : score === 67
-          ? tr('Exactly 67.')
-          : score > 67
-            ? `You passed 67 with ${score} moves.`
-            : `Counted ${score} moves.`;
+          : `${rivalName} is ahead by ${rivalFinalScore - score}.`;
+    } else if (currentMode === GAME_MODES.LEG_CLAPS) {
+      resultCopy.textContent = score > 0 ? `Counted ${score} leg claps.` : tr('No leg claps were counted.');
+    } else {
+      resultCopy.textContent = score === 67
+        ? tr('Exactly 67.')
+        : score > 67
+          ? `You passed 67 with ${score} moves.`
+          : `Counted ${score} moves.`;
+    }
+    updateComboUI();
     shareText.value = shareableResult();
     copyShareStatus.textContent = '';
     resultCard.hidden = false;
@@ -683,8 +739,7 @@ if (app) {
     discardRecording();
     armed = false;
     countdownActive = false;
-    score = 0;
-    eventTimeline = [];
+    resetScores();
     gestureTracker.reset();
     runStartedAt = 0;
     rivalTimelineIndex = 0;
@@ -693,7 +748,6 @@ if (app) {
       rivalVideo.pause();
       if (rivalVideo.readyState) rivalVideo.currentTime = 0;
     }
-    scoreEl.textContent = '0';
     timeEl.textContent = GAME_SECONDS.toFixed(1);
     resultCard.hidden = true;
     shareText.value = '';
@@ -706,9 +760,24 @@ if (app) {
     showError('');
   }
 
+  function selectedVisibility() {
+    return visibilityInput?.value === 'private' ? 'private' : 'public';
+  }
+
+  function submissionMetrics() {
+    if (currentMode !== GAME_MODES.COMBINE) return {};
+    return {
+      six_seven: sixSevenScore,
+      leg_claps: legClapScore,
+      timelines: comboTimelines,
+    };
+  }
+
   async function submitRecording() {
     if (!recordingBlob || !submitButton) return;
-    if (!publicationConsent?.checked) {
+    const visibility = selectedVisibility();
+    const isPublic = visibility === 'public';
+    if (isPublic && !publicationConsent?.checked) {
       openPublicationModal();
       return;
     }
@@ -717,16 +786,22 @@ if (app) {
       uploadStatus.textContent = `Recording exceeded the ${app.dataset.maxUploadMb} MB upload limit.`;
       return;
     }
-
     const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]')?.value || '';
     const extension = recordingBlob.type === 'video/mp4' ? 'mp4' : 'webm';
     const form = new FormData();
     form.append('game_mode', currentMode);
     form.append('score', String(score));
-    form.append('event_timeline', JSON.stringify(eventTimeline));
-    form.append('publication_consent', 'yes');
+    form.append('visibility', visibility);
+    if (currentMode === GAME_MODES.COMBINE) {
+      form.append('metrics', JSON.stringify(submissionMetrics()));
+    } else {
+      form.append('event_timeline', JSON.stringify(eventTimeline));
+    }
+    if (isPublic) form.append('publication_consent', 'yes');
     form.append('video', recordingBlob, `${activeModeConfig.downloadSlug}.${extension}`);
     if (displayNameInput) form.append('display_name', displayNameInput.value);
+    const commentInput = document.getElementById('hof-submission-comment');
+    if (commentInput?.value) form.append('submission_comment', commentInput.value);
     if (turnstileResponse) form.append('cf-turnstile-response', turnstileResponse);
 
     submitButton.disabled = true;
@@ -786,7 +861,10 @@ if (app) {
   enableButton.addEventListener('click', initialiseDetector);
   startButton.addEventListener('click', armRun);
   resetButton.addEventListener('click', resetRun);
-  submitButton?.addEventListener('click', openPublicationModal);
+  submitButton?.addEventListener('click', () => {
+    if (selectedVisibility() === 'private') submitRecording();
+    else openPublicationModal();
+  });
   publicationConsent?.addEventListener('change', () => {
     confirmPublication.disabled = !publicationConsent.checked;
   });
