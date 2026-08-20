@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}67 Rich List{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% url 'brainrot:cosmetics_css' %}">
+<main class="container py-4 py-md-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+    <div><div class="text-secondary small text-uppercase fw-semibold">ABSOLUTELY SERIOUS FINANCIAL INSTITUTION</div><h1 class="display-5 fw-bold mb-1">67 Rich List 🪙</h1><p class="text-secondary mb-0">Current balances. Spending, privatising and deleting HOF assets can all destroy your ranking.</p></div>
+    <div class="btn-group"><a class="btn {% if currency == '67' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?currency=67">67 Coin</a><a class="btn {% if currency == '61' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?currency=61">61 Coin</a></div>
+  </div>
+  <div class="card shadow-sm overflow-hidden"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
+    <thead><tr><th>#</th><th>Capitalist</th><th class="text-end">{{ currency }} balance</th><th class="text-end">{{ other_currency }} balance</th></tr></thead>
+    <tbody>{% for row in rows %}<tr class="{% if row.balance < 0 %}table-danger{% endif %}"><td class="fw-bold">{{ forloop.counter }}</td><td><strong class="{% if row.username_cosmetic %}cosmetic-{{ row.username_cosmetic.id }}{% endif %}">{{ row.user.username }}</strong>{% if row.badge_cosmetic %} <span class="badge cosmetic-{{ row.badge_cosmetic.id }}">{{ row.badge_cosmetic.badge_text|default:row.badge_cosmetic.name }}</span>{% endif %}{% if row.balance < 0 %}<span class="badge text-bg-danger ms-2">DEBT 💀</span>{% endif %}</td><td class="text-end fs-4 fw-bold {% if row.balance < 0 %}text-danger{% endif %}">{{ row.balance }}</td><td class="text-end text-secondary">{{ row.other_balance }}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-secondary py-5">The economy has not been invented yet.</td></tr>{% endfor %}</tbody>
+  </table></div></div>
+  <div class="d-flex flex-wrap gap-2 mt-3"><a class="btn btn-outline-dark" href="{% url 'brainrot:daily' %}">Daily leaderboard</a>{% if request.user.is_authenticated %}<a class="btn btn-dark" href="{% url 'brainrot:shop' %}">Spend irresponsibly</a><a class="btn btn-outline-secondary" href="{% url 'brainrot:inventory' %}">My Cosmetics</a>{% endif %}</div>
+</main>
+{% endblock %}

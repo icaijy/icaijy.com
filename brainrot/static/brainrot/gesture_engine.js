@@ -5,14 +5,13 @@ if (typeof document !== 'undefined') {
 export const GAME_MODES = Object.freeze({
   SIX_SEVEN: 'six_seven',
   LEG_CLAPS: 'leg_claps',
+  COMBINE: 'combine',
 });
 
 const LANDMARK_SETS = Object.freeze({
   [GAME_MODES.SIX_SEVEN]: [11, 12, 15, 16],
-  // Leg claps are defined by the knees. Ankles are deliberately not required:
-  // MediaPipe often loses feet near the bottom of a phone frame, and foot motion
-  // should not decide whether an inward knee clap happened.
   [GAME_MODES.LEG_CLAPS]: [23, 24, 25, 26],
+  [GAME_MODES.COMBINE]: [11, 12, 15, 16, 23, 24, 25, 26],
 });
 
 export const OVERLAY_GEOMETRY = Object.freeze({
@@ -23,6 +22,13 @@ export const OVERLAY_GEOMETRY = Object.freeze({
   [GAME_MODES.LEG_CLAPS]: {
     points: [23, 24, 25, 26],
     links: [[23, 24], [23, 25], [24, 26], [25, 26]],
+  },
+  [GAME_MODES.COMBINE]: {
+    points: [11, 12, 13, 14, 15, 16, 23, 24, 25, 26],
+    links: [
+      [11, 13], [13, 15], [12, 14], [14, 16], [11, 12], [15, 16],
+      [11, 23], [12, 24], [23, 24], [23, 25], [24, 26], [25, 26],
+    ],
   },
 });
 
@@ -74,10 +80,6 @@ class SixSevenTracker {
   }
 }
 
-// For this dance, the knees are roughly one hip-width apart at the inward
-// point. Opening the knees makes that horizontal gap clearly wider than the
-// hips. The gap between these thresholds is deliberate hysteresis so one pose
-// cannot repeatedly count from small landmark jitter.
 const LEG_CLAP_CLOSE_RATIO = 1.20;
 const LEG_CLAP_REOPEN_RATIO = 1.35;
 
@@ -101,27 +103,42 @@ class LegClapTracker {
 
   observe(landmarks) {
     if (!landmarksAreVisible(GAME_MODES.LEG_CLAPS, landmarks)) {
-      // Require a fresh visible open pose after tracking is lost. This avoids
-      // counting a person merely re-entering the frame at the inward point.
       this.armed = false;
       return false;
     }
 
     const ratio = this.kneeRatio(landmarks);
-
     if (ratio >= LEG_CLAP_REOPEN_RATIO) {
       this.armed = true;
       return false;
     }
-
     if (ratio > LEG_CLAP_CLOSE_RATIO || !this.armed) return false;
-
     this.armed = false;
     return true;
   }
 }
 
+class CombineTracker {
+  constructor() {
+    this.sixSeven = new SixSevenTracker();
+    this.legClaps = new LegClapTracker();
+  }
+
+  reset() {
+    this.sixSeven.reset();
+    this.legClaps.reset();
+  }
+
+  observe(landmarks, now) {
+    return {
+      sixSeven: this.sixSeven.observe(landmarks, now),
+      legClaps: this.legClaps.observe(landmarks, now),
+    };
+  }
+}
+
 export function createGestureTracker(mode) {
   if (mode === GAME_MODES.LEG_CLAPS) return new LegClapTracker();
+  if (mode === GAME_MODES.COMBINE) return new CombineTracker();
   return new SixSevenTracker();
 }

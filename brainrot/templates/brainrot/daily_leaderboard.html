@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}67 Daily Leaderboard{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% url 'brainrot:cosmetics_css' %}">
+<main class="container py-4 py-md-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+    <div>
+      <div class="text-secondary small text-uppercase fw-semibold">MELBOURNE TIME · BEST RUN PER USER</div>
+      <h1 class="display-5 fw-bold mb-1">{% if period == 'week' %}This Week{% elif period == 'all' %}All-Time User Bests{% else %}Daily Leaderboard{% endif %}</h1>
+      <p class="text-secondary mb-0">Private runs may rank, but their videos remain private. Only the main 67 daily board pays 61 Coin.</p>
+    </div>
+    <div class="d-flex gap-2"><a class="btn btn-outline-dark" href="{% url 'brainrot:wealth' %}">Rich List 🪙</a><a class="btn btn-primary" href="{% url 'brainrot:counter' %}?mode={{ game_mode }}">Play</a></div>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2 justify-content-between mb-3">
+    <div class="btn-group">
+      <a class="btn {% if period == 'today' %}btn-dark{% else %}btn-outline-dark{% endif %}" href="?mode={{ game_mode }}&period=today">Today</a>
+      <a class="btn {% if period == 'week' %}btn-dark{% else %}btn-outline-dark{% endif %}" href="?mode={{ game_mode }}&period=week">This Week</a>
+      <a class="btn {% if period == 'all' %}btn-dark{% else %}btn-outline-dark{% endif %}" href="?mode={{ game_mode }}&period=all">All Time</a>
+    </div>
+    <div class="btn-group flex-wrap">
+      <a class="btn {% if game_mode == 'six_seven' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?mode=six_seven&period={{ period }}">67</a>
+      <a class="btn {% if game_mode == 'leg_claps' %}btn-success{% else %}btn-outline-success{% endif %}" href="?mode=leg_claps&period={{ period }}">Leg Claps</a>
+      <a class="btn {% if game_mode == 'combine' %}btn-warning{% else %}btn-outline-warning{% endif %}" href="?mode=combine&period={{ period }}">Combine</a>
+    </div>
+  </div>
+
+  <div class="card shadow-sm overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead><tr><th>#</th><th>User</th><th>Best</th>{% if prizes_enabled %}<th>61 prize</th>{% endif %}<th>Run</th><th>Time</th></tr></thead>
+        <tbody>
+        {% for entry in entries %}
+          <tr>
+            <td class="fw-bold">{{ forloop.counter }}</td>
+            <td><strong class="{% if entry.username_cosmetic %}cosmetic-{{ entry.username_cosmetic.id }}{% endif %}">{{ entry.user.username }}</strong>{% if entry.badge_cosmetic %} <span class="badge cosmetic-{{ entry.badge_cosmetic.id }}">{{ entry.badge_cosmetic.badge_text|default:entry.badge_cosmetic.name }}</span>{% endif %}</td>
+            <td class="fs-4 fw-bold">{{ entry.score }}{% if entry.game_mode == 'combine' %}<div class="small fw-normal text-secondary">{{ entry.combo_six_seven }} × {{ entry.combo_leg_claps }}</div>{% endif %}</td>
+            {% if prizes_enabled %}<td>{% if entry.daily_prize %}<strong>+{{ entry.daily_prize }}</strong>{% else %}—{% endif %}</td>{% endif %}
+            <td>{% if entry.visibility == 'public' %}<a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}">Public</a>{% else %}<span class="badge text-bg-secondary">Private video</span>{% endif %}</td>
+            <td class="text-secondary">{{ entry.created_at|date:'H:i' }}</td>
+          </tr>
+        {% empty %}<tr><td colspan="6" class="text-center text-secondary py-5">Nobody has done anything. Society remains temporarily functional.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% if prizes_enabled %}<p class="small text-secondary mt-3">After the Melbourne day ends, lazy settlement pays places 1–7: <strong>20, 13, 9, 7, 5, 4, 3</strong> = at most 61 Coin total. No midnight cron required.</p>{% endif %}
+</main>
+{% endblock %}

@@ -19,6 +19,8 @@ def hall_of_fame_video(request, entry_id):
     extension = entry.video.name.rsplit('.', 1)[-1].lower() if '.' in entry.video.name else 'mp4'
     if entry.game_mode == HallOfFameEntry.GameMode.LEG_CLAPS:
         mode_slug = 'tung-tung-leg-claps'
+    elif entry.game_mode == HallOfFameEntry.GameMode.COMBINE:
+        mode_slug = '67-tung-combine'
     elif entry.game_mode == HallOfFameEntry.GameMode.VOICE_67:
         mode_slug = 'six-seven-voice'
     else:

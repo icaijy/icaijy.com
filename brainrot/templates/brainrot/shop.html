@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}67 Cosmetics Shop{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% url 'brainrot:cosmetics_css' %}">
+<main class="container py-4 py-md-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+    <div>
+      <div class="text-secondary small text-uppercase fw-semibold">SPEND DIGITAL MONEY ON CSS</div>
+      <h1 class="display-5 fw-bold mb-1">67 Cosmetics Shop</h1>
+      <p class="text-secondary mb-0">Username skins, HOF backgrounds, badges and comment skins. Some expire. Your financial regret does not.</p>
+    </div>
+    <div class="text-end">
+      <div class="fw-bold fs-5 {% if balance_67 < 0 %}text-danger{% endif %}">{{ balance_67 }} × 67 Coin</div>
+      <div class="text-secondary {% if balance_61 < 0 %}text-danger{% endif %}">{{ balance_61 }} × 61 Coin</div>
+      {% if balance_67 < 0 %}<div class="small text-danger fw-semibold">67 DEBT 💀</div>{% endif %}
+    </div>
+  </div>
+
+  {% if messages %}{% for message in messages %}<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %}">{{ message }}</div>{% endfor %}{% endif %}
+
+  <div class="d-flex flex-wrap justify-content-between gap-2 mb-4">
+    <div class="btn-group flex-wrap" role="group">
+      <a class="btn {% if category == 'all' %}btn-dark{% else %}btn-outline-dark{% endif %}" href="?category=all">All</a>
+      {% for value,label in categories %}<a class="btn {% if category == value %}btn-dark{% else %}btn-outline-dark{% endif %}" href="?category={{ value }}">{{ label }}</a>{% endfor %}
+    </div>
+    <a class="btn btn-outline-primary" href="{% url 'brainrot:inventory' %}">My Cosmetics →</a>
+  </div>
+
+  <div class="row g-3 g-lg-4">
+    {% for cosmetic in cosmetics %}
+      <div class="col-12 col-md-6 col-xl-4">
+        <article class="card shadow-sm h-100 overflow-hidden">
+          <div class="card-body d-flex flex-column gap-3">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <div class="small text-uppercase text-secondary fw-semibold">{{ cosmetic.get_category_display }}</div>
+                <h2 class="h4 mb-0">{{ cosmetic.name }}</h2>
+              </div>
+              {% if cosmetic.is_equipped %}<span class="badge text-bg-success">EQUIPPED</span>{% elif cosmetic.is_active_owned %}<span class="badge text-bg-light border text-dark">OWNED</span>{% endif %}
+            </div>
+
+            <div class="border rounded p-3 bg-light-subtle">
+              {% if cosmetic.category == 'username' %}
+                <div class="small text-secondary mb-2">Preview</div><strong class="fs-4 cosmetic-{{ cosmetic.id }}">icaijy</strong>
+              {% elif cosmetic.category == 'hof' %}
+                <div class="card cosmetic-{{ cosmetic.id }}"><div class="card-body"><strong>HOF specimen #67</strong><div class="small">190 moves · scientifically important</div></div></div>
+              {% elif cosmetic.category == 'badge' %}
+                <div class="small text-secondary mb-2">Preview</div><span class="badge cosmetic-{{ cosmetic.id }}">{{ cosmetic.badge_text|default:cosmetic.name }}</span>
+              {% else %}
+                <div class="card cosmetic-{{ cosmetic.id }}"><div class="card-body py-2"><strong>icaijy</strong><div>peer-reviewed nonsense goes here</div></div></div>
+              {% endif %}
+            </div>
+
+            <p class="text-secondary small mb-0">{{ cosmetic.description }}</p>
+
+            {% if cosmetic.ownership %}
+              <div class="small">
+                {% if cosmetic.is_permanent %}<strong>PERMANENTLY OWNED</strong>
+                {% elif cosmetic.is_expired %}<strong class="text-danger">EXPIRED</strong>
+                {% else %}<strong>Owned until {{ cosmetic.ownership.expires_at|date:'j M Y · H:i' }}</strong>{% endif %}
+              </div>
+            {% endif %}
+
+            <div class="mt-auto d-grid gap-2">
+              {% for offer in cosmetic.active_offers %}
+                {% if not cosmetic.is_permanent %}
+                  <form method="post" action="{% url 'brainrot:buy_cosmetic' offer.id %}">
+                    {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button class="btn {% if offer.currency == '61' %}btn-outline-info{% else %}btn-outline-primary{% endif %} w-100" type="submit">
+                      {{ offer.price }} × {{ offer.currency }} Coin · {% if offer.duration_days %}{{ offer.duration_days }} days{% else %}PERMANENT{% endif %}
+                    </button>
+                  </form>
+                {% endif %}
+              {% endfor %}
+              {% if cosmetic.is_active_owned %}
+                {% if cosmetic.is_equipped %}
+                  <form method="post" action="{% url 'brainrot:unequip_cosmetic' cosmetic.category %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-outline-secondary w-100">Unequip</button></form>
+                {% else %}
+                  <form method="post" action="{% url 'brainrot:equip_cosmetic' cosmetic.id %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-dark w-100">Equip</button></form>
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+        </article>
+      </div>
+    {% empty %}
+      <div class="col-12"><div class="alert alert-light border">No products in this aisle. Capitalism has encountered a temporary outage.</div></div>
+    {% endfor %}
+  </div>
+
+  <div class="card mt-4 border-warning-subtle bg-warning-subtle">
+    <div class="card-body small">
+      <strong>67 Coin is HOF-backed.</strong> Main 67 runs are assets; public runs are worth more than private runs. If you spend your balance and later privatise or delete the backing HOF, your balance may go negative. Debt is allowed, but the shop will not let you borrow more to buy CSS. 🤡
+    </div>
+  </div>
+</main>
+{% endblock %}

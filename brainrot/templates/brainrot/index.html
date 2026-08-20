@@ -1,84 +1,25 @@
 {% extends 'base.html' %}
 {% load static i18n %}
 {% get_current_language as CURRENT_LANGUAGE %}
-
 {% block title %}67 Games{% endblock %}
-
 {% block content %}
 <style>
-  .games-hero-card {
-    overflow: hidden;
-    border: 1px solid #1e293b;
-    background: linear-gradient(135deg, #0b1220 0%, #111827 65%, #172033 100%);
-    color: #fff;
-    box-shadow: 0 24px 55px rgba(15,23,42,.18);
-  }
-  .games-hero-card .display-2 { color: #d8ff62; letter-spacing: -.08em; }
-  .games-hero-card h2 { color: #fff; }
-  .games-hero-card .btn { background: #d8ff62; border-color: #d8ff62; color: #111827; }
-  .games-hero-card .btn:hover { background: #c9ef59; border-color: #c9ef59; }
-  .game-card { transition: transform .15s ease, box-shadow .15s ease; }
-  .game-card:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(15,23,42,.10) !important; }
-  .coming-soon-card { background: repeating-linear-gradient(135deg,#fff 0,#fff 18px,#f8fafc 18px,#f8fafc 36px); }
+  .games-hero-card{overflow:hidden;border:1px solid #1e293b;background:linear-gradient(135deg,#0b1220 0%,#111827 65%,#172033 100%);color:#fff;box-shadow:0 24px 55px rgba(15,23,42,.18)}
+  .games-hero-card .display-2{color:#d8ff62;letter-spacing:-.08em}.games-hero-card h2{color:#fff}.games-hero-card .btn{background:#d8ff62;border-color:#d8ff62;color:#111827}
+  .game-card{transition:transform .15s ease,box-shadow .15s ease}.game-card:hover{transform:translateY(-3px);box-shadow:0 16px 34px rgba(15,23,42,.10)!important}.coming-soon-card{background:repeating-linear-gradient(135deg,#fff 0,#fff 18px,#f8fafc 18px,#f8fafc 36px)}
 </style>
-
 <main class="container py-4 py-md-5">
-  <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4 mb-md-5">
-    <div>
-      <div class="text-secondary small text-uppercase fw-semibold mb-2">icaijy.com · extremely serious athletics department</div>
-      <h1 class="display-5 fw-bold mb-2">67 Games</h1>
-      <p class="lead text-secondary mb-0">Pick a game and waste exactly 20 seconds with measurable precision.</p>
-    </div>
-    <a class="btn btn-outline-dark" href="{% url 'brainrot:hall_of_fame' %}"><i class="fa-solid fa-ranking-star me-1"></i> {% translate "Hall of Fame" %}</a>
-  </div>
+  <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4 mb-md-5"><div><div class="text-secondary small text-uppercase fw-semibold mb-2">icaijy.com · extremely serious athletics & monetary department</div><h1 class="display-5 fw-bold mb-2">67 Games</h1><p class="lead text-secondary mb-0">Waste exactly 20 seconds, acquire assets, then spend the resulting imaginary money on CSS.</p></div><div class="d-flex flex-wrap gap-2"><a class="btn btn-outline-dark" href="{% url 'brainrot:hall_of_fame' %}"><i class="fa-solid fa-ranking-star me-1"></i> Hall of Fame</a><a class="btn btn-outline-dark" href="{% url 'brainrot:daily' %}">Daily</a><a class="btn btn-outline-dark" href="{% url 'brainrot:wealth' %}">Rich List 🪙</a>{% if request.user.is_authenticated %}<a class="btn btn-dark" href="{% url 'brainrot:shop' %}">Shop</a>{% endif %}</div></div>
 
-  <a class="card games-hero-card text-decoration-none mb-4" href="{% url 'brainrot:counter' %}?mode=six_seven">
-    <div class="card-body p-4 p-md-5">
-      <div class="row g-4 align-items-center">
-        <div class="col-12 col-lg-8">
-          <span class="badge rounded-pill text-bg-light mb-3">THE MAIN EVENT · 20 s · camera</span>
-          <h2 class="display-5 fw-bold mb-3">{% translate "67 Counter" %}</h2>
-          <p class="lead text-white-50 mb-4">{% translate "Move your arms up and down in the 6–7 pattern. Make as many counted moves as you can in 20 seconds." %}</p>
-          <span class="btn btn-light px-4">{% translate "Begin" %} →</span>
-        </div>
-        <div class="col-12 col-lg-4 text-lg-end"><span class="display-2 fw-bold">67</span></div>
-      </div>
-    </div>
-  </a>
+  <a class="card games-hero-card text-decoration-none mb-4" href="{% url 'brainrot:counter' %}?mode=six_seven"><div class="card-body p-4 p-md-5"><div class="row g-4 align-items-center"><div class="col-12 col-lg-8"><span class="badge rounded-pill text-bg-light mb-3">THE MAIN EVENT · HOF-BACKED 67 COIN</span><h2 class="display-5 fw-bold mb-3">67 Counter</h2><p class="lead text-white-50 mb-4">Move your arms in the 6–7 pattern. Registered HOF runs are now actual balance-sheet assets for some reason.</p><span class="btn btn-light px-4">Begin →</span></div><div class="col-12 col-lg-4 text-lg-end"><span class="display-2 fw-bold">67</span></div></div></div></a>
 
   <div class="row g-3 g-lg-4">
-    <div class="col-12 col-lg-4">
-      <a class="card game-card h-100 text-decoration-none text-body shadow-sm border-success" href="{% url 'brainrot:counter' %}?mode=leg_claps">
-        <div class="card-body p-4 d-flex flex-column">
-          <div class="d-flex align-items-start justify-content-between gap-3 mb-4"><span class="badge text-bg-success">20 s · camera</span><span class="display-6 fw-bold text-success">TT</span></div>
-          <h2 class="h3 fw-bold mb-3">{% translate "Tung Tung Leg Claps" %}</h2>
-          <p class="text-secondary flex-grow-1 mb-4">{% translate "Count each time Tung Tung's knees swing inward from a clearly open position. The knees must open again before another clap." %}</p>
-          <span class="fw-semibold text-success">{% translate "Begin" %} →</span>
-        </div>
-      </a>
-    </div>
-
-    <div class="col-12 col-lg-4">
-      <a class="card game-card coming-soon-card h-100 text-decoration-none text-body shadow-sm" href="{% url 'brainrot:voice_counter' %}">
-        <div class="card-body p-4 d-flex flex-column">
-          <div class="d-flex align-items-start justify-content-between gap-3 mb-4"><span class="badge text-bg-warning">COMING SOON</span><span class="display-6 fw-bold">🗣️</span></div>
-          <h2 class="h3 fw-bold">{% if CURRENT_LANGUAGE == 'zh-hans' %}语音 67 极速挑战{% else %}Six Seven Voice Speedrun{% endif %}</h2>
-          <p class="text-secondary flex-grow-1 mb-4">{% if CURRENT_LANGUAGE == 'zh-hans' %}连续高速说 six seven 的专用检测器还在重做。现有通用语音模型跟不上嘴速，所以先不上线半成品。{% else %}The fast continuous-speech detector is being rebuilt. Existing general speech models could not keep up, so the half-working version is parked for now.{% endif %}</p>
-          <span class="fw-semibold text-secondary">{% if CURRENT_LANGUAGE == 'zh-hans' %}看看施工现场{% else %}See what's being built{% endif %} →</span>
-        </div>
-      </a>
-    </div>
-
-    <div class="col-12 col-lg-4">
-      <a class="card game-card h-100 text-decoration-none text-body shadow-sm border-secondary" href="{% url 'brainrot:typing_test' %}">
-        <div class="card-body p-4 d-flex flex-column">
-          <div class="d-flex align-items-start justify-content-between gap-3 mb-4"><span class="badge text-bg-secondary">keyboard</span><span class="display-6 fw-bold text-secondary">61</span></div>
-          <h2 class="h3 fw-bold">{% translate "61 / 67 Typing Test" %}</h2>
-          <p class="text-secondary flex-grow-1 mb-4">Type 61 and 67 as quickly and accurately as you can.</p>
-          <span class="fw-semibold text-secondary">{% translate "Type" %} →</span>
-        </div>
-      </a>
-    </div>
+    <div class="col-12 col-md-6 col-xl-3"><a class="card game-card h-100 text-decoration-none text-body shadow-sm border-success" href="{% url 'brainrot:counter' %}?mode=leg_claps"><div class="card-body p-4 d-flex flex-column"><div class="d-flex justify-content-between mb-4"><span class="badge text-bg-success">20 s · camera</span><span class="display-6 fw-bold text-success">TT</span></div><h2 class="h3 fw-bold mb-3">Tung Tung Leg Claps</h2><p class="text-secondary flex-grow-1">Count inward knee claps after a clear reopen.</p><span class="fw-semibold text-success">Begin →</span></div></a></div>
+    <div class="col-12 col-md-6 col-xl-3"><a class="card game-card h-100 text-decoration-none text-body shadow-sm border-warning" href="{% url 'brainrot:counter' %}?mode=combine"><div class="card-body p-4 d-flex flex-column"><div class="d-flex justify-content-between mb-4"><span class="badge text-bg-warning">NEW · 20 s</span><span class="display-6 fw-bold">×</span></div><h2 class="h3 fw-bold mb-3">67 × Tung Tung</h2><p class="text-secondary flex-grow-1">Do both at once. Combo Score = 67 count × Leg Clap count.</p><span class="fw-semibold text-warning-emphasis">Destroy coordination →</span></div></a></div>
+    <div class="col-12 col-md-6 col-xl-3"><a class="card game-card coming-soon-card h-100 text-decoration-none text-body shadow-sm" href="{% url 'brainrot:voice_counter' %}"><div class="card-body p-4 d-flex flex-column"><div class="d-flex justify-content-between mb-4"><span class="badge text-bg-warning">COMING SOON</span><span class="display-6 fw-bold">🗣️</span></div><h2 class="h3 fw-bold">Six Seven Voice Speedrun</h2><p class="text-secondary flex-grow-1">The continuous-speech detector is being rebuilt.</p><span class="fw-semibold text-secondary">Construction site →</span></div></a></div>
+    <div class="col-12 col-md-6 col-xl-3"><a class="card game-card h-100 text-decoration-none text-body shadow-sm border-secondary" href="{% url 'brainrot:typing_test' %}"><div class="card-body p-4 d-flex flex-column"><div class="d-flex justify-content-between mb-4"><span class="badge text-bg-secondary">keyboard</span><span class="display-6 fw-bold text-secondary">61</span></div><h2 class="h3 fw-bold">61 / 67 Typing Test</h2><p class="text-secondary flex-grow-1">Type 61 and 67 as quickly and accurately as possible.</p><span class="fw-semibold text-secondary">Type →</span></div></a></div>
   </div>
+
+  <div class="row g-3 mt-3"><div class="col-12 col-lg-4"><a class="card text-decoration-none text-body h-100" href="{% url 'brainrot:daily' %}"><div class="card-body"><div class="small text-uppercase text-secondary">DAILY META</div><h2 class="h4">61 Coin Leaderboard</h2><p class="small text-secondary mb-0">Top seven main-67 users split at most 61 Coin each Melbourne day.</p></div></a></div><div class="col-12 col-lg-4"><a class="card text-decoration-none text-body h-100" href="{% url 'brainrot:wealth' %}"><div class="card-body"><div class="small text-uppercase text-secondary">CAPITALISM</div><h2 class="h4">67 Rich List</h2><p class="small text-secondary mb-0">See who is rich, poor, or somehow in 67 debt.</p></div></a></div><div class="col-12 col-lg-4">{% if request.user.is_authenticated %}<a class="card text-decoration-none text-body h-100" href="{% url 'brainrot:shop' %}"><div class="card-body"><div class="small text-uppercase text-secondary">CSS CONSUMPTION</div><h2 class="h4">Cosmetics Shop</h2><p class="small text-secondary mb-0">Spend imaginary money on increasingly irresponsible styling.</p></div></a>{% else %}<div class="card h-100"><div class="card-body"><div class="small text-uppercase text-secondary">CSS CONSUMPTION</div><h2 class="h4">Cosmetics Shop</h2><p class="small text-secondary mb-0"><a href="{% url 'login' %}?next={% url 'brainrot:shop' %}">Log in</a> to participate in the economy.</p></div></div>{% endif %}</div></div>
 </main>
 {% endblock %}
