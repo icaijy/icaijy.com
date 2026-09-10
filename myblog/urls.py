@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
+from django.views.generic import RedirectView
 from django.conf.urls.i18n import i18n_patterns
 from . import  views
 
@@ -31,7 +32,9 @@ urlpatterns = [
     path('oj/', include('oj.urls')),
     path('67/', include('brainrot.urls')),
     path('vce/', include('vce.urls')),
-    path('67xvce/', include('vce.chaos_urls')),
+    path('67vce/', include('vce.chaos_urls')),
+    path('67xvce/', RedirectView.as_view(url='/67vce/', permanent=True)),
+    path('67xvce/<slug:bank_id>/', RedirectView.as_view(url='/67vce/%(bank_id)s/', permanent=True)),
     path('', include('oracdata.urls')),
     path("vip/", include("prank.urls")),
 ]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

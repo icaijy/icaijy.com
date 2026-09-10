@@ -50,6 +50,19 @@ class SpeedrunTests(TestCase):
         self.assertNotIn('answer', started['question'])
         self.assertNotIn('explanations', started['question'])
 
+    def test_67vce_is_canonical_and_legacy_routes_redirect(self):
+        self.assertEqual(reverse('vce_chaos:index'), '/67vce/')
+        self.assertEqual(self.client.get('/67xvce/').headers['Location'], '/67vce/')
+        legacy_bank = self.client.get('/67xvce/physics_u34/')
+        self.assertEqual(legacy_bank.status_code, 301)
+        self.assertEqual(legacy_bank.headers['Location'], '/67vce/physics_u34/')
+
+    def test_play_page_loads_repeatable_mathjax_and_camera_preview_hooks(self):
+        page = self.client.get(reverse('vce_chaos:play', args=('algorithmics_u34',)))
+        self.assertContains(page, 'mathjax@3/es5/tex-chtml.js')
+        self.assertContains(page, 'data-camera-panel')
+        self.assertContains(page, 'data-sidebar="tools"')
+
     def test_play_pages_include_the_official_reference(self):
         algorithmics = self.client.get(reverse('vce:play', args=('algorithmics_u34',)))
         self.assertContains(algorithmics, 'MASTER THEOREM')

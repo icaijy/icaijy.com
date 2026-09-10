@@ -45,7 +45,11 @@
         {% if rival %}<div class="alert alert-light border py-2 px-3 small"><span class="text-secondary">score to beat</span><strong class="float-end">{{ rival.score }}</strong></div>{% endif %}
         <div class="d-grid gap-2"><button class="btn btn-primary" id="enable-camera">Enable camera</button><button class="btn btn-primary" id="start-run" disabled hidden>Detector is still loading…</button><button class="btn btn-outline-secondary" id="reset-run" hidden>Try again</button></div><p class="small text-secondary mt-3 mb-0">The live score is burned into the locally recorded video.</p><p class="counter-error text-danger small mt-2 mb-0" id="counter-error" role="alert"></p>
       </section>
-      <a class="hof-card d-flex align-items-center gap-3 p-3 text-decoration-none text-body" id="counter-hof-portal" href="{% url 'brainrot:hall_of_fame' %}?mode={{ game_mode }}"><span class="hof-mark" id="counter-hof-mark">{% if game_mode == 'leg_claps' %}TT{% elif game_mode == 'combine' %}×{% else %}67{% endif %}</span><span><small class="text-secondary d-block">VIDEO LEADERBOARD</small><strong>Hall of Fame →</strong></span></a>
+      <section class="counter-inline-hof" id="counter-hof-portal">
+        <header><span>HALL OF FAME</span><a href="{% url 'brainrot:hall_of_fame' %}?mode={{ game_mode }}">FULL BOARD →</a></header>
+        <nav aria-label="Hall of Fame mode">{% for value, label in game_modes %}{% if value != 'voice_67' %}<a href="?mode={{ value }}#counter-hof-portal" class="{% if game_mode == value %}active{% endif %}">{{ label }}</a>{% endif %}{% endfor %}</nav>
+        {% if leaders %}<ol>{% for entry in leaders %}<li><a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}"><span>{{ forloop.counter|stringformat:'02d' }}</span><span>{{ entry.public_name }}</span><strong>{{ entry.score }}</strong></a></li>{% endfor %}</ol>{% else %}<p>No survivors yet.<br>Be the first.</p>{% endif %}
+      </section>
       {% if request.user.is_authenticated %}<a class="d-block small mt-2" href="{% url 'brainrot:my_hall_of_fame' %}">Manage my submitted runs</a>{% endif %}
     </aside>
   </div>

@@ -41,6 +41,13 @@ def _normalise_game_mode(raw_mode):
 
 
 def _counter_context(rival=None, game_mode=HallOfFameEntry.GameMode.SIX_SEVEN):
+    leaders = list(
+        HallOfFameEntry.objects.filter(
+            game_mode=game_mode,
+            visibility=HallOfFameEntry.Visibility.PUBLIC,
+        ).select_related('user').order_by('-score', 'created_at', 'id')[:50]
+    )
+    decorate_user_objects(leaders)
     context = {
         'turnstile_enabled': settings.TURNSTILE_ENABLED,
         'turnstile_site_key': settings.TURNSTILE_SITE_KEY,
@@ -48,6 +55,8 @@ def _counter_context(rival=None, game_mode=HallOfFameEntry.GameMode.SIX_SEVEN):
         'anonymous_submission_available': settings.TURNSTILE_ENABLED or settings.DEBUG,
         'rival': rival,
         'game_mode': game_mode,
+        'leaders': leaders,
+        'game_modes': HallOfFameEntry.GameMode.choices,
     }
     if rival is not None:
         timeline = rival.event_timeline
