@@ -45,6 +45,7 @@
             <li class="nav-item d-none d-lg-block">
               <a class="site-67-shortcut" href="{% url 'brainrot:counter' %}?mode=six_seven"><span>67</span><small>{% trans "Play" %}</small></a>
             </li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'vce:index' %}"><i class="fa-solid fa-stopwatch me-1"></i> VCE</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:hall_of_fame' %}"><i class="fa-solid fa-ranking-star me-1"></i> HOF</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:daily' %}"><i class="fa-solid fa-calendar-day me-1"></i> Daily</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:latest_comments' %}"><i class="fa-regular fa-comments me-1"></i> Comments</a></li>
@@ -82,7 +83,7 @@
               <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fa-solid fa-user me-1"></i>{% if request.user.is_authenticated %}{{ request.user.username }}{% else %}{% trans "Account" %}{% endif %}
               </a>
-              <ul class="dropdown-menu dropdown-menu-end site-dropdown" aria-labelledby="userDropdown">
+              <ul class="dropdown-menu dropdown-menu-end site-dropdown">
                 {% if request.user.is_authenticated %}
                   <li><a class="dropdown-item" href="{% url 'brainrot:inventory' %}"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>My Cosmetics</a></li>
                   <li><a class="dropdown-item" href="{% url 'brainrot:my_hall_of_fame' %}"><i class="fa-solid fa-medal me-2"></i>{% translate "My 67 Hall of Fame" %}</a></li>
@@ -115,6 +116,7 @@
         <span>&copy; {% now "Y" %} Henry · icaijy.com</span>
         <span class="site-footer-links">
           <a href="{% url 'brainrot:counter' %}?mode=six_seven">67</a>
+          <a href="{% url 'vce:index' %}">VCE</a>
           <a href="{% url 'brainrot:hall_of_fame' %}">HOF</a>
           <a href="{% url 'blog' %}">{% trans "Blog" %}</a>
           <a href="https://github.com/icaijy" rel="me">GitHub</a>
