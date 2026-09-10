@@ -2,6 +2,7 @@ import json
 import math
 import random
 import unicodedata
+from collections import Counter, defaultdict
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -106,8 +107,35 @@ def get_object_or_404_bank(bank_id):
     return bank
 
 
+def _sample_questions(bank, count, excluded_ids=()):
+    """Choose without replacement while keeping the run's topic mix broad."""
+    excluded = set(excluded_ids)
+    buckets = defaultdict(list)
+    for question in bank.questions:
+        if question.id not in excluded:
+            buckets[question.topic].append(question)
+    for questions in buckets.values():
+        random.shuffle(questions)
+
+    previous_topics = Counter(
+        QUESTION_BY_ID[question_id].topic
+        for question_id in excluded
+        if question_id in QUESTION_BY_ID
+    )
+    selected = []
+    while buckets and len(selected) < count:
+        lowest_count = min(previous_topics[topic] for topic in buckets)
+        least_used = [topic for topic in buckets if previous_topics[topic] == lowest_count]
+        topic = random.choice(least_used)
+        selected.append(buckets[topic].pop())
+        previous_topics[topic] += 1
+        if not buckets[topic]:
+            del buckets[topic]
+    return selected
+
+
 def _new_run(request, bank, game_mode, count=QUESTION_BATCH_SIZE):
-    question_ids = [question.id for question in random.sample(bank.questions, min(count, len(bank.questions)))]
+    question_ids = [question.id for question in _sample_questions(bank, count)]
     return AlgorithmicsRun.objects.create(
         user=request.user if request.user.is_authenticated else None,
         session_key=_session_key(request),
@@ -159,7 +187,7 @@ def start_run(request):
             'penalty_seconds': PENALTY_SECONDS, 'game_mode': run.game_mode, 'bank_id': run.bank_id,
         })
     run_question_count = min(100, len(bank.questions))
-    question_ids = [question.id for question in random.sample(bank.questions, run_question_count)]
+    question_ids = [question.id for question in _sample_questions(bank, run_question_count)]
     run = AlgorithmicsRun.objects.create(
         user=request.user if request.user.is_authenticated else None,
         session_key=_session_key(request),
@@ -192,8 +220,7 @@ def refill_run(request):
             return JsonResponse({'error': 'This run is already finished.'}, status=409)
         bank = get_object_or_404_bank(run.bank_id)
         used = set(run.question_ids)
-        available = [question for question in bank.questions if question.id not in used]
-        selected = random.sample(available, min(QUESTION_BATCH_SIZE, len(available)))
+        selected = _sample_questions(bank, QUESTION_BATCH_SIZE, used)
         run.question_ids = [*run.question_ids, *(question.id for question in selected)]
         run.save(update_fields=('question_ids',))
     return JsonResponse({'questions': [question.client_dict() for question in selected]})
