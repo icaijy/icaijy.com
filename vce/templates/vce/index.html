@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}VCE Algorithmics 1-Minute Speedrun · icaijy.com{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'vce/speedrun.css' %}">
+{% endblock %}
+
+{% block content %}
+<div
+  id="vce-speedrun"
+  class="vce-page"
+  data-start-url="{% url 'vce:start' %}"
+  data-answer-url="{% url 'vce:answer' %}"
+  data-finish-url="{% url 'vce:finish' %}"
+  data-detail-template="/vce/attempt/__ID__/"
+  data-run-seconds="{{ run_seconds }}"
+  data-penalty-seconds="{{ penalty_seconds }}"
+>
+  <main class="vce-shell">
+    <header class="vce-hero">
+      <div>
+        <div class="vce-kicker"><span class="vce-kicker-dot"></span> VCE ALGORITHMICS · MULTIPLE CHOICE</div>
+        <h1>One minute.<br><span>How cooked are you?</span></h1>
+        <p>{{ question_count }} original VCAA-style questions across {{ topic_count }} study-design topics. Correct answers score one. Wrong answers cost {{ penalty_seconds }} seconds.</p>
+      </div>
+      <div class="vce-hero-stat" aria-label="Challenge duration">
+        <strong>60</strong>
+        <span>SECONDS</span>
+      </div>
+    </header>
+
+    <section class="vce-arena" aria-live="polite">
+      <div id="vce-intro" class="vce-state">
+        <div class="vce-rules">
+          <div><strong>+1</strong><span>correct</span></div>
+          <div><strong>3s</strong><span>wrong-answer lock</span></div>
+          <div><strong>∞</strong><span>attempts</span></div>
+        </div>
+
+        {% if not request.user.is_authenticated %}
+        <label class="vce-name-field">
+          <span>HOF display name <small>(optional)</small></span>
+          <input id="vce-display-name" type="text" maxlength="32" autocomplete="nickname" placeholder="Guest Swan">
+        </label>
+        {% else %}
+        <div class="vce-signed-in">Running as <strong>{{ request.user.username }}</strong>{% if personal_best %} · PB {{ personal_best.score }}{% endif %}</div>
+        {% endif %}
+
+        <button id="vce-start" class="vce-start-button" type="button">
+          <span>START SPEEDRUN</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <p class="vce-fineprint">2025 VCAA material was used for style calibration only and is not included in the question bank.</p>
+      </div>
+
+      <div id="vce-game" class="vce-state" hidden>
+        <div class="vce-hud">
+          <div class="vce-score-box"><span>CORRECT</span><strong id="vce-score">0</strong></div>
+          <div class="vce-timer" id="vce-timer">60.0</div>
+          <div class="vce-score-box vce-score-box-wrong"><span>WRONG</span><strong id="vce-wrong">0</strong></div>
+        </div>
+        <div class="vce-timebar"><span id="vce-timebar-fill"></span></div>
+
+        <article id="vce-question-card" class="vce-question-card">
+          <div class="vce-question-meta">
+            <span id="vce-question-topic"></span>
+            <span id="vce-question-source"></span>
+          </div>
+          <h2 id="vce-question-stem"></h2>
+          <div id="vce-options" class="vce-options"></div>
+        </article>
+
+        <div id="vce-penalty" class="vce-penalty" hidden>
+          <div class="vce-penalty-top">
+            <span>WRONG · <strong id="vce-penalty-count">3.0</strong>s</span>
+            <span id="vce-penalty-correct"></span>
+          </div>
+          <p id="vce-penalty-explanation"></p>
+        </div>
+      </div>
+
+      <div id="vce-result" class="vce-state vce-result" hidden>
+        <div class="vce-result-label">TIME.</div>
+        <div class="vce-result-score"><strong id="vce-result-score">0</strong><span>correct</span></div>
+        <p id="vce-result-copy"></p>
+        <div class="vce-result-actions">
+          <button id="vce-again" class="vce-start-button" type="button"><span>RUN IT BACK</span><i class="fa-solid fa-rotate-right"></i></button>
+          <button id="vce-review-last" class="vce-ghost-button" type="button"><i class="fa-solid fa-list-check"></i> Review run</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="vce-hof-section">
+      <div class="vce-section-head">
+        <div>
+          <span class="vce-kicker">HALL OF FAME</span>
+          <h2>Fastest brains, allegedly.</h2>
+        </div>
+        <span class="vce-section-note">Ranked by correct answers · fewer wrong answers break ties</span>
+      </div>
+
+      <div class="vce-hof-card">
+        {% if leaders %}
+        <div class="table-responsive">
+          <table class="vce-hof-table">
+            <thead>
+              <tr><th>#</th><th>Player</th><th>Correct</th><th>Wrong</th><th>Run</th></tr>
+            </thead>
+            <tbody>
+              {% for attempt in leaders %}
+              <tr>
+                <td class="vce-rank">{{ attempt.rank }}</td>
+                <td><strong>{{ attempt.public_name }}</strong></td>
+                <td class="vce-correct-count">{{ attempt.score }}</td>
+                <td>{{ attempt.wrong_count }}</td>
+                <td><button class="vce-review-link" type="button" data-attempt-id="{{ attempt.id }}">Review</button></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="vce-empty">No runs yet. This is either history in the making or the database was just migrated.</div>
+        {% endif %}
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="modal fade" id="vceReviewModal" tabindex="-1" aria-labelledby="vceReviewTitle" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content vce-modal">
+      <div class="modal-header">
+        <div>
+          <div class="vce-kicker">RUN REVIEW</div>
+          <h2 class="modal-title fs-5" id="vceReviewTitle">Attempt</h2>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="vce-review-body">
+        <div class="vce-empty">Loading…</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'vce/speedrun.js' %}" defer></script>
+{% endblock %}
