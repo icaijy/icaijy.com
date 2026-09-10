@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}VCE Algorithmics 1 Minute Speedrun{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'vce/speedrun.css' %}" />{% endblock %}
+
+{% block content %}
+<main class="vce-page" data-start-url="{% url 'vce:start' %}" data-answer-url="{% url 'vce:answer' %}" data-finish-url="{% url 'vce:finish' %}" data-authenticated="{{ request.user.is_authenticated|yesno:'true,false' }}">
+  {% csrf_token %}
+  <section class="vce-shell">
+    <header class="vce-topbar">
+      <a href="/" class="vce-back"><i class="fa-solid fa-arrow-left"></i> icaijy.com</a>
+      <a href="#leaderboard" class="vce-board-link"><i class="fa-solid fa-trophy"></i> HOF</a>
+    </header>
+
+    <div class="vce-grid">
+      <section class="vce-arena" aria-live="polite">
+        <div class="vce-idle" data-screen="idle">
+          <div class="vce-kicker">VCE ALGORITHMICS · SECTION A</div>
+          <h1>How many can you<br><span>solve in one minute?</span></h1>
+          <p class="vce-intro">Four options. One correct answer. A wrong answer locks the board for {{ penalty_seconds }} seconds while the explanation burns into your brain.</p>
+          <button class="vce-start" type="button" data-start><span>START</span><small>60 SECOND SPEEDRUN</small></button>
+          <div class="vce-stats">
+            <span><strong>{{ question_count }}</strong> original questions</span>
+            <span><strong>2015–2024</strong> exam-informed</span>
+            <span><strong>2025</strong> style reference only</span>
+          </div>
+        </div>
+
+        <div class="vce-game" data-screen="game" hidden>
+          <div class="vce-hud">
+            <div><small>TIME</small><strong data-time>60.0</strong></div>
+            <div class="vce-progress"><span data-progress></span></div>
+            <div><small>SCORE</small><strong data-score>0</strong></div>
+          </div>
+          <div class="vce-topic" data-topic></div>
+          <h2 class="vce-question" data-question></h2>
+          <div class="vce-options" data-options></div>
+          <div class="vce-source" data-source></div>
+        </div>
+
+        <div class="vce-result" data-screen="result" hidden>
+          <div class="vce-kicker">TIME</div>
+          <div class="vce-final-score" data-final-score>0</div>
+          <h2>correct answers in 60 seconds</h2>
+          {% if not request.user.is_authenticated %}
+            <label class="vce-name-label" for="vce-name">Name for the Hall of Fame</label>
+            <input id="vce-name" class="vce-name" maxlength="32" placeholder="Anonymous Student" autocomplete="nickname" />
+          {% else %}
+            <p class="vce-signed-in">Submitting as <strong>{{ request.user.username }}</strong></p>
+          {% endif %}
+          <p class="vce-submit-error" data-submit-error hidden></p>
+          <button class="vce-submit" type="button" data-submit>Save score &amp; review</button>
+        </div>
+      </section>
+
+      <aside class="vce-leaderboard" id="leaderboard">
+        <div class="vce-board-head"><span>HALL OF FAME</span><small>TOP 50</small></div>
+        {% if leaders %}
+          <ol>
+            {% for entry in leaders %}
+              <li>
+                <a href="{% url 'vce:run_detail' entry.token %}">
+                  <span class="vce-rank">{{ forloop.counter|stringformat:'02d' }}</span>
+                  <span class="vce-name-cell">{{ entry.public_name }}</span>
+                  <strong>{{ entry.score }}</strong>
+                </a>
+              </li>
+            {% endfor %}
+          </ol>
+        {% else %}
+          <div class="vce-empty">No survivors yet.<br>Be the first.</div>
+        {% endif %}
+      </aside>
+    </div>
+  </section>
+
+  <div class="vce-penalty" data-penalty hidden role="dialog" aria-modal="true" aria-labelledby="penalty-title">
+    <div class="vce-penalty-card">
+      <div class="vce-wrong"><span data-penalty-count>3</span>s PENALTY</div>
+      <h2 id="penalty-title">Correct answer</h2>
+      <div class="vce-correct-answer" data-correct-answer></div>
+      <p data-correct-note></p>
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}<script type="module" src="{% static 'vce/speedrun.js' %}"></script>{% endblock %}

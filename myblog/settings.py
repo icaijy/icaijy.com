@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'oracdata',
     'prank',
     'brainrot',
+    'vce',
 ]
 
 MIDDLEWARE = [
