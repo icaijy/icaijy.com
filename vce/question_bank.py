@@ -7,6 +7,37 @@ give concise feedback for every distractor.
 """
 from dataclasses import dataclass
 from random import Random
+import re
+
+
+def latexify(text):
+    """Wrap the compact maths used by the bank without changing answer identity."""
+    if not isinstance(text, str) or '\\(' in text or '\\[' in text:
+        return text
+    recurrence = re.search(r'T\(n\) = (\d+)T\(n/(\d+)\) \+ O\(n\^(\d+)\)', text)
+    if recurrence:
+        plain = recurrence.group(0)
+        a, b, c = recurrence.groups()
+        text = text.replace(plain, rf'\(T(n)={a}T(n/{b})+O(n^{c})\)')
+        return text
+    def complexity(match):
+        body = match.group(1).replace('log₂ ', r'\log_2 ').replace('log ', r'\log ')
+        body = body.replace('²', '^2').replace('³', '^3').replace('ⁿ', '^n').replace('×', r'\times ')
+        return rf'\(O({body})\)'
+    text = re.sub(r'O\(([^)]+)\)', complexity, text)
+    replacements = (
+        ('n(n − 1)/2', r'\(n(n-1)/2\)'), ('n − 1', r'\(n-1\)'),
+        ('n + 1', r'\(n+1\)'), ('2n', r'\(2n\)'), ('n²', r'\(n^2\)'),
+        ('log₂n', r'\(\log_2 n\)'), ('1 + … + n', r'\(1+\cdots+n\)'),
+        ('floor((low + high)/2)', r'\(\lfloor(low+high)/2\rfloor\)'),
+    )
+    for plain, maths in replacements:
+        text = text.replace(plain, maths)
+    if text.startswith('Compare a = '):
+        match = re.fullmatch(r'Compare a = (\d+) with b\^c = (\d+)\.', text)
+        if match:
+            return rf'Compare \(a={match.group(1)}\) with \(b^c={match.group(2)}\).'
+    return text
 
 
 @dataclass(frozen=True)
@@ -24,14 +55,14 @@ class Question:
         return self.options[self.answer_index]
 
     def public_dict(self):
-        return {'id': self.id, 'prompt': self.prompt, 'options': self.options, 'source': self.source, 'topic': self.topic}
+        return {'id': self.id, 'prompt': latexify(self.prompt), 'options': tuple(latexify(option) for option in self.options), 'source': self.source, 'topic': self.topic}
 
     def review_dict(self, selected=None):
         return {
             **self.public_dict(),
-            'answer': self.answer,
+            'answer': latexify(self.answer),
             'answer_index': self.answer_index,
-            'explanations': self.explanations,
+            'explanations': tuple(latexify(note) for note in self.explanations),
             'selected': selected,
         }
 
