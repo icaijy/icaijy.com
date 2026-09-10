@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import AlgorithmicsRun
-from .question_bank import QUESTION_BY_ID, QUESTIONS
+from .question_bank import QUESTION_BY_ID, QUESTIONS, latexify
 
 
 class QuestionBankTests(TestCase):
@@ -17,6 +17,10 @@ class QuestionBankTests(TestCase):
             self.assertEqual(len(question.explanations), 4)
             self.assertIn(question.answer, question.options)
             self.assertTrue(question.source.startswith('Written for icaijy.com'))
+
+    def test_formulae_are_rendered_as_mathjax_tex(self):
+        self.assertEqual(latexify('O(n² log n)'), r'\(O(n^2 \log n)\)')
+        self.assertIn(r'\(T(n)=2T(n/2)+O(n^1)\)', latexify('Find T(n) = 2T(n/2) + O(n^1) now'))
 
 
 @override_settings(STORAGES={
@@ -50,7 +54,30 @@ class SpeedrunTests(TestCase):
         self.assertEqual(finished.status_code, 200)
         detail = self.client.get(finished.json()['detail_url'])
         self.assertContains(detail, 'Fast Swan')
-        self.assertContains(detail, question.prompt)
+        self.assertContains(detail, question.topic)
+
+    def test_physical_mode_multiplies_correct_answers_by_server_counted_events(self):
+        started = self.client.post(reverse('vce:start'), {'game_mode': 'combine'}).json()
+        question = QUESTION_BY_ID[started['question']['id']]
+        self.client.post(reverse('vce:answer'), {'token': started['token'], 'position': 0, 'selected': question.answer_index})
+        run = AlgorithmicsRun.objects.get(token=started['token'])
+        run.started_at = timezone.now() - timedelta(seconds=61)
+        run.save(update_fields=('started_at',))
+        finished = self.client.post(reverse('vce:finish'), {
+            'token': started['token'], 'display_name': 'Chaos Swan',
+            'metrics': '{"six_seven":[1,2,3],"leg_claps":[1.5,2.5]}',
+        }).json()
+        self.assertEqual(finished['movement_score'], 6)
+        self.assertEqual(finished['final_score'], 6)
+
+    def test_invalid_mode_and_movement_payload_are_rejected(self):
+        self.assertEqual(self.client.post(reverse('vce:start'), {'game_mode': 'nope'}).status_code, 400)
+        started = self.client.post(reverse('vce:start'), {'game_mode': 'six_seven'}).json()
+        run = AlgorithmicsRun.objects.get(token=started['token'])
+        run.started_at = timezone.now() - timedelta(seconds=61)
+        run.save(update_fields=('started_at',))
+        response = self.client.post(reverse('vce:finish'), {'token': started['token'], 'metrics': '{"six_seven":[2,1]}'})
+        self.assertEqual(response.status_code, 400)
 
     def test_wrong_answer_enforces_three_second_lock(self):
         started = self.client.post(reverse('vce:start')).json()

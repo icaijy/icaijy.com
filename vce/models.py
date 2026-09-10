@@ -5,6 +5,12 @@ from django.db import models
 
 
 class AlgorithmicsRun(models.Model):
+    class GameMode(models.TextChoices):
+        NORMAL = 'normal', 'Serious'
+        SIX_SEVEN = 'six_seven', '67'
+        LEG_CLAPS = 'leg_claps', 'Tung Tung'
+        COMBINE = 'combine', 'Combine'
+
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -16,6 +22,10 @@ class AlgorithmicsRun(models.Model):
     display_name = models.CharField(max_length=32, blank=True)
     session_key = models.CharField(max_length=40, blank=True)
     score = models.PositiveSmallIntegerField(default=0)
+    game_mode = models.CharField(max_length=16, choices=GameMode.choices, default=GameMode.NORMAL)
+    movement_score = models.PositiveIntegerField(default=1)
+    final_score = models.PositiveIntegerField(default=0)
+    metrics = models.JSONField(default=dict)
     question_ids = models.JSONField(default=list)
     attempts = models.JSONField(default=list)
     started_at = models.DateTimeField(auto_now_add=True)
@@ -24,9 +34,9 @@ class AlgorithmicsRun(models.Model):
     is_submitted = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ('-score', 'finished_at', 'id')
+        ordering = ('-final_score', 'finished_at', 'id')
         indexes = [
-            models.Index(fields=('-score', 'finished_at'), name='vce_run_score_idx'),
+            models.Index(fields=('game_mode', '-final_score', 'finished_at'), name='vce_mode_score_idx'),
             models.Index(fields=('token',), name='vce_run_token_idx'),
         ]
 
@@ -40,3 +50,7 @@ class AlgorithmicsRun(models.Model):
     def elapsed_seconds(self):
         end = self.finished_at or self.started_at
         return max(0, (end - self.started_at).total_seconds())
+
+    @property
+    def is_physical(self):
+        return self.game_mode != self.GameMode.NORMAL

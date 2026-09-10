@@ -1,3 +1,5 @@
+import json
+import math
 import random
 import unicodedata
 from datetime import timedelta
@@ -16,6 +18,7 @@ from .question_bank import QUESTION_BY_ID, QUESTIONS
 GAME_SECONDS = 60
 PENALTY_SECONDS = 3
 RUN_QUESTION_COUNT = min(100, len(QUESTIONS))
+VALID_MODES = {choice for choice, _ in AlgorithmicsRun.GameMode.choices}
 
 
 def _session_key(request):
@@ -49,26 +52,35 @@ def _finish(run, now=None):
 
 
 def index(request):
+    mode = request.GET.get('mode', AlgorithmicsRun.GameMode.NORMAL)
+    if mode not in VALID_MODES:
+        mode = AlgorithmicsRun.GameMode.NORMAL
     leaders = list(
-        AlgorithmicsRun.objects.filter(is_submitted=True)
+        AlgorithmicsRun.objects.filter(is_submitted=True, game_mode=mode)
         .select_related('user')
-        .order_by('-score', 'finished_at', 'id')[:50]
+        .order_by('-final_score', 'finished_at', 'id')[:50]
     )
     return render(request, 'vce/index.html', {
         'leaders': leaders,
         'question_count': len(QUESTIONS),
         'game_seconds': GAME_SECONDS,
         'penalty_seconds': PENALTY_SECONDS,
+        'leaderboard_mode': mode,
+        'game_modes': AlgorithmicsRun.GameMode.choices,
     })
 
 
 @require_POST
 def start_run(request):
+    game_mode = request.POST.get('game_mode', AlgorithmicsRun.GameMode.NORMAL)
+    if game_mode not in VALID_MODES:
+        return JsonResponse({'error': 'Invalid game mode.'}, status=400)
     question_ids = [question.id for question in random.sample(QUESTIONS, RUN_QUESTION_COUNT)]
     run = AlgorithmicsRun.objects.create(
         user=request.user if request.user.is_authenticated else None,
         session_key=_session_key(request),
         question_ids=question_ids,
+        game_mode=game_mode,
     )
     return JsonResponse({
         'token': str(run.token),
@@ -78,6 +90,7 @@ def start_run(request):
         'penalty_seconds': PENALTY_SECONDS,
         'position': 0,
         'score': 0,
+        'game_mode': run.game_mode,
         'question': _question_at(run, 0).public_dict(),
     }, status=201)
 
@@ -163,12 +176,25 @@ def finish_run(request):
             }
             if canonical in reserved or canonical in registered:
                 return JsonResponse({'error': 'That name belongs to a registered user or site role.'}, status=400)
+        try:
+            metrics = json.loads(request.POST.get('metrics', '{}'))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return JsonResponse({'error': 'Invalid movement data.'}, status=400)
+        movement_score, clean_metrics = _movement_result(run.game_mode, metrics)
+        if movement_score is None:
+            return JsonResponse({'error': 'Invalid movement data.'}, status=400)
+
         run.display_name = '' if request.user.is_authenticated else name
+        run.metrics = clean_metrics
+        run.movement_score = movement_score
+        run.final_score = run.score * movement_score
         run.is_submitted = True
-        run.save(update_fields=('display_name', 'is_submitted'))
+        run.save(update_fields=('display_name', 'metrics', 'movement_score', 'final_score', 'is_submitted'))
     return JsonResponse({
         'ok': True,
         'score': run.score,
+        'movement_score': run.movement_score,
+        'final_score': run.final_score,
         'detail_url': reverse('vce:run_detail', args=(run.token,)),
     })
 
@@ -188,8 +214,8 @@ def run_detail(request, token):
             review['option_reviews'] = [
                 {
                     'letter': chr(65 + index),
-                    'text': option,
-                    'explanation': question.explanations[index],
+                    'text': review['options'][index],
+                    'explanation': review['explanations'][index],
                     'is_answer': index == question.answer_index,
                     'is_selected': index == attempt.get('selected'),
                 }
@@ -197,3 +223,37 @@ def run_detail(request, token):
             ]
             reviews.append(review)
     return render(request, 'vce/run_detail.html', {'run': run, 'reviews': reviews})
+
+
+def _clean_timeline(value):
+    if not isinstance(value, list) or len(value) > 1000:
+        return None
+    clean = []
+    previous = -1.0
+    for raw in value:
+        if isinstance(raw, bool) or not isinstance(raw, (int, float)) or not math.isfinite(raw):
+            return None
+        stamp = round(float(raw), 3)
+        if stamp < 0 or stamp > GAME_SECONDS + 1 or stamp < previous:
+            return None
+        clean.append(stamp)
+        previous = stamp
+    return clean
+
+
+def _movement_result(mode, metrics):
+    if mode == AlgorithmicsRun.GameMode.NORMAL:
+        return 1, {}
+    if not isinstance(metrics, dict):
+        return None, {}
+    if mode == AlgorithmicsRun.GameMode.COMBINE:
+        six = _clean_timeline(metrics.get('six_seven'))
+        legs = _clean_timeline(metrics.get('leg_claps'))
+        if six is None or legs is None:
+            return None, {}
+        return len(six) * len(legs), {'six_seven': six, 'leg_claps': legs}
+    key = 'six_seven' if mode == AlgorithmicsRun.GameMode.SIX_SEVEN else 'leg_claps'
+    timeline = _clean_timeline(metrics.get(key))
+    if timeline is None:
+        return None, {}
+    return len(timeline), {key: timeline}

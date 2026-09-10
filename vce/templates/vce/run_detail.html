@@ -10,8 +10,9 @@
     <a href="{% url 'vce:index' %}" class="vce-back"><i class="fa-solid fa-arrow-left"></i> Back to speedrun</a>
     <header class="vce-review-hero">
       <div><div class="vce-kicker">RUN REVIEW</div><h1>{{ run.public_name }}</h1><p>{{ run.started_at|date:'j M Y, g:i a' }}</p></div>
-      <div class="vce-review-score"><strong>{{ run.score }}</strong><span>correct</span></div>
+      <div class="vce-review-score"><strong>{{ run.final_score }}</strong><span>{{ run.get_game_mode_display }} score</span></div>
     </header>
+    {% if run.is_physical %}<p class="vce-review-breakdown">{{ run.score }} correct × {{ run.movement_score }} movement score = <strong>{{ run.final_score }}</strong></p>{% endif %}
     <div class="vce-review-list">
       {% for item in reviews %}
         <details class="vce-review-item {% if item.correct %}is-correct{% else %}is-wrong{% endif %}">
