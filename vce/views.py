@@ -13,12 +13,12 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .models import AlgorithmicsRun
-from .question_bank import QUESTION_BY_ID, QUESTIONS
+from .question_bank import ALL_QUESTIONS, BANKS, QUESTION_BY_ID
 
 GAME_SECONDS = 60
 PENALTY_SECONDS = 3
-RUN_QUESTION_COUNT = min(100, len(QUESTIONS))
 VALID_MODES = {choice for choice, _ in AlgorithmicsRun.GameMode.choices}
+PHYSICAL_MODES = VALID_MODES - {AlgorithmicsRun.GameMode.NORMAL}
 
 
 def _session_key(request):
@@ -44,6 +44,15 @@ def _question_at(run, position):
     return QUESTION_BY_ID.get(run.question_ids[position])
 
 
+def _bank_groups():
+    groups = []
+    for subject in ('Algorithmics (HESS)', 'Chemistry', 'Physics', 'Mathematical Methods', 'Specialist Mathematics'):
+        banks = [bank for bank in BANKS.values() if bank.subject == subject]
+        if banks:
+            groups.append({'subject': subject, 'banks': banks, 'count': sum(len(bank.questions) for bank in banks)})
+    return groups
+
+
 def _finish(run, now=None):
     now = now or timezone.now()
     if run.finished_at is None:
@@ -52,35 +61,64 @@ def _finish(run, now=None):
 
 
 def index(request):
-    mode = request.GET.get('mode', AlgorithmicsRun.GameMode.NORMAL)
-    if mode not in VALID_MODES:
-        mode = AlgorithmicsRun.GameMode.NORMAL
+    return render(request, 'vce/index.html', {'groups': _bank_groups(), 'chaos': False, 'total_questions': len(ALL_QUESTIONS)})
+
+
+def chaos_index(request):
+    return render(request, 'vce/index.html', {'groups': _bank_groups(), 'chaos': True, 'total_questions': len(ALL_QUESTIONS)})
+
+
+def play(request, bank_id, chaos=False):
+    bank = get_object_or_404_bank(bank_id)
+    mode = request.GET.get('mode', AlgorithmicsRun.GameMode.SIX_SEVEN if chaos else AlgorithmicsRun.GameMode.NORMAL)
+    allowed_modes = PHYSICAL_MODES if chaos else {AlgorithmicsRun.GameMode.NORMAL}
+    if mode not in allowed_modes:
+        mode = AlgorithmicsRun.GameMode.SIX_SEVEN if chaos else AlgorithmicsRun.GameMode.NORMAL
     leaders = list(
-        AlgorithmicsRun.objects.filter(is_submitted=True, game_mode=mode)
+        AlgorithmicsRun.objects.filter(is_submitted=True, bank_id=bank.id, game_mode=mode)
         .select_related('user')
         .order_by('-final_score', 'finished_at', 'id')[:50]
     )
-    return render(request, 'vce/index.html', {
+    return render(request, 'vce/play.html', {
         'leaders': leaders,
-        'question_count': len(QUESTIONS),
+        'bank': bank,
+        'question_count': len(bank.questions),
         'game_seconds': GAME_SECONDS,
         'penalty_seconds': PENALTY_SECONDS,
         'leaderboard_mode': mode,
         'game_modes': AlgorithmicsRun.GameMode.choices,
+        'chaos': chaos,
     })
+
+
+def chaos_play(request, bank_id):
+    return play(request, bank_id, chaos=True)
+
+
+def get_object_or_404_bank(bank_id):
+    bank = BANKS.get(bank_id)
+    if bank is None:
+        from django.http import Http404
+        raise Http404('Question bank not found.')
+    return bank
 
 
 @require_POST
 def start_run(request):
+    bank = BANKS.get(request.POST.get('bank_id', 'algorithmics_u34'))
+    if bank is None:
+        return JsonResponse({'error': 'Invalid question bank.'}, status=400)
     game_mode = request.POST.get('game_mode', AlgorithmicsRun.GameMode.NORMAL)
     if game_mode not in VALID_MODES:
         return JsonResponse({'error': 'Invalid game mode.'}, status=400)
-    question_ids = [question.id for question in random.sample(QUESTIONS, RUN_QUESTION_COUNT)]
+    run_question_count = min(100, len(bank.questions))
+    question_ids = [question.id for question in random.sample(bank.questions, run_question_count)]
     run = AlgorithmicsRun.objects.create(
         user=request.user if request.user.is_authenticated else None,
         session_key=_session_key(request),
         question_ids=question_ids,
         game_mode=game_mode,
+        bank_id=bank.id,
     )
     return JsonResponse({
         'token': str(run.token),
@@ -91,6 +129,7 @@ def start_run(request):
         'position': 0,
         'score': 0,
         'game_mode': run.game_mode,
+        'bank_id': run.bank_id,
         'question': _question_at(run, 0).public_dict(),
     }, status=201)
 
@@ -222,7 +261,11 @@ def run_detail(request, token):
                 for index, option in enumerate(question.options)
             ]
             reviews.append(review)
-    return render(request, 'vce/run_detail.html', {'run': run, 'reviews': reviews})
+    return render(request, 'vce/run_detail.html', {
+        'run': run,
+        'bank': BANKS.get(run.bank_id),
+        'reviews': reviews,
+    })
 
 
 def _clean_timeline(value):

@@ -11,7 +11,7 @@ if (root) {
   const canvas = $('[data-pose-overlay]');
   const context = canvas.getContext('2d');
   const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
-  let token = '', deadline = 0, position = 0, score = 0, nextQuestion = null, mode = 'normal';
+  let token = '', deadline = 0, position = 0, score = 0, nextQuestion = null, mode = root.dataset.initialMode || 'normal';
   let running = false, answering = false, frame = 0, detectorFrame = 0, stream = null, landmarker = null, tracker = null, engine = null;
   let timelines = {six_seven: [], leg_claps: []}, runStartedAt = 0, lastVideoTime = -1;
 
@@ -23,15 +23,16 @@ if (root) {
   };
   const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
   const show = name => Object.entries(screens).forEach(([key, el]) => { el.hidden = key !== name; });
+  const hasMath = text => /\\\\[([]/.test(text || '');
   const typeset = node => window.MathJax?.Hub?.Queue(['Typeset', window.MathJax.Hub, node]);
-  const setText = (selector, text) => { const node = $(selector); node.textContent = text; typeset(node); };
+  const setText = (selector, text) => { const node = $(selector); node.textContent = text; if (hasMath(text)) typeset(node); };
   const isPhysical = () => mode !== 'normal';
 
   function selectMode(nextMode) {
     if (running) return;
     mode = nextMode;
     const chaos = isPhysical();
-    $('[data-chaos-modes]').hidden = !chaos;
+    if ($('[data-chaos-modes]')) $('[data-chaos-modes]').hidden = !chaos;
     root.querySelectorAll('[data-mode]').forEach(button => button.classList.toggle('active', chaos ? button.dataset.mode !== 'normal' : button.dataset.mode === 'normal'));
     root.querySelectorAll('[data-chaos-mode]').forEach(button => button.classList.toggle('active', button.dataset.chaosMode === mode));
     startButton.disabled = chaos && !stream;
@@ -39,7 +40,13 @@ if (root) {
   }
 
   root.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => selectMode(button.dataset.mode)));
-  root.querySelectorAll('[data-chaos-mode]').forEach(button => button.addEventListener('click', () => selectMode(button.dataset.chaosMode)));
+  root.querySelectorAll('[data-chaos-mode]').forEach(button => button.addEventListener('click', () => {
+    if (running || button.dataset.chaosMode === mode) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('mode', button.dataset.chaosMode);
+    url.hash = '';
+    window.location.assign(url);
+  }));
 
   async function loadVision() {
     if (landmarker) return;
@@ -61,7 +68,7 @@ if (root) {
     throw lastError || new Error('Pose model could not load.');
   }
 
-  $('[data-enable-camera]').addEventListener('click', async () => {
+  $('[data-enable-camera]')?.addEventListener('click', async () => {
     const status = $('[data-camera-status]');
     status.textContent = 'Loading pose model…';
     try {
@@ -118,8 +125,9 @@ if (root) {
     setText('[data-topic]', question.topic); setText('[data-question]', question.prompt); setText('[data-source]', question.source);
     optionsEl.replaceChildren(...question.options.map((option, index) => {
       const button = document.createElement('button'); button.type = 'button'; button.className = 'vce-option'; button.innerHTML = `<span>${String.fromCharCode(65 + index)}</span><strong></strong>`;
-      button.querySelector('strong').textContent = option; button.addEventListener('click', () => choose(index)); typeset(button); return button;
+      button.querySelector('strong').textContent = option; button.addEventListener('click', () => choose(index)); return button;
     }));
+    if (question.options.some(hasMath)) typeset(optionsEl);
   }
 
   function tick() {
@@ -131,7 +139,7 @@ if (root) {
   async function startRun() {
     if (answering || (isPhysical() && !stream)) return; answering = true; startButton.disabled = true;
     try {
-      const data = await post(root.dataset.startUrl, {game_mode: mode}); token = data.token; deadline = Date.parse(data.deadline); position = 0; score = 0; timelines = {six_seven: [], leg_claps: []};
+      const data = await post(root.dataset.startUrl, {game_mode: mode, bank_id: root.dataset.bankId}); token = data.token; deadline = Date.parse(data.deadline); position = 0; score = 0; timelines = {six_seven: [], leg_claps: []};
       if (isPhysical()) { tracker = engine.createGestureTracker(mode); runStartedAt = performance.now(); }
       $('[data-score]').textContent = '0'; updateMovement(); $('[data-sidebar="leaderboard"]').hidden = true; $('[data-sidebar="tools"]').hidden = false; $('[data-camera-panel]').hidden = !isPhysical(); show('game'); renderQuestion(data.question); running = true; tick();
     } catch (error) { startButton.disabled = false; startButton.querySelector('small').textContent = error.message; }
@@ -152,5 +160,5 @@ if (root) {
   async function showPenalty(seconds) { $('[data-penalty]').hidden = false; const until = Date.now() + seconds*1000; while (running && Date.now() < until && Date.now() < deadline) { $('[data-penalty-count]').textContent = Math.max(1, Math.ceil((until-Date.now())/1000)); await delay(80); } $('[data-penalty]').hidden = true; }
   function endRun(serverScore) { if (!running && !screens.result.hidden) return; running = false; cancelAnimationFrame(frame); $('[data-penalty]').hidden = true; $('[data-correct-flash]').hidden = true; score = Number.isInteger(serverScore) ? serverScore : score; const movement = movementScore(), final = score * movement; $('[data-final-score]').textContent = final; $('[data-result-copy]').textContent = isPhysical() ? 'correct × movement' : 'correct answers in 60 seconds'; $('[data-result-equation]').hidden = !isPhysical(); $('[data-result-equation]').textContent = `${score} correct × ${movement} movement = ${final}`; show('result'); }
   async function submitRun() { submitButton.disabled = true; $('[data-submit-error]').hidden = true; try { const data = await post(root.dataset.finishUrl, {token, display_name: $('#vce-name')?.value || '', metrics: JSON.stringify(timelines)}); window.location.assign(data.detail_url); } catch (error) { if (error.status === 409) return setTimeout(submitRun, 600); $('[data-submit-error]').textContent = error.message; $('[data-submit-error]').hidden = false; submitButton.disabled = false; } }
-  startButton.addEventListener('click', startRun); submitButton.addEventListener('click', submitRun); selectMode('normal');
+  startButton.addEventListener('click', startRun); submitButton.addEventListener('click', submitRun); selectMode(mode);
 }

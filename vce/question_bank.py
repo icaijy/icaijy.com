@@ -482,3 +482,26 @@ for slug, situation, correct, wrong in search_comparisons:
 
 QUESTION_BY_ID = {question.id: question for question in QUESTIONS}
 assert len(QUESTION_BY_ID) == len(QUESTIONS), 'Question IDs must be unique.'
+
+# The original Algorithmics bank remains a first-class bank. Other subjects
+# live in a separate module so this carefully calibrated file stays readable.
+ALGORITHMICS_QUESTIONS = tuple(QUESTIONS)
+
+from .subject_banks import Bank, make_subject_banks  # noqa: E402
+
+BANKS = {
+    'algorithmics_u34': Bank(
+        id='algorithmics_u34',
+        subject='Algorithmics (HESS)',
+        units='3 & 4',
+        technology='',
+        reference_label='VCAA 2024 Algorithmics examination reference sheet',
+        reference_url='https://www.vcaa.vic.edu.au/sites/default/files/2025-03/2024algorithmics-w.pdf',
+        accent='#0077ff',
+        questions=ALGORITHMICS_QUESTIONS,
+    ),
+    **make_subject_banks(),
+}
+ALL_QUESTIONS = tuple(question for bank in BANKS.values() for question in bank.questions)
+QUESTION_BY_ID = {question.id: question for question in ALL_QUESTIONS}
+assert len(QUESTION_BY_ID) == len(ALL_QUESTIONS), 'Question IDs must be globally unique.'
