@@ -13,6 +13,7 @@
       <div class="vce-review-score"><strong>{{ run.final_score }}</strong><span>{{ run.get_game_mode_display }} score</span></div>
     </header>
     {% if run.is_physical %}<p class="vce-review-breakdown">{{ run.score }} correct × {{ run.movement_score }} movement score = <strong>{{ run.final_score }}</strong></p>{% endif %}
+    {% if run.is_physical %}{% if run.video %}<section class="vce-run-video"><video controls playsinline preload="metadata" src="{% url 'vce:run_video' run.token %}"></video><div><strong>67 × VCE evidence</strong><span>{{ run.video_duration_seconds|floatformat:1 }} seconds · bandwidth-limited recording</span><a href="{% url 'vce:run_video' run.token %}?download=1">Download video</a></div></section>{% else %}<p class="vce-legacy-video"><i class="fa-solid fa-video-slash"></i> Legacy run · no video was recorded</p>{% endif %}{% endif %}
     <div class="vce-review-list">
       {% for item in reviews %}
         <details class="vce-review-item {% if item.correct %}is-correct{% else %}is-wrong{% endif %}">

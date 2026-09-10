@@ -12,7 +12,8 @@ if (root) {
   const context = canvas.getContext('2d');
   const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
   let token = '', deadline = 0, position = 0, score = 0, nextQuestion = null, mode = root.dataset.initialMode || 'normal';
-  let running = false, answering = false, frame = 0, detectorFrame = 0, stream = null, landmarker = null, tracker = null, engine = null;
+  let running = false, ending = false, answering = false, frame = 0, detectorFrame = 0, stream = null, landmarker = null, tracker = null, engine = null;
+  let recorder = null, recordingChunks = [], recordingBlob = null, recordingUrl = '';
   let timelines = {six_seven: [], leg_claps: []}, runStartedAt = 0, lastVideoTime = -1;
 
   const post = async (url, fields = {}) => {
@@ -38,6 +39,32 @@ if (root) {
   };
   const setText = (selector, text) => { const node = $(selector); node.textContent = text; if (hasMath(text)) typeset(node); };
   const isPhysical = () => mode !== 'normal';
+
+  function preferredRecordingType() {
+    if (!window.MediaRecorder) return '';
+    return ['video/webm;codecs=vp8', 'video/webm', 'video/mp4;codecs=avc1', 'video/mp4'].find(type => MediaRecorder.isTypeSupported(type)) || '';
+  }
+
+  function startRecording() {
+    const mimeType = preferredRecordingType();
+    if (!mimeType || !stream) throw new Error('This browser cannot record a compatible video.');
+    recordingChunks = []; recordingBlob = null;
+    recorder = new MediaRecorder(stream, {mimeType, videoBitsPerSecond: 650000});
+    recorder.addEventListener('dataavailable', event => { if (event.data.size) recordingChunks.push(event.data); });
+    recorder.start(1000);
+  }
+
+  function stopRecording() {
+    return new Promise(resolve => {
+      if (!recorder || recorder.state === 'inactive') return resolve(recordingBlob);
+      recorder.addEventListener('stop', () => {
+        const type = (recorder.mimeType || recordingChunks[0]?.type || 'video/webm').split(';')[0];
+        recordingBlob = new Blob(recordingChunks, {type}); recordingChunks = []; recorder = null;
+        resolve(recordingBlob);
+      }, {once: true});
+      recorder.stop();
+    });
+  }
 
   function selectMode(nextMode) {
     if (running) return;
@@ -83,11 +110,11 @@ if (root) {
     const status = $('[data-camera-status]');
     status.textContent = 'Loading pose model…';
     try {
-      [engine, stream] = await Promise.all([import(root.dataset.gestureEngineUrl), navigator.mediaDevices.getUserMedia({video: {facingMode: 'user', width: {ideal: 960}, height: {ideal: 720}}, audio: false})]);
+      [engine, stream] = await Promise.all([import(root.dataset.gestureEngineUrl), navigator.mediaDevices.getUserMedia({video: {facingMode: 'user', width: {ideal: 640, max: 640}, height: {ideal: 480, max: 480}, frameRate: {ideal: 15, max: 15}}, audio: false})]);
       await loadVision();
       video.srcObject = stream;
       await video.play();
-      status.textContent = 'Camera ready. Keep your body in frame.';
+      status.textContent = 'Camera ready. A low-bandwidth evidence video will be recorded locally during the run.';
       $('[data-enable-camera]').textContent = 'CAMERA READY';
       $('[data-sidebar="leaderboard"]').hidden = true;
       $('[data-sidebar="tools"]').hidden = false;
@@ -153,9 +180,10 @@ if (root) {
 
   async function startRun() {
     if (answering || (isPhysical() && !stream)) return; answering = true; startButton.disabled = true;
+    if (isPhysical() && !preferredRecordingType()) { startButton.querySelector('small').textContent = 'RECORDING NOT SUPPORTED'; answering = false; return; }
     try {
       const data = await post(root.dataset.startUrl, {game_mode: mode, bank_id: root.dataset.bankId}); token = data.token; deadline = Date.parse(data.deadline); position = 0; score = 0; timelines = {six_seven: [], leg_claps: []};
-      if (isPhysical()) { tracker = engine.createGestureTracker(mode); runStartedAt = performance.now(); }
+      if (isPhysical()) { tracker = engine.createGestureTracker(mode); runStartedAt = performance.now(); startRecording(); }
       $('[data-score]').textContent = '0'; updateMovement(); $('[data-sidebar="leaderboard"]').hidden = true; $('[data-sidebar="tools"]').hidden = false; $('[data-camera-panel]').hidden = !isPhysical(); show('game'); renderQuestion(data.question); running = true; tick();
     } catch (error) { startButton.disabled = false; startButton.querySelector('small').textContent = error.message; }
     finally { answering = false; }
@@ -173,7 +201,26 @@ if (root) {
   }
 
   async function showPenalty(seconds) { $('[data-penalty]').hidden = false; const until = Date.now() + seconds*1000; while (running && Date.now() < until && Date.now() < deadline) { $('[data-penalty-count]').textContent = Math.max(1, Math.ceil((until-Date.now())/1000)); await delay(80); } $('[data-penalty]').hidden = true; }
-  function endRun(serverScore) { if (!running && !screens.result.hidden) return; running = false; cancelAnimationFrame(frame); $('[data-penalty]').hidden = true; $('[data-correct-flash]').hidden = true; score = Number.isInteger(serverScore) ? serverScore : score; const movement = movementScore(), final = score * movement; $('[data-final-score]').textContent = final; $('[data-result-copy]').textContent = isPhysical() ? 'correct × movement' : 'correct answers in 60 seconds'; $('[data-result-equation]').hidden = !isPhysical(); $('[data-result-equation]').textContent = `${score} correct × ${movement} movement = ${final}`; show('result'); }
-  async function submitRun() { submitButton.disabled = true; $('[data-submit-error]').hidden = true; try { const data = await post(root.dataset.finishUrl, {token, display_name: $('#vce-name')?.value || '', metrics: JSON.stringify(timelines)}); window.location.assign(data.detail_url); } catch (error) { if (error.status === 409) return setTimeout(submitRun, 600); $('[data-submit-error]').textContent = error.message; $('[data-submit-error]').hidden = false; submitButton.disabled = false; } }
+  async function endRun(serverScore) {
+    if (ending || (!running && !screens.result.hidden)) return; ending = true; running = false; cancelAnimationFrame(frame);
+    $('[data-penalty]').hidden = true; $('[data-correct-flash]').hidden = true;
+    if (isPhysical()) await stopRecording();
+    score = Number.isInteger(serverScore) ? serverScore : score; const movement = movementScore(), final = score * movement;
+    $('[data-final-score]').textContent = final; $('[data-result-copy]').textContent = isPhysical() ? 'correct × movement' : 'correct answers in 60 seconds'; $('[data-result-equation]').hidden = !isPhysical(); $('[data-result-equation]').textContent = `${score} correct × ${movement} movement = ${final}`;
+    const preview = $('[data-recording-preview]'); const recordingNote = $('[data-recording-note]');
+    if (recordingBlob && preview) { if (recordingUrl) URL.revokeObjectURL(recordingUrl); recordingUrl = URL.createObjectURL(recordingBlob); preview.src = recordingUrl; preview.parentElement.hidden = false; recordingNote.textContent = `${(recordingBlob.size / 1024 / 1024).toFixed(1)} MB low-bandwidth evidence recording`; }
+    show('result'); ending = false;
+  }
+  async function submitRun() {
+    submitButton.disabled = true; $('[data-submit-error]').hidden = true;
+    try {
+      const fields = new FormData(); fields.append('token', token); fields.append('display_name', $('#vce-name')?.value || ''); fields.append('metrics', JSON.stringify(timelines));
+      if (recordingBlob) fields.append('video', recordingBlob, recordingBlob.type === 'video/mp4' ? 'vce-run.mp4' : 'vce-run.webm');
+      const response = await fetch(root.dataset.finishUrl, {method:'POST', headers:{'X-CSRFToken':csrf}, body:fields});
+      const data = await response.json().catch(() => ({error:'Unreadable server response.'}));
+      if (!response.ok) throw Object.assign(new Error(data.error || 'Request failed.'), {status:response.status});
+      window.location.assign(data.detail_url);
+    } catch (error) { if (error.status === 409) return setTimeout(submitRun, 600); $('[data-submit-error]').textContent = error.message; $('[data-submit-error]').hidden = false; submitButton.disabled = false; }
+  }
   startButton.addEventListener('click', startRun); submitButton.addEventListener('click', submitRun); selectMode(mode);
 }

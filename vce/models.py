@@ -3,6 +3,13 @@ import uuid
 from django.conf import settings
 from django.db import models
 
+from brainrot.storage import private_media_storage
+
+
+def vce_run_upload_path(instance, filename):
+    extension = getattr(instance, '_validated_extension', 'webm')
+    return f'vce_runs/{uuid.uuid4().hex}.{extension}'
+
 
 class AlgorithmicsRun(models.Model):
     class GameMode(models.TextChoices):
@@ -33,6 +40,9 @@ class AlgorithmicsRun(models.Model):
     finished_at = models.DateTimeField(null=True, blank=True)
     locked_until = models.DateTimeField(null=True, blank=True)
     is_submitted = models.BooleanField(default=False)
+    video = models.FileField(upload_to=vce_run_upload_path, storage=private_media_storage, blank=True)
+    video_mime_type = models.CharField(max_length=32, blank=True)
+    video_duration_seconds = models.FloatField(null=True, blank=True)
 
     class Meta:
         ordering = ('-final_score', 'finished_at', 'id')
