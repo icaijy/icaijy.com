@@ -63,6 +63,10 @@
     padding: .85rem 1.05rem; border: 1px solid #cbd5e1; border-radius: .9rem;
     background: #fff; color: #334155; text-decoration: none; font-weight: 750;
   }
+  #homepage-wrapper .vce-action { border-color: #2563eb; background: #2563eb; color: #fff; box-shadow: 0 12px 28px rgba(37,99,235,.22); }
+  #homepage-wrapper .chaos-action { border-color: #b8eb38; background: #eaff9f; color: #17210a; }
+  #homepage-wrapper .featured-hof { display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:1rem;padding:1rem 1.2rem;border:1px solid #cbd5e1;border-radius:1rem;background:#0f172a;color:#fff;text-decoration:none; }
+  #homepage-wrapper .featured-hof span { color:#94a3b8; }
   #homepage-wrapper .hero-mark {
     position: relative; display: grid; place-items: center; aspect-ratio: 1;
     border-radius: 2rem; background: #0b1220; color: #d8ff62;
@@ -102,14 +106,14 @@
   <div class="home-shell">
     <section class="hero">
       <div>
-        <div class="eyebrow"><span class="live-dot"></span> currently the important bit</div>
-        <h1>Play the <span>67 Counter.</span></h1>
-        <p class="hero-copy">{% trans "Projects, questionable experiments, and an archive of competitive-programming history." %} The 20-second 67 game is currently receiving a suspicious amount of real-world use.</p>
+        <div class="eyebrow"><span class="live-dot"></span> pick your one-minute disaster</div>
+        <h1>Study VCE.<br><span>Count 67.</span></h1>
+        <p class="hero-copy">Five VCE subjects, serious timed question banks, camera-counted 67 challenges, and the completely unnecessary mode that combines both.</p>
         <div class="hero-actions">
+          <a class="secondary-action vce-action" href="{% url 'vce:index' %}"><i class="fa-solid fa-stopwatch"></i> VCE Speedrun</a>
           <a class="play-67" href="{% url 'brainrot:counter' %}?mode=six_seven"><i class="fa-solid fa-play"></i> Play 67 now</a>
+          <a class="secondary-action chaos-action" href="{% url 'vce_chaos:index' %}"><i class="fa-solid fa-person-running"></i> 67 × VCE</a>
           <a class="secondary-action" href="{% url 'brainrot:hall_of_fame' %}"><i class="fa-solid fa-ranking-star"></i> Hall of Fame</a>
-          <a class="secondary-action" href="{% url 'brainrot:index' %}"><i class="fa-solid fa-gamepad"></i> All 67 games</a>
-          <a class="secondary-action" href="{% url 'vce:index' %}"><i class="fa-solid fa-stopwatch"></i> VCE Algo Speedrun</a>
         </div>
       </div>
       <a class="hero-mark text-decoration-none" href="{% url 'brainrot:counter' %}?mode=six_seven" aria-label="Open 67 Counter">
@@ -118,14 +122,16 @@
       </a>
     </section>
 
+    <a class="featured-hof" id="featured-hof" href="{% url 'brainrot:hall_of_fame' %}"><strong><i class="fa-solid fa-ranking-star me-2"></i>The original video Hall of Fame is still here.</strong><span>Open full board →</span></a>
+
     <div class="section-head">
       <h2>Everything else</h2>
       <p>The serious projects are still here. They have simply lost the homepage election.</p>
     </div>
     <div class="home-grid">
-      <a class="home-card" href="{% url 'vce:index' %}"><i class="fa-solid fa-stopwatch"></i><strong>VCE Algorithmics Speedrun</strong><small>One minute. Multiple choice. Wrong answers cost three seconds.</small></a>
+      <a class="home-card" href="{% url 'vce:index' %}"><i class="fa-solid fa-stopwatch"></i><strong>VCE Speedrun</strong><small>Algorithmics, Chemistry, Physics, Methods and Specialist Mathematics.</small></a>
       <a class="home-card" href="/blog"><i class="fa-solid fa-pen-nib"></i><strong>{% trans "Henry's Blog" %}</strong><small>Notes, articles and assorted write-ups.</small></a>
-      <a class="home-card" href="/orac-leaderboards"><i class="fa-solid fa-ranking-star"></i><strong>ORAC Leaderboards++</strong><small>Competitive-programming leaderboard archive.</small></a>
+      <a class="home-card" href="/orac-leaderboards"><i class="fa-solid fa-ranking-star"></i><small>OI / competitive programming archive</small><strong>ORAC Leaderboards++</strong></a>
       <a class="home-card" href="/oracdata"><i class="fa-solid fa-chart-line"></i><strong>{% trans "ORAC2 Analytics" %}</strong><small>Historical data and statistics.</small></a>
       <a class="home-card" href="{% url 'brainrot:index' %}"><i class="fa-solid fa-flask"></i><strong>67 Research Division</strong><small>67, Tung Tung, typing, and whatever terrible idea ships next.</small></a>
     </div>

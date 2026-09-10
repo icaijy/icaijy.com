@@ -24,7 +24,7 @@
   </head>
 
   <body class="maincontent">
-    <nav class="navbar navbar-expand-lg navbar-dark site-navbar sticky-top" aria-label="Primary navigation">
+    <nav class="navbar navbar-expand-xl navbar-dark site-navbar sticky-top" aria-label="Primary navigation">
       <div class="container-xl">
         <a class="navbar-brand site-brand" href="{% url 'home' %}" aria-label="icaijy.com home">
           <img src="{% static 'compass.svg' %}" width="34" height="34" alt="" />
@@ -34,19 +34,20 @@
           </span>
         </a>
 
-        <a class="site-67-shortcut d-lg-none" href="{% url 'brainrot:counter' %}?mode=six_seven" aria-label="Play 67 Counter"><span>67</span></a>
+        <a class="site-67-shortcut d-xl-none" href="{% url 'brainrot:counter' %}?mode=six_seven" aria-label="Play 67 Counter"><span>67</span></a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#siteNavbar" aria-controls="siteNavbar" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="siteNavbar">
-          <ul class="navbar-nav me-auto align-items-lg-center gap-lg-1">
-            <li class="nav-item d-none d-lg-block">
+          <ul class="navbar-nav me-auto align-items-xl-center gap-xl-1">
+            <li class="nav-item d-none d-xl-block">
               <a class="site-67-shortcut" href="{% url 'brainrot:counter' %}?mode=six_seven"><span>67</span><small>{% trans "Play" %}</small></a>
             </li>
+            <li class="nav-item"><a class="nav-link nav-link-featured nav-link-vce" href="{% url 'vce:index' %}"><i class="fa-solid fa-stopwatch me-1"></i> VCE Speedrun</a></li>
+            <li class="nav-item"><a class="nav-link nav-link-featured nav-link-chaos" href="{% url 'vce_chaos:index' %}"><i class="fa-solid fa-person-running me-1"></i> 67 × VCE</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:hall_of_fame' %}"><i class="fa-solid fa-ranking-star me-1"></i> HOF</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'vce:index' %}"><i class="fa-solid fa-stopwatch me-1"></i> VCE</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:daily' %}"><i class="fa-solid fa-calendar-day me-1"></i> Daily</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:latest_comments' %}"><i class="fa-regular fa-comments me-1"></i> Comments</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:shop' %}"><i class="fa-solid fa-bag-shopping me-1"></i> Shop</a></li>
@@ -64,7 +65,7 @@
             </li>
           </ul>
 
-          <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+          <ul class="navbar-nav ms-auto align-items-xl-center gap-xl-1">
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-solid fa-language me-1"></i> {% if CURRENT_LANGUAGE == 'zh-hans' %}中文{% else %}EN{% endif %}</a>
               <ul class="dropdown-menu dropdown-menu-end site-dropdown" aria-labelledby="languageDropdown">
@@ -127,10 +128,14 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
     <script>document.addEventListener('DOMContentLoaded', () => window.hljs?.highlightAll());</script>
     {% if request.resolver_match.namespace == 'brainrot' and request.resolver_match.url_name != 'daily' %}<script type="module" src="{% static 'brainrot/daily_widget.js' %}"></script>{% endif %}
-    <script type="text/x-mathjax-config">
-      MathJax.Hub.Config({config: ['MMLorHTML.js'],jax: ['input/TeX', 'output/HTML-CSS', 'output/NativeMML'],extensions: ['MathMenu.js', 'MathZoom.js']})
+    <script>
+      window.MathJax = {
+        tex: {inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']]},
+        chtml: {matchFontHeight: false},
+        startup: {typeset: true}
+      };
     </script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     {% block extra_scripts %}{% endblock %}
   </body>
 </html>

@@ -23,8 +23,19 @@ if (root) {
   };
   const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
   const show = name => Object.entries(screens).forEach(([key, el]) => { el.hidden = key !== name; });
-  const hasMath = text => /\\\\[([]/.test(text || '');
-  const typeset = node => window.MathJax?.Hub?.Queue(['Typeset', window.MathJax.Hub, node]);
+  const hasMath = text => /\\[([]/.test(text || '');
+  let mathQueue = Promise.resolve();
+  const typeset = node => {
+    if (!node) return;
+    mathQueue = mathQueue.then(async () => {
+      for (let attempt = 0; attempt < 50 && !window.MathJax?.typesetPromise && !window.MathJax?.Hub?.Queue; attempt += 1) await delay(100);
+      if (window.MathJax?.startup?.promise) await window.MathJax.startup.promise;
+      if (window.MathJax?.typesetClear) window.MathJax.typesetClear([node]);
+      if (window.MathJax?.typesetPromise) await window.MathJax.typesetPromise([node]);
+      else if (window.MathJax?.Hub?.Queue) window.MathJax.Hub.Queue(['Typeset', window.MathJax.Hub, node]);
+      else throw new Error('MathJax did not become available.');
+    }).catch(error => console.warn('Math typesetting failed.', error));
+  };
   const setText = (selector, text) => { const node = $(selector); node.textContent = text; if (hasMath(text)) typeset(node); };
   const isPhysical = () => mode !== 'normal';
 
@@ -78,7 +89,11 @@ if (root) {
       await video.play();
       status.textContent = 'Camera ready. Keep your body in frame.';
       $('[data-enable-camera]').textContent = 'CAMERA READY';
+      $('[data-sidebar="leaderboard"]').hidden = true;
+      $('[data-sidebar="tools"]').hidden = false;
+      $('[data-camera-panel]').hidden = false;
       startButton.disabled = false;
+      startButton.querySelector('small').textContent = '60 SECOND SPEEDRUN';
       detectorLoop();
     } catch (error) {
       stream?.getTracks().forEach(track => track.stop()); stream = null;

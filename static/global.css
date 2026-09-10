@@ -106,6 +106,19 @@ body {
     color: #fff;
 }
 
+.site-navbar .nav-link-featured {
+    border: 1px solid rgba(56, 232, 255, 0.38);
+    background: rgba(56, 232, 255, 0.10);
+    color: #eafcff;
+    font-weight: 800;
+}
+
+.site-navbar .nav-link-chaos {
+    border-color: rgba(216, 255, 98, 0.48);
+    background: rgba(216, 255, 98, 0.10);
+    color: #efffc2;
+}
+
 .site-67-shortcut {
     display: inline-flex;
     align-items: center;
