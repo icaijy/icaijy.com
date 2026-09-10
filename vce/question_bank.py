@@ -57,6 +57,10 @@ class Question:
     def public_dict(self):
         return {'id': self.id, 'prompt': latexify(self.prompt), 'options': tuple(latexify(option) for option in self.options), 'source': self.source, 'topic': self.topic}
 
+    def client_dict(self):
+        """Full payload for the deliberately client-judged one-minute game."""
+        return self.review_dict()
+
     def review_dict(self, selected=None):
         return {
             **self.public_dict(),

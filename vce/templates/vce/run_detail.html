@@ -16,11 +16,11 @@
     {% if run.is_physical %}{% if run.video %}<section class="vce-run-video"><video controls playsinline preload="metadata" src="{% url 'vce:run_video' run.token %}"></video><div><strong>67 × VCE evidence</strong><span>{{ run.video_duration_seconds|floatformat:1 }} seconds · bandwidth-limited recording</span><a href="{% url 'vce:run_video' run.token %}?download=1">Download video</a></div></section>{% else %}<p class="vce-legacy-video"><i class="fa-solid fa-video-slash"></i> Legacy run · no video was recorded</p>{% endif %}{% endif %}
     <div class="vce-review-list">
       {% for item in reviews %}
-        <details class="vce-review-item {% if item.correct %}is-correct{% else %}is-wrong{% endif %}">
+        <details class="vce-review-item {% if item.unanswered %}is-unanswered{% elif item.correct %}is-correct{% else %}is-wrong{% endif %}">
           <summary>
             <span class="vce-review-number">{{ forloop.counter|stringformat:'02d' }}</span>
             <span>{{ item.prompt }}</span>
-            <i class="fa-solid {% if item.correct %}fa-check{% else %}fa-xmark{% endif %}"></i>
+            <i class="fa-solid {% if item.unanswered %}fa-minus{% elif item.correct %}fa-check{% else %}fa-xmark{% endif %}"></i>
           </summary>
           <div class="vce-review-body">
             <div class="vce-review-options">
@@ -32,7 +32,7 @@
                 </div>
               {% endfor %}
             </div>
-            <p class="vce-source">{{ item.source }} · answered at {{ item.answered_ms }} ms</p>
+            <p class="vce-source">{{ item.source }} · {% if item.unanswered %}not answered before time expired{% else %}answered at {{ item.answered_ms }} ms{% endif %}</p>
           </div>
         </details>
       {% empty %}

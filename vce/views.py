@@ -21,6 +21,7 @@ GAME_SECONDS = 60
 PENALTY_SECONDS = 3
 VALID_MODES = {choice for choice, _ in AlgorithmicsRun.GameMode.choices}
 PHYSICAL_MODES = VALID_MODES - {AlgorithmicsRun.GameMode.NORMAL}
+QUESTION_BATCH_SIZE = 20
 
 
 def _session_key(request):
@@ -105,6 +106,32 @@ def get_object_or_404_bank(bank_id):
     return bank
 
 
+def _new_run(request, bank, game_mode, count=QUESTION_BATCH_SIZE):
+    question_ids = [question.id for question in random.sample(bank.questions, min(count, len(bank.questions)))]
+    return AlgorithmicsRun.objects.create(
+        user=request.user if request.user.is_authenticated else None,
+        session_key=_session_key(request),
+        question_ids=question_ids,
+        game_mode=game_mode,
+        bank_id=bank.id,
+    )
+
+
+@require_POST
+def prepare_run(request):
+    bank = BANKS.get(request.POST.get('bank_id', 'algorithmics_u34'))
+    game_mode = request.POST.get('game_mode', AlgorithmicsRun.GameMode.NORMAL)
+    if bank is None:
+        return JsonResponse({'error': 'Invalid question bank.'}, status=400)
+    if game_mode not in VALID_MODES:
+        return JsonResponse({'error': 'Invalid game mode.'}, status=400)
+    run = _new_run(request, bank, game_mode)
+    return JsonResponse({
+        'token': str(run.token),
+        'questions': [QUESTION_BY_ID[question_id].client_dict() for question_id in run.question_ids],
+    }, status=201)
+
+
 @require_POST
 def start_run(request):
     bank = BANKS.get(request.POST.get('bank_id', 'algorithmics_u34'))
@@ -113,6 +140,24 @@ def start_run(request):
     game_mode = request.POST.get('game_mode', AlgorithmicsRun.GameMode.NORMAL)
     if game_mode not in VALID_MODES:
         return JsonResponse({'error': 'Invalid game mode.'}, status=400)
+    prepared_token = request.POST.get('token')
+    if prepared_token:
+        with transaction.atomic():
+            run = get_object_or_404(AlgorithmicsRun.objects.select_for_update(), token=prepared_token)
+            if not _owns(request, run):
+                return JsonResponse({'error': 'This run belongs to another session.'}, status=403)
+            if run.is_submitted or run.attempts or run.bank_id != bank.id or run.game_mode != game_mode:
+                return JsonResponse({'error': 'This prepared run cannot be started.'}, status=409)
+            run.started_at = timezone.now()
+            run.finished_at = None
+            run.locked_until = None
+            run.score = 0
+            run.save(update_fields=('started_at', 'finished_at', 'locked_until', 'score'))
+        return JsonResponse({
+            'token': str(run.token), 'started_at': run.started_at.isoformat(),
+            'deadline': _deadline(run).isoformat(), 'seconds': GAME_SECONDS,
+            'penalty_seconds': PENALTY_SECONDS, 'game_mode': run.game_mode, 'bank_id': run.bank_id,
+        })
     run_question_count = min(100, len(bank.questions))
     question_ids = [question.id for question in random.sample(bank.questions, run_question_count)]
     run = AlgorithmicsRun.objects.create(
@@ -134,6 +179,24 @@ def start_run(request):
         'bank_id': run.bank_id,
         'question': _question_at(run, 0).public_dict(),
     }, status=201)
+
+
+@require_POST
+def refill_run(request):
+    token = request.POST.get('token', '')
+    with transaction.atomic():
+        run = get_object_or_404(AlgorithmicsRun.objects.select_for_update(), token=token)
+        if not _owns(request, run):
+            return JsonResponse({'error': 'This run belongs to another session.'}, status=403)
+        if run.is_submitted:
+            return JsonResponse({'error': 'This run is already finished.'}, status=409)
+        bank = get_object_or_404_bank(run.bank_id)
+        used = set(run.question_ids)
+        available = [question for question in bank.questions if question.id not in used]
+        selected = random.sample(available, min(QUESTION_BATCH_SIZE, len(available)))
+        run.question_ids = [*run.question_ids, *(question.id for question in selected)]
+        run.save(update_fields=('question_ids',))
+    return JsonResponse({'questions': [question.client_dict() for question in selected]})
 
 
 @require_POST
@@ -225,6 +288,17 @@ def finish_run(request):
         if movement_score is None:
             return JsonResponse({'error': 'Invalid movement data.'}, status=400)
 
+        if 'attempts' in request.POST:
+            try:
+                attempts = json.loads(request.POST['attempts'])
+            except (TypeError, ValueError, json.JSONDecodeError):
+                return JsonResponse({'error': 'Invalid answer history.'}, status=400)
+            clean_attempts = _clean_client_attempts(run, attempts)
+            if clean_attempts is None:
+                return JsonResponse({'error': 'Invalid answer history.'}, status=400)
+            run.attempts = clean_attempts
+            run.score = sum(attempt['correct'] is True for attempt in clean_attempts)
+
         inspected = None
         upload = request.FILES.get('video')
         if upload is not None:
@@ -241,6 +315,8 @@ def finish_run(request):
         run.final_score = run.score * movement_score
         run.is_submitted = True
         update_fields = ['display_name', 'metrics', 'movement_score', 'final_score', 'is_submitted']
+        if 'attempts' in request.POST:
+            update_fields.extend(('attempts', 'score'))
         if inspected:
             run._validated_extension = inspected.extension
             run.video = upload
@@ -265,8 +341,10 @@ def run_detail(request, token):
     for attempt in run.attempts:
         question = QUESTION_BY_ID.get(attempt.get('question_id'))
         if question:
+            unanswered = attempt.get('selected') is None
             review = question.review_dict(attempt.get('selected')) | {
                 'correct': bool(attempt.get('correct')),
+                'unanswered': unanswered,
                 'answered_ms': attempt.get('answered_ms', 0),
             }
             review['option_reviews'] = [
@@ -313,6 +391,30 @@ def _clean_timeline(value):
             return None
         clean.append(stamp)
         previous = stamp
+    return clean
+
+
+def _clean_client_attempts(run, attempts):
+    """Validate shape/order only; correctness is intentionally trusted from the client."""
+    if not isinstance(attempts, list) or len(attempts) > len(run.question_ids):
+        return None
+    clean = []
+    previous_ms = -1
+    for index, attempt in enumerate(attempts):
+        if not isinstance(attempt, dict) or attempt.get('question_id') != run.question_ids[index]:
+            return None
+        selected = attempt.get('selected')
+        unanswered = selected is None
+        if (not unanswered and (isinstance(selected, bool) or selected not in range(4))) or (unanswered and index != len(attempts) - 1):
+            return None
+        correct = None if unanswered else attempt.get('correct')
+        if not unanswered and not isinstance(correct, bool):
+            return None
+        answered_ms = attempt.get('answered_ms')
+        if isinstance(answered_ms, bool) or not isinstance(answered_ms, int) or not previous_ms <= answered_ms <= (GAME_SECONDS + 1) * 1000:
+            return None
+        clean.append({'question_id': attempt['question_id'], 'selected': selected, 'correct': correct, 'answered_ms': answered_ms})
+        previous_ms = answered_ms
     return clean
 
 
