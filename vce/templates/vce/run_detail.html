@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ run.public_name }} · Algorithmics Speedrun{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'vce/speedrun.css' %}" />{% endblock %}
+
+{% block content %}
+<main class="vce-page vce-review-page">
+  <section class="vce-review-shell">
+    <a href="{% url 'vce:index' %}" class="vce-back"><i class="fa-solid fa-arrow-left"></i> Back to speedrun</a>
+    <header class="vce-review-hero">
+      <div><div class="vce-kicker">RUN REVIEW</div><h1>{{ run.public_name }}</h1><p>{{ run.started_at|date:'j M Y, g:i a' }}</p></div>
+      <div class="vce-review-score"><strong>{{ run.score }}</strong><span>correct</span></div>
+    </header>
+    <div class="vce-review-list">
+      {% for item in reviews %}
+        <details class="vce-review-item {% if item.correct %}is-correct{% else %}is-wrong{% endif %}">
+          <summary>
+            <span class="vce-review-number">{{ forloop.counter|stringformat:'02d' }}</span>
+            <span>{{ item.prompt }}</span>
+            <i class="fa-solid {% if item.correct %}fa-check{% else %}fa-xmark{% endif %}"></i>
+          </summary>
+          <div class="vce-review-body">
+            <div class="vce-review-options">
+              {% for option in item.option_reviews %}
+                <div class="{% if option.is_answer %}answer-correct{% elif option.is_selected %}answer-wrong{% endif %}">
+                  <strong>{{ option.letter }}</strong>
+                  <span>{{ option.text }}</span>
+                  <small>{{ option.explanation }}</small>
+                </div>
+              {% endfor %}
+            </div>
+            <p class="vce-source">{{ item.source }} · answered at {{ item.answered_ms }} ms</p>
+          </div>
+        </details>
+      {% empty %}
+        <div class="vce-empty">No questions were answered in this run.</div>
+      {% endfor %}
+    </div>
+    <a href="{% url 'vce:index' %}" class="vce-again">Run it again</a>
+  </section>
+</main>
+{% endblock %}

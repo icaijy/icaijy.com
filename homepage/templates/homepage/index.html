@@ -109,6 +109,7 @@
           <a class="play-67" href="{% url 'brainrot:counter' %}?mode=six_seven"><i class="fa-solid fa-play"></i> Play 67 now</a>
           <a class="secondary-action" href="{% url 'brainrot:hall_of_fame' %}"><i class="fa-solid fa-ranking-star"></i> Hall of Fame</a>
           <a class="secondary-action" href="{% url 'brainrot:index' %}"><i class="fa-solid fa-gamepad"></i> All 67 games</a>
+          <a class="secondary-action" href="{% url 'vce:index' %}"><i class="fa-solid fa-stopwatch"></i> VCE Algo Speedrun</a>
         </div>
       </div>
       <a class="hero-mark text-decoration-none" href="{% url 'brainrot:counter' %}?mode=six_seven" aria-label="Open 67 Counter">
@@ -122,6 +123,7 @@
       <p>The serious projects are still here. They have simply lost the homepage election.</p>
     </div>
     <div class="home-grid">
+      <a class="home-card" href="{% url 'vce:index' %}"><i class="fa-solid fa-stopwatch"></i><strong>VCE Algorithmics Speedrun</strong><small>One minute. Multiple choice. Wrong answers cost three seconds.</small></a>
       <a class="home-card" href="/blog"><i class="fa-solid fa-pen-nib"></i><strong>{% trans "Henry's Blog" %}</strong><small>Notes, articles and assorted write-ups.</small></a>
       <a class="home-card" href="/orac-leaderboards"><i class="fa-solid fa-ranking-star"></i><strong>ORAC Leaderboards++</strong><small>Competitive-programming leaderboard archive.</small></a>
       <a class="home-card" href="/oracdata"><i class="fa-solid fa-chart-line"></i><strong>{% trans "ORAC2 Analytics" %}</strong><small>Historical data and statistics.</small></a>
