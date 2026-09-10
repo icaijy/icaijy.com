@@ -5,18 +5,28 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import AlgorithmicsRun
-from .question_bank import QUESTION_BY_ID, QUESTIONS, latexify
+from .question_bank import ALL_QUESTIONS, BANKS, QUESTION_BY_ID, QUESTIONS, latexify
 
 
 class QuestionBankTests(TestCase):
     def test_bank_is_large_valid_and_original(self):
         self.assertGreaterEqual(len(QUESTIONS), 250)
-        self.assertEqual(len(QUESTIONS), len(QUESTION_BY_ID))
-        for question in QUESTIONS:
+        self.assertGreaterEqual(len(ALL_QUESTIONS), 1500)
+        self.assertEqual(len(ALL_QUESTIONS), len(QUESTION_BY_ID))
+        self.assertEqual(len(BANKS), 13)
+        for question in ALL_QUESTIONS:
             self.assertEqual(len(question.options), 4)
+            self.assertEqual(len(set(question.options)), 4)
             self.assertEqual(len(question.explanations), 4)
             self.assertIn(question.answer, question.options)
             self.assertTrue(question.source.startswith('Written for icaijy.com'))
+
+    def test_only_mathematics_banks_are_split_by_technology(self):
+        split_banks = [bank for bank in BANKS.values() if bank.technology]
+        self.assertEqual(len(split_banks), 8)
+        self.assertTrue(all(bank.subject in {'Mathematical Methods', 'Specialist Mathematics'} for bank in split_banks))
+        self.assertFalse(BANKS['chemistry_u12'].technology)
+        self.assertFalse(BANKS['physics_u34'].technology)
 
     def test_formulae_are_rendered_as_mathjax_tex(self):
         self.assertEqual(latexify('O(n² log n)'), r'\(O(n^2 \log n)\)')
@@ -30,11 +40,24 @@ class QuestionBankTests(TestCase):
 class SpeedrunTests(TestCase):
     def test_entry_points_and_public_payload_hide_answers(self):
         page = self.client.get(reverse('vce:index'))
-        self.assertContains(page, 'VCE Algorithmics 1 Minute Speedrun')
+        self.assertContains(page, 'Pick a question bank')
+        self.assertContains(page, 'Mathematical Methods')
+        self.assertContains(page, 'Tech-free')
+        self.assertContains(self.client.get(reverse('vce_chaos:index')), '67 × VCE')
         self.assertContains(self.client.get('/'), '/vce/')
-        started = self.client.post(reverse('vce:start')).json()
+        started = self.client.post(reverse('vce:start'), {'bank_id': 'chemistry_u12'}).json()
+        self.assertEqual(started['bank_id'], 'chemistry_u12')
         self.assertNotIn('answer', started['question'])
         self.assertNotIn('explanations', started['question'])
+
+    def test_play_pages_include_the_official_reference(self):
+        algorithmics = self.client.get(reverse('vce:play', args=('algorithmics_u34',)))
+        self.assertContains(algorithmics, 'MASTER THEOREM')
+        self.assertContains(algorithmics, r'aT\!\left')
+        chemistry = self.client.get(reverse('vce:play', args=('chemistry_u34',)))
+        self.assertContains(chemistry, '2026 VCAA Chemistry Data Book')
+        self.assertContains(chemistry, '2026-ChemistryDataBook_0.pdf')
+        self.assertEqual(self.client.get(reverse('vce:play', args=('not-a-bank',))).status_code, 404)
 
     def test_start_answer_finish_and_review(self):
         started = self.client.post(reverse('vce:start')).json()
@@ -57,7 +80,7 @@ class SpeedrunTests(TestCase):
         self.assertContains(detail, question.topic)
 
     def test_physical_mode_multiplies_correct_answers_by_server_counted_events(self):
-        started = self.client.post(reverse('vce:start'), {'game_mode': 'combine'}).json()
+        started = self.client.post(reverse('vce:start'), {'game_mode': 'combine', 'bank_id': 'physics_u34'}).json()
         question = QUESTION_BY_ID[started['question']['id']]
         self.client.post(reverse('vce:answer'), {'token': started['token'], 'position': 0, 'selected': question.answer_index})
         run = AlgorithmicsRun.objects.get(token=started['token'])
@@ -69,6 +92,7 @@ class SpeedrunTests(TestCase):
         }).json()
         self.assertEqual(finished['movement_score'], 6)
         self.assertEqual(finished['final_score'], 6)
+        self.assertEqual(run.bank_id, 'physics_u34')
 
     def test_invalid_mode_and_movement_payload_are_rejected(self):
         self.assertEqual(self.client.post(reverse('vce:start'), {'game_mode': 'nope'}).status_code, 400)

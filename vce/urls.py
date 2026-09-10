@@ -6,6 +6,7 @@ app_name = 'vce'
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('play/<slug:bank_id>/', views.play, name='play'),
     path('api/start/', views.start_run, name='start'),
     path('api/answer/', views.answer, name='answer'),
     path('api/finish/', views.finish_run, name='finish'),

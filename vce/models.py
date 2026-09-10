@@ -22,6 +22,7 @@ class AlgorithmicsRun(models.Model):
     display_name = models.CharField(max_length=32, blank=True)
     session_key = models.CharField(max_length=40, blank=True)
     score = models.PositiveSmallIntegerField(default=0)
+    bank_id = models.CharField(max_length=48, default='algorithmics_u34')
     game_mode = models.CharField(max_length=16, choices=GameMode.choices, default=GameMode.NORMAL)
     movement_score = models.PositiveIntegerField(default=1)
     final_score = models.PositiveIntegerField(default=0)
@@ -36,7 +37,7 @@ class AlgorithmicsRun(models.Model):
     class Meta:
         ordering = ('-final_score', 'finished_at', 'id')
         indexes = [
-            models.Index(fields=('game_mode', '-final_score', 'finished_at'), name='vce_mode_score_idx'),
+            models.Index(fields=('bank_id', 'game_mode', '-final_score'), name='vce_bank_score_idx'),
             models.Index(fields=('token',), name='vce_run_token_idx'),
         ]
 
