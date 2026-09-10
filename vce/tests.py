@@ -39,6 +39,54 @@ class QuestionBankTests(TestCase):
     'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
 })
 class SpeedrunTests(TestCase):
+    def test_prepare_delivers_twenty_complete_questions_and_refill_has_no_duplicates(self):
+        prepared = self.client.post(reverse('vce:prepare'), {'bank_id': 'algorithmics_u34'}).json()
+        self.assertEqual(len(prepared['questions']), 20)
+        self.assertIn('answer_index', prepared['questions'][0])
+        self.assertIn('explanations', prepared['questions'][0])
+        first_ids = {question['id'] for question in prepared['questions']}
+
+        refill = self.client.post(reverse('vce:refill'), {'token': prepared['token']}).json()
+        self.assertEqual(len(refill['questions']), 20)
+        refill_ids = {question['id'] for question in refill['questions']}
+        self.assertFalse(first_ids & refill_ids)
+        run = AlgorithmicsRun.objects.get(token=prepared['token'])
+        self.assertEqual(len(run.question_ids), 40)
+
+    def test_prepared_run_starts_clock_only_when_start_is_clicked(self):
+        prepared = self.client.post(reverse('vce:prepare'), {'bank_id': 'physics_u34'}).json()
+        run = AlgorithmicsRun.objects.get(token=prepared['token'])
+        old_started_at = run.started_at
+        started = self.client.post(reverse('vce:start'), {
+            'token': prepared['token'], 'bank_id': 'physics_u34', 'game_mode': 'normal',
+        })
+        self.assertEqual(started.status_code, 200)
+        run.refresh_from_db()
+        self.assertGreater(run.started_at, old_started_at)
+        self.assertNotIn('question', started.json())
+
+    def test_frontend_attempt_batch_saves_final_unanswered_question(self):
+        prepared = self.client.post(reverse('vce:prepare')).json()
+        self.client.post(reverse('vce:start'), {'token': prepared['token']})
+        run = AlgorithmicsRun.objects.get(token=prepared['token'])
+        run.started_at = timezone.now() - timedelta(seconds=61)
+        run.save(update_fields=('started_at',))
+        question_ids = run.question_ids[:3]
+        attempts = [
+            {'question_id': question_ids[0], 'selected': 0, 'correct': True, 'answered_ms': 1200},
+            {'question_id': question_ids[1], 'selected': 3, 'correct': False, 'answered_ms': 4200},
+            {'question_id': question_ids[2], 'selected': None, 'correct': None, 'answered_ms': 60000},
+        ]
+        response = self.client.post(reverse('vce:finish'), {
+            'token': prepared['token'], 'attempts': __import__('json').dumps(attempts),
+        })
+        self.assertEqual(response.status_code, 200)
+        run.refresh_from_db()
+        self.assertEqual(run.score, 1)
+        self.assertIsNone(run.attempts[-1]['selected'])
+        detail = self.client.get(response.json()['detail_url'])
+        self.assertContains(detail, 'not answered before time expired')
+
     def test_entry_points_and_public_payload_hide_answers(self):
         page = self.client.get(reverse('vce:index'))
         self.assertContains(page, 'Pick a question bank')

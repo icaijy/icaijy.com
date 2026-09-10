@@ -11,7 +11,8 @@ if (root) {
   const canvas = $('[data-pose-overlay]');
   const context = canvas.getContext('2d');
   const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
-  let token = '', deadline = 0, position = 0, score = 0, nextQuestion = null, mode = root.dataset.initialMode || 'normal';
+  let token = '', deadline = 0, position = 0, score = 0, mode = root.dataset.initialMode || 'normal';
+  let questions = [], attempts = [], prepared = false, refillPromise = null, currentAnswered = false;
   let running = false, ending = false, answering = false, frame = 0, detectorFrame = 0, stream = null, landmarker = null, tracker = null, engine = null;
   let recorder = null, recordingChunks = [], recordingBlob = null, recordingUrl = '';
   let timelines = {six_seven: [], leg_claps: []}, runStartedAt = 0, lastVideoTime = -1;
@@ -39,6 +40,12 @@ if (root) {
   };
   const setText = (selector, text) => { const node = $(selector); node.textContent = text; if (hasMath(text)) typeset(node); };
   const isPhysical = () => mode !== 'normal';
+
+  function updateStartState() {
+    const cameraReady = !isPhysical() || Boolean(stream);
+    startButton.disabled = !prepared || !cameraReady || running || answering;
+    startButton.querySelector('small').textContent = !prepared ? 'LOADING 20 QUESTIONS…' : !cameraReady ? 'ENABLE CAMERA FIRST' : '60 SECOND SPEEDRUN';
+  }
 
   function preferredRecordingType() {
     if (!window.MediaRecorder) return '';
@@ -73,8 +80,7 @@ if (root) {
     if ($('[data-chaos-modes]')) $('[data-chaos-modes]').hidden = !chaos;
     root.querySelectorAll('[data-mode]').forEach(button => button.classList.toggle('active', chaos ? button.dataset.mode !== 'normal' : button.dataset.mode === 'normal'));
     root.querySelectorAll('[data-chaos-mode]').forEach(button => button.classList.toggle('active', button.dataset.chaosMode === mode));
-    startButton.disabled = chaos && !stream;
-    startButton.querySelector('small').textContent = chaos && !stream ? 'ENABLE CAMERA FIRST' : '60 SECOND SPEEDRUN';
+    updateStartState();
   }
 
   root.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => selectMode(button.dataset.mode)));
@@ -119,8 +125,7 @@ if (root) {
       $('[data-sidebar="leaderboard"]').hidden = true;
       $('[data-sidebar="tools"]').hidden = false;
       $('[data-camera-panel]').hidden = false;
-      startButton.disabled = false;
-      startButton.querySelector('small').textContent = '60 SECOND SPEEDRUN';
+      updateStartState();
       detectorLoop();
     } catch (error) {
       stream?.getTracks().forEach(track => track.stop()); stream = null;
@@ -164,6 +169,7 @@ if (root) {
 
   function renderQuestion(question) {
     if (!question) return endRun();
+    currentAnswered = false;
     setText('[data-topic]', question.topic); setText('[data-question]', question.prompt); setText('[data-source]', question.source);
     optionsEl.replaceChildren(...question.options.map((option, index) => {
       const button = document.createElement('button'); button.type = 'button'; button.className = 'vce-option'; button.innerHTML = `<span>${String.fromCharCode(65 + index)}</span><strong></strong>`;
@@ -179,31 +185,49 @@ if (root) {
   }
 
   async function startRun() {
-    if (answering || (isPhysical() && !stream)) return; answering = true; startButton.disabled = true;
+    if (answering || !prepared || (isPhysical() && !stream)) return; answering = true; startButton.disabled = true;
     if (isPhysical() && !preferredRecordingType()) { startButton.querySelector('small').textContent = 'RECORDING NOT SUPPORTED'; answering = false; return; }
     try {
-      const data = await post(root.dataset.startUrl, {game_mode: mode, bank_id: root.dataset.bankId}); token = data.token; deadline = Date.parse(data.deadline); position = 0; score = 0; timelines = {six_seven: [], leg_claps: []};
-      if (isPhysical()) { tracker = engine.createGestureTracker(mode); runStartedAt = performance.now(); startRecording(); }
-      $('[data-score]').textContent = '0'; updateMovement(); $('[data-sidebar="leaderboard"]').hidden = true; $('[data-sidebar="tools"]').hidden = false; $('[data-camera-panel]').hidden = !isPhysical(); show('game'); renderQuestion(data.question); running = true; tick();
-    } catch (error) { startButton.disabled = false; startButton.querySelector('small').textContent = error.message; }
+      const data = await post(root.dataset.startUrl, {token, game_mode: mode, bank_id: root.dataset.bankId}); deadline = Date.parse(data.deadline); position = 0; score = 0; attempts = []; timelines = {six_seven: [], leg_claps: []}; runStartedAt = performance.now();
+      if (isPhysical()) { tracker = engine.createGestureTracker(mode); startRecording(); }
+      $('[data-score]').textContent = '0'; updateMovement(); $('[data-sidebar="leaderboard"]').hidden = true; $('[data-sidebar="tools"]').hidden = false; $('[data-camera-panel]').hidden = !isPhysical(); show('game'); running = true; renderQuestion(questions[0]); tick();
+    } catch (error) { startButton.querySelector('small').textContent = error.message; }
     finally { answering = false; }
   }
 
   async function choose(selected) {
     if (!running || answering || Date.now() >= deadline) return; answering = true; [...optionsEl.children].forEach(button => { button.disabled = true; });
+    const question = questions[position];
+    if (!question) { answering = false; return; }
+    currentAnswered = true;
+    const correct = selected === question.answer_index;
+    attempts.push({question_id: question.id, selected, correct, answered_ms: Math.min(60000, Math.max(0, Math.round(performance.now() - runStartedAt)))});
+    if (correct) score += 1;
+    $('[data-score]').textContent = score;
     try {
-      const data = await post(root.dataset.answerUrl, {token, position, selected}); if (data.finished) return endRun(data.score);
-      score = data.score; position = data.position; $('[data-score]').textContent = score; nextQuestion = data.question;
-      if (data.correct) { optionsEl.children[selected]?.classList.add('is-correct'); $('[data-correct-flash]').hidden = false; await delay(260); $('[data-correct-flash]').hidden = true; if (running) renderQuestion(nextQuestion); }
-      else { const review = data.review; setText('[data-correct-answer]', `${String.fromCharCode(65 + review.answer_index)}. ${review.answer}`); setText('[data-correct-note]', review.explanations[review.answer_index]); await showPenalty(data.penalty_seconds); if (running) renderQuestion(nextQuestion); }
-    } catch (error) { if (error.status === 429 && error.payload?.wait_ms) await delay(error.payload.wait_ms); else { setText('[data-source]', error.message); [...optionsEl.children].forEach(button => { button.disabled = false; }); } }
+      if (correct) { optionsEl.children[selected]?.classList.add('is-correct'); $('[data-correct-flash]').hidden = false; await delay(260); $('[data-correct-flash]').hidden = true; }
+      else { setText('[data-correct-answer]', `${String.fromCharCode(65 + question.answer_index)}. ${question.answer}`); setText('[data-correct-note]', question.explanations[question.answer_index]); await showPenalty(3); }
+      if (!running) return;
+      position += 1;
+      if (questions.length - position < 5) refillQuestions();
+      if (!questions[position] && refillPromise) await refillPromise;
+      if (running) renderQuestion(questions[position]);
+    } catch (error) { setText('[data-source]', error.message); }
     finally { answering = false; }
+  }
+
+  async function refillQuestions() {
+    if (refillPromise || !token) return refillPromise;
+    refillPromise = post(root.dataset.refillUrl, {token}).then(data => { questions.push(...data.questions); return data.questions; }).finally(() => { refillPromise = null; });
+    return refillPromise;
   }
 
   async function showPenalty(seconds) { $('[data-penalty]').hidden = false; const until = Date.now() + seconds*1000; while (running && Date.now() < until && Date.now() < deadline) { $('[data-penalty-count]').textContent = Math.max(1, Math.ceil((until-Date.now())/1000)); await delay(80); } $('[data-penalty]').hidden = true; }
   async function endRun(serverScore) {
     if (ending || (!running && !screens.result.hidden)) return; ending = true; running = false; cancelAnimationFrame(frame);
     $('[data-penalty]').hidden = true; $('[data-correct-flash]').hidden = true;
+    const current = questions[position];
+    if (current && !currentAnswered) attempts.push({question_id: current.id, selected: null, correct: null, answered_ms: 60000});
     if (isPhysical()) await stopRecording();
     score = Number.isInteger(serverScore) ? serverScore : score; const movement = movementScore(), final = score * movement;
     $('[data-final-score]').textContent = final; $('[data-result-copy]').textContent = isPhysical() ? 'correct × movement' : 'correct answers in 60 seconds'; $('[data-result-equation]').hidden = !isPhysical(); $('[data-result-equation]').textContent = `${score} correct × ${movement} movement = ${final}`;
@@ -214,7 +238,7 @@ if (root) {
   async function submitRun() {
     submitButton.disabled = true; $('[data-submit-error]').hidden = true;
     try {
-      const fields = new FormData(); fields.append('token', token); fields.append('display_name', $('#vce-name')?.value || ''); fields.append('metrics', JSON.stringify(timelines));
+      const fields = new FormData(); fields.append('token', token); fields.append('display_name', $('#vce-name')?.value || ''); fields.append('metrics', JSON.stringify(timelines)); fields.append('attempts', JSON.stringify(attempts));
       if (recordingBlob) fields.append('video', recordingBlob, recordingBlob.type === 'video/mp4' ? 'vce-run.mp4' : 'vce-run.webm');
       const response = await fetch(root.dataset.finishUrl, {method:'POST', headers:{'X-CSRFToken':csrf}, body:fields});
       const data = await response.json().catch(() => ({error:'Unreadable server response.'}));
@@ -222,5 +246,14 @@ if (root) {
       window.location.assign(data.detail_url);
     } catch (error) { if (error.status === 409) return setTimeout(submitRun, 600); $('[data-submit-error]').textContent = error.message; $('[data-submit-error]').hidden = false; submitButton.disabled = false; }
   }
-  startButton.addEventListener('click', startRun); submitButton.addEventListener('click', submitRun); selectMode(mode);
+  async function prepareRun() {
+    updateStartState();
+    try {
+      const data = await post(root.dataset.prepareUrl, {game_mode: mode, bank_id: root.dataset.bankId});
+      token = data.token; questions = data.questions; prepared = questions.length > 0;
+    } catch (error) { startButton.querySelector('small').textContent = error.message; }
+    updateStartState();
+  }
+
+  startButton.addEventListener('click', startRun); submitButton.addEventListener('click', submitRun); selectMode(mode); prepareRun();
 }
