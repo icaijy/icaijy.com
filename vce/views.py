@@ -5,8 +5,9 @@ import unicodedata
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import timezone
@@ -14,6 +15,7 @@ from django.views.decorators.http import require_POST
 
 from .models import AlgorithmicsRun
 from .question_bank import ALL_QUESTIONS, BANKS, QUESTION_BY_ID
+from brainrot.validators import validate_hall_of_fame_video
 
 GAME_SECONDS = 60
 PENALTY_SECONDS = 3
@@ -223,12 +225,29 @@ def finish_run(request):
         if movement_score is None:
             return JsonResponse({'error': 'Invalid movement data.'}, status=400)
 
+        inspected = None
+        upload = request.FILES.get('video')
+        if upload is not None:
+            if run.game_mode == AlgorithmicsRun.GameMode.NORMAL:
+                return JsonResponse({'error': 'Video is only accepted for 67 × VCE runs.'}, status=400)
+            try:
+                inspected = validate_hall_of_fame_video(upload, max_seconds=66)
+            except ValidationError as exc:
+                return JsonResponse({'error': exc.messages[0]}, status=400)
+
         run.display_name = '' if request.user.is_authenticated else name
         run.metrics = clean_metrics
         run.movement_score = movement_score
         run.final_score = run.score * movement_score
         run.is_submitted = True
-        run.save(update_fields=('display_name', 'metrics', 'movement_score', 'final_score', 'is_submitted'))
+        update_fields = ['display_name', 'metrics', 'movement_score', 'final_score', 'is_submitted']
+        if inspected:
+            run._validated_extension = inspected.extension
+            run.video = upload
+            run.video_mime_type = inspected.mime_type
+            run.video_duration_seconds = inspected.duration_seconds
+            update_fields.extend(('video', 'video_mime_type', 'video_duration_seconds'))
+        run.save(update_fields=update_fields)
     return JsonResponse({
         'ok': True,
         'score': run.score,
@@ -266,6 +285,19 @@ def run_detail(request, token):
         'bank': BANKS.get(run.bank_id),
         'reviews': reviews,
     })
+
+
+def run_video(request, token):
+    run = get_object_or_404(AlgorithmicsRun, token=token, is_submitted=True)
+    if not run.video:
+        return JsonResponse({'error': 'This legacy run has no recording.'}, status=404)
+    extension = 'mp4' if run.video_mime_type == 'video/mp4' else 'webm'
+    return FileResponse(
+        run.video.open('rb'),
+        content_type=run.video_mime_type or 'application/octet-stream',
+        as_attachment=request.GET.get('download') == '1',
+        filename=f'vce-{run.token}.{extension}',
+    )
 
 
 def _clean_timeline(value):

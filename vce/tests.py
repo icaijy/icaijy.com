@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.test import TestCase, override_settings
+from django.core.files.base import ContentFile
 from django.urls import reverse
 from django.utils import timezone
 
@@ -62,6 +63,25 @@ class SpeedrunTests(TestCase):
         self.assertContains(page, 'mathjax@3/es5/tex-chtml.js')
         self.assertContains(page, 'data-camera-panel')
         self.assertContains(page, 'data-sidebar="tools"')
+
+    def test_legacy_physical_run_without_video_is_preserved_and_labelled(self):
+        run = AlgorithmicsRun.objects.create(
+            session_key='legacy', game_mode='six_seven', bank_id='algorithmics_u34',
+            score=2, movement_score=3, final_score=6, is_submitted=True,
+        )
+        detail = self.client.get(reverse('vce:run_detail', args=(run.token,)))
+        self.assertContains(detail, 'Legacy run · no video was recorded')
+        self.assertEqual(self.client.get(reverse('vce:run_video', args=(run.token,))).status_code, 404)
+
+    def test_saved_vce_video_can_be_streamed(self):
+        run = AlgorithmicsRun.objects.create(
+            session_key='video', game_mode='six_seven', bank_id='algorithmics_u34',
+            final_score=1, is_submitted=True, video_mime_type='video/webm',
+        )
+        run.video.save('evidence.webm', ContentFile(b'video-evidence'), save=True)
+        response = self.client.get(reverse('vce:run_video', args=(run.token,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'video/webm')
 
     def test_play_pages_include_the_official_reference(self):
         algorithmics = self.client.get(reverse('vce:play', args=('algorithmics_u34',)))

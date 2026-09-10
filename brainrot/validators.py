@@ -62,7 +62,7 @@ def _sniff_container(upload):
     raise ValidationError('Only genuine WebM or MP4 video files are accepted.')
 
 
-def _probe_video(upload, expected_mime):
+def _probe_video(upload, expected_mime, max_seconds):
     ffprobe = shutil.which('ffprobe')
     if not ffprobe:
         raise ValidationError('Video verification is temporarily unavailable (ffprobe missing).')
@@ -109,10 +109,10 @@ def _probe_video(upload, expected_mime):
 
         packet_duration = _packet_duration(path, ffprobe)
         duration = packet_duration if packet_duration > 1 else container_duration
-        if duration <= 1 or duration > settings.HOF_MAX_VIDEO_SECONDS:
+        if duration <= 1 or duration > max_seconds:
             raise ValidationError(
                 f'Video duration was detected as {duration:.2f} seconds; it must be between '
-                f'1 and {settings.HOF_MAX_VIDEO_SECONDS:g} seconds.'
+                f'1 and {max_seconds:g} seconds.'
             )
         return duration
     except (json.JSONDecodeError, ValueError, subprocess.TimeoutExpired):
@@ -125,7 +125,7 @@ def _probe_video(upload, expected_mime):
                 pass
 
 
-def validate_hall_of_fame_video(upload):
+def validate_hall_of_fame_video(upload, max_seconds=None):
     """Validate a browser recording without transcoding it on the web server."""
     if upload.size <= 0 or upload.size > settings.HOF_MAX_UPLOAD_BYTES:
         max_mb = settings.HOF_MAX_UPLOAD_BYTES / (1024 * 1024)
@@ -140,6 +140,6 @@ def validate_hall_of_fame_video(upload):
     if supplied_type not in compatible_types[mime_type]:
         raise ValidationError('The declared MIME type does not match the video container.')
 
-    duration = _probe_video(upload, mime_type)
+    duration = _probe_video(upload, mime_type, max_seconds or settings.HOF_MAX_VIDEO_SECONDS)
     upload.seek(0)
     return ValidatedVideo(mime_type, extension, duration)
