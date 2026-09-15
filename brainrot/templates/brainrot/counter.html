@@ -46,6 +46,7 @@
         <div class="d-grid gap-2"><button class="btn btn-primary" id="enable-camera">Enable camera</button><button class="btn btn-primary" id="start-run" disabled hidden>Detector is still loading…</button><button class="btn btn-outline-secondary" id="reset-run" hidden>Try again</button></div><p class="small text-secondary mt-3 mb-0">The live score is burned into the locally recorded video.</p><p class="counter-error text-danger small mt-2 mb-0" id="counter-error" role="alert"></p>
       </section>
       <section class="counter-inline-hof" id="counter-hof-portal">
+        <span id="counter-hof-mark" hidden aria-hidden="true">{% if game_mode == 'leg_claps' %}TT{% elif game_mode == 'combine' %}×{% else %}67{% endif %}</span>
         <header><span>HALL OF FAME</span><a href="{% url 'brainrot:hall_of_fame' %}?mode={{ game_mode }}">FULL BOARD →</a></header>
         <nav aria-label="Hall of Fame mode">{% for value, label in game_modes %}{% if value != 'voice_67' %}<a href="?mode={{ value }}#counter-hof-portal" class="{% if game_mode == value %}active{% endif %}">{{ label }}</a>{% endif %}{% endfor %}</nav>
         {% if leaders %}<ol>{% for entry in leaders %}<li><a href="{% url 'brainrot:hall_of_fame_detail' entry.id %}"><span>{{ forloop.counter|stringformat:'02d' }}</span><span>{{ entry.public_name }}</span><strong>{{ entry.score }}</strong></a></li>{% endfor %}</ol>{% else %}<p>No survivors yet.<br>Be the first.</p>{% endif %}
