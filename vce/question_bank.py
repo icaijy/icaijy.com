@@ -484,6 +484,46 @@ for slug, situation, correct, wrong in search_comparisons:
         add_shuffled(f'search-choice-{slug}-{version}', f'{situation} {suffix}', correct, wrong, 'U4 AOS2 · Selecting algorithms', f'{correct} best matches the input and goal.')
 
 
+# Coverage added after a fresh audit against the accredited 2023–2027 Study
+# Design and the style of current-era VCAA examinations.  These target areas
+# that the original speed bank under-represented rather than multiplying stems.
+algorithmics_audit_items = [
+    ('logic-precedence', 'If ready is true and (paid or invited) is false, the expression ready AND (paid OR invited) is', 'false', ['true', 'undefined', 'equal to ready only'], 'U3 AOS2 · Logical operations', 'The parenthesised OR is false, so true AND false is false.'),
+    ('loop-trace', 'After executing total ← 0; for i from 1 to 4: total ← total + i, total is', '10', ['4', '6', '16'], 'U3 AOS2 · Pseudocode tracing', 'The loop adds 1 + 2 + 3 + 4.'),
+    ('nested-loop-trace', 'A statement runs once for every ordered pair (i,j), where i and j each range from 1 to n. It runs', 'n² times', ['2n times', 'n times', 'log₂ n times'], 'U4 AOS1 · Iterative analysis', 'There are n choices for each of two independent loop indices.'),
+    ('recursive-base', 'A recursive algorithm without a reachable base case will generally', 'fail to terminate', ['become greedy', 'use constant space', 'sort its input'], 'U3 AOS2 · Recursion', 'Recursive calls need a stopping case that is eventually reached.'),
+    ('modular-precondition', 'A module precondition describes', 'what must be true before the module is called', ['what is guaranteed after it returns', 'its worst-case Big-O only', 'the module name'], 'U3 AOS1 · Modularisation', 'The caller must establish the precondition.'),
+    ('modular-postcondition', 'A module postcondition describes', 'what the module guarantees after valid execution', ['what must be true before the call', 'only its parameter types', 'the programming language'], 'U3 AOS1 · Modularisation', 'The postcondition is the promised result for a valid call.'),
+    ('closure-meaning', 'The transitive closure of a directed graph records whether', 'a path exists between each ordered pair of vertices', ['each edge has minimum weight', 'the graph is planar', 'every vertex has equal rank'], 'U3 AOS2 · Transitive closure', 'Closure represents reachability, including paths with intermediate vertices.'),
+    ('floyd-update', 'In Floyd–Warshall, allowing vertex k as an intermediate can improve d[i,j] using', 'd[i,k] + d[k,j]', ['d[i,k] − d[k,j]', 'd[i,j] × k', 'the degree of k only'], 'U3 AOS2 · Floyd–Warshall', 'The candidate route travels i→k and then k→j.'),
+    ('induction-role', 'In a correctness proof by induction for input size n, the inductive hypothesis assumes correctness for', 'a smaller stated case used by the algorithm', ['all possible inputs without proof', 'only the largest input', 'the running time'], 'U3 AOS2 · Correctness', 'The step uses an already established smaller case.'),
+    ('contradiction-role', 'A proof by contradiction establishes a claim by assuming its negation and deriving', 'an impossibility', ['a faster algorithm', 'a random example', 'a larger input'], 'U3 AOS2 · Correctness', 'The contradiction rules out the negated claim.'),
+    ('quick-partition', 'After a correct quicksort partition around pivot p,', 'items on one side satisfy the chosen lower relation and items on the other the higher relation', ['the whole array is necessarily sorted', 'both sides must have equal size', 'the pivot is removed permanently'], 'U4 AOS2 · Quicksort', 'Partition places the pivot relative to the two subproblems; recursive sorting remains.'),
+    ('quick-worst', 'Repeatedly choosing an extreme element as quicksort pivot can produce recurrence', 'T(n)=T(n−1)+O(n)', ['T(n)=2T(n/2)+O(n)', 'T(n)=O(1)', 'T(n)=T(n/2)+O(1)'], 'U4 AOS2 · Quicksort', 'One partition is empty and the other loses only the pivot.'),
+    ('merge-space', 'Standard mergesort on an array usually needs additional space primarily for', 'merging temporary subarrays', ['the comparison operator', 'the base case value', 'storing only one Boolean'], 'U4 AOS2 · Mergesort', 'The merge step conventionally writes into auxiliary storage.'),
+    ('change-dp-state', 'For a one-dimensional change-making dynamic program, a useful state best[c] stores', 'the best result for amount c', ['the last coin examined only', 'every permutation as a string', 'the recursion depth only'], 'U4 AOS2 · Dynamic programming', 'Subproblem results are indexed by the target amount.'),
+    ('dp-overlap', 'Dynamic programming is especially useful when a recursive formulation has', 'overlapping subproblems and reusable optimal results', ['no subproblems', 'only undecidable inputs', 'a requirement to revisit every permutation'], 'U4 AOS2 · Dynamic programming', 'Memoisation or tabulation avoids solving the same state repeatedly.'),
+    ('backtrack-prune-partial', 'Backtracking prunes a partial candidate when it', 'cannot be extended to a valid solution', ['has already produced a valid prefix', 'uses recursion', 'contains the first input item'], 'U4 AOS2 · Backtracking', 'A provably hopeless branch need not be explored.'),
+    ('astar-admissible-bound', 'An admissible A* heuristic never', 'overestimates the remaining optimal cost', ['equals zero', 'uses graph information', 'underestimates any cost'], 'U4 AOS2 · A* search', 'This lower-bound property supports optimality under the usual conditions.'),
+    ('sa-temperature-cooling', 'In simulated annealing, lowering temperature over time generally makes acceptance of worse moves', 'less likely', ['more likely without limit', 'certain', 'unrelated to score change'], 'U4 AOS2 · Simulated annealing', 'Cooling shifts exploration toward exploitation.'),
+    ('np-verify', 'For a problem in NP, a proposed solution can be', 'verified in polynomial time', ['generated in constant time', 'proved undecidable', 'solved only by a quantum computer'], 'U4 AOS1 · Complexity classes', 'NP is defined using polynomial-time verification.'),
+    ('npc-both', 'An NP-complete problem is both', 'in NP and NP-hard', ['in P and undecidable', 'finite and greedy', 'recursive and randomised'], 'U4 AOS1 · Complexity classes', 'NP-complete problems combine membership in NP with NP-hardness.'),
+    ('reduction-direction', 'To show new problem X is NP-hard using known NP-hard problem Y, a suitable reduction maps', 'instances of Y to instances of X', ['instances of X to Y only', 'both problems to binary search', 'X to a constant answer'], 'U4 AOS1 · Problem reductions', 'A solver for X would then solve Y through the reduction.'),
+    ('tm-transition-scanned-symbol', 'A Turing-machine transition depends on its current state and', 'the symbol currently under the head', ['the wall-clock time', 'the user interface', 'the entire tape being blank'], 'U4 AOS1 · Turing machines', 'Those two inputs determine the write, move and next state.'),
+    ('halting-consequence', 'The halting problem shows there is no algorithm that correctly decides termination for', 'every program–input pair', ['any loop with a fixed bound', 'binary search on a finite array', 'a single known program run'], 'U4 AOS1 · Undecidability', 'The impossibility concerns a universal termination decider.'),
+    ('turing-test-target', 'The original imitation game primarily tests whether a machine can', 'produce conversation indistinguishable from a human participant', ['prove it is conscious', 'solve every computable problem', 'train without data'], 'U4 AOS3 · Turing Test', 'The operational criterion concerns behavioural indistinguishability in conversation.'),
+    ('chinese-room-point', 'Searle’s Chinese Room argues that correct symbol manipulation alone may lack', 'understanding or intentionality', ['syntactic rules', 'input symbols', 'observable output'], 'U4 AOS3 · Chinese Room', 'The argument distinguishes syntax from semantic understanding.'),
+    ('systems-reply', 'The systems reply to the Chinese Room claims that understanding may belong to', 'the whole system rather than the person inside', ['no component or system', 'the rule book alone necessarily', 'the external observer only'], 'U4 AOS3 · Chinese Room responses', 'It changes the level at which understanding is attributed.'),
+    ('svm-margin', 'For linearly separable training data, a support vector machine selects a boundary that maximises', 'the margin to the nearest training points', ['the number of input features', 'training-set size', 'every weight independently'], 'U4 AOS3 · Support vector machines', 'The nearest points are support vectors defining the maximum margin.'),
+    ('svm-feature', 'Adding a derived feature to an SVM can help when it makes previously non-linear classes', 'linearly separable in the expanded feature space', ['identical', 'unsupervised by definition', 'free of all outliers'], 'U4 AOS3 · Support vector machines', 'A feature mapping can permit a linear boundary in the new space.'),
+    ('mlp-forward', 'During forward propagation in a multilayer perceptron, a neuron applies an activation function to', 'a weighted sum of its inputs plus bias', ['the class label alone', 'the learning rate only', 'the number of epochs'], 'U4 AOS3 · Multilayer perceptrons', 'Weighted inputs and bias form the neuron’s pre-activation value.'),
+    ('overfit-sign', 'Very high training accuracy but much lower validation accuracy most strongly suggests', 'overfitting', ['underfitting', 'perfect generalisation', 'an undecidable model'], 'U4 AOS3 · Machine learning', 'The model has fitted training-specific patterns that do not transfer.'),
+    ('underfit-sign', 'Poor performance on both training and validation data most strongly suggests', 'underfitting', ['overfitting only', 'data leakage', 'perfect calibration'], 'U4 AOS3 · Machine learning', 'The model has not captured enough of the underlying relationship.'),
+]
+for slug, prompt, correct, wrong, topic, note in algorithmics_audit_items:
+    add_shuffled(slug, prompt, correct, wrong, topic, note)
+
+
 QUESTION_BY_ID = {question.id: question for question in QUESTIONS}
 assert len(QUESTION_BY_ID) == len(QUESTIONS), 'Question IDs must be unique.'
 
@@ -491,7 +531,7 @@ assert len(QUESTION_BY_ID) == len(QUESTIONS), 'Question IDs must be unique.'
 # live in a separate module so this carefully calibrated file stays readable.
 ALGORITHMICS_QUESTIONS = tuple(QUESTIONS)
 
-from .subject_banks import Bank, make_subject_banks  # noqa: E402
+from .subject_banks import Bank, LEGACY_QUESTION_ALIASES, make_subject_banks  # noqa: E402
 
 BANKS = {
     'algorithmics_u34': Bank(
@@ -509,3 +549,5 @@ BANKS = {
 ALL_QUESTIONS = tuple(question for bank in BANKS.values() for question in bank.questions)
 QUESTION_BY_ID = {question.id: question for question in ALL_QUESTIONS}
 assert len(QUESTION_BY_ID) == len(ALL_QUESTIONS), 'Question IDs must be globally unique.'
+assert not (QUESTION_BY_ID.keys() & LEGACY_QUESTION_ALIASES.keys())
+QUESTION_BY_ID.update(LEGACY_QUESTION_ALIASES)

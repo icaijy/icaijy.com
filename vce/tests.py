@@ -12,15 +12,39 @@ from .question_bank import ALL_QUESTIONS, BANKS, QUESTION_BY_ID, QUESTIONS, late
 class QuestionBankTests(TestCase):
     def test_bank_is_large_valid_and_original(self):
         self.assertGreaterEqual(len(QUESTIONS), 250)
-        self.assertGreaterEqual(len(ALL_QUESTIONS), 1500)
-        self.assertEqual(len(ALL_QUESTIONS), len(QUESTION_BY_ID))
+        self.assertGreaterEqual(len(ALL_QUESTIONS), 1000)
+        self.assertTrue({question.id for question in ALL_QUESTIONS} <= QUESTION_BY_ID.keys())
         self.assertEqual(len(BANKS), 13)
-        for question in ALL_QUESTIONS:
-            self.assertEqual(len(question.options), 4)
-            self.assertEqual(len(set(question.options)), 4)
-            self.assertEqual(len(question.explanations), 4)
-            self.assertIn(question.answer, question.options)
-            self.assertTrue(question.source.startswith('Written for icaijy.com'))
+        for bank in BANKS.values():
+            signatures = {(question.prompt, question.options) for question in bank.questions}
+            self.assertEqual(len(signatures), len(bank.questions))
+            for question in bank.questions:
+                self.assertEqual(len(question.options), 4)
+                self.assertEqual(len(set(question.options)), 4)
+                self.assertEqual(len(question.explanations), 4)
+                self.assertIn(question.answer, question.options)
+                self.assertTrue(question.source.startswith('Written for icaijy.com'))
+
+    def test_cosmetic_clones_are_not_offered_but_old_run_ids_still_resolve(self):
+        for bank_id, bank in BANKS.items():
+            if bank_id == 'algorithmics_u34':
+                continue
+            self.assertFalse(any(question.id.endswith(('-1', '-2', '-3')) for question in bank.questions))
+            self.assertFalse(any(question.prompt.startswith((
+                'A student is checking a worked solution.',
+                'Which response best completes this VCE-style item?',
+                'During a one-minute revision round:',
+            )) for question in bank.questions))
+        self.assertIn('chemistry_u12-00-1', QUESTION_BY_ID)
+        self.assertIn('galvanic cell', QUESTION_BY_ID['chemistry_u34-32-0'].prompt)
+        self.assertIn('lurches forward', QUESTION_BY_ID['physics_u34-24-0'].prompt)
+        self.assertIn('maximum', QUESTION_BY_ID['methods_u34_techactive-16-0'].prompt)
+
+    def test_methods_banks_exclude_general_mathematics_topics(self):
+        forbidden = {'Finance', 'Regression', 'Residuals', 'Sequences'}
+        for bank_id, bank in BANKS.items():
+            if bank_id.startswith('methods_'):
+                self.assertFalse(forbidden & {question.topic.rsplit(' · ', 1)[-1] for question in bank.questions})
 
     def test_only_mathematics_banks_are_split_by_technology(self):
         split_banks = [bank for bank in BANKS.values() if bank.technology]
@@ -52,6 +76,10 @@ class SpeedrunTests(TestCase):
         self.assertFalse(first_ids & refill_ids)
         run = AlgorithmicsRun.objects.get(token=prepared['token'])
         self.assertEqual(len(run.question_ids), 40)
+
+    def test_prepare_spreads_questions_across_topics(self):
+        prepared = self.client.post(reverse('vce:prepare'), {'bank_id': 'algorithmics_u34'}).json()
+        self.assertEqual(len({question['topic'] for question in prepared['questions']}), 20)
 
     def test_prepared_run_starts_clock_only_when_start_is_clicked(self):
         prepared = self.client.post(reverse('vce:prepare'), {'bank_id': 'physics_u34'}).json()
