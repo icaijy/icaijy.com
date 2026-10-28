@@ -1,22 +1,55 @@
 {% extends 'base.html' %}
-{% load i18n %}
-{% block title %}Henry's Website{% endblock %}
+{% load static i18n %}
+{% block title %}Henry — icaijy.com{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'homepage.css' %}">{% endblock %}
 {% block content %}
-<div class="container-xl py-5">
-  <section class="p-4 p-md-5 rounded-4 border bg-white mb-4">
-    <p class="text-secondary text-uppercase small">icaijy.com · Henry</p>
-    <h1 class="display-4 fw-bold">Code, compete, write.</h1>
-    <p class="lead text-secondary">Competitive programming, ORAC stats, and notes along the way.</p>
-    <div class="d-flex flex-wrap gap-2 mt-4">
-      <a class="btn btn-primary" href="/orac-leaderboards/">ORAC Leaderboards++</a>
-      <a class="btn btn-outline-secondary" href="{% url 'blog' %}">{% trans "Blog" %}</a>
+<main class="home-shell">
+  <section class="home-intro" aria-labelledby="home-title">
+    <div class="intro-copy">
+      <p class="home-eyebrow"><span class="intro-dot" aria-hidden="true"></span> HENRY'S PERSONAL WEBSITE</p>
+      <h1 id="home-title">A little code.<br>A lot of <em>curiosity.</em></h1>
+      <p class="intro-description">Competitive programming, things I've built,<br class="d-none d-sm-inline"> and notes from figuring it all out.</p>
+      <div class="intro-links">
+        <a class="home-button" href="/orac-leaderboards/">Explore ORAC <span aria-hidden="true">↗</span></a>
+        <a class="intro-blog" href="{% url 'blog' %}">Read the blog <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+    <a class="home-67" href="{% url 'brainrot:index' %}">
+      <span class="sidequest-label">THE SIDE QUEST <span aria-hidden="true">↗</span></span>
+      <span class="sidequest-number" aria-hidden="true">67<span>✳</span></span>
+      <span class="sidequest-title">67 Research Division</span>
+      <span class="sidequest-description">Very serious games.<br> Very questionable science.</span>
+      <span class="sidequest-link">Enter the playground <span aria-hidden="true">→</span></span>
+    </a>
+  </section>
+
+  <section class="home-projects" aria-labelledby="projects-heading">
+    <div class="home-section-heading"><h2 id="projects-heading">On the workbench</h2><span>TOOLS, STATS & WORDS</span></div>
+    <div class="projects-grid">
+      <article class="project-orac">
+        <div class="project-topline"><span class="project-kicker">01 / COMPETITIVE PROGRAMMING</span><span class="project-orbit" aria-hidden="true">↗</span></div>
+        <div class="orac-wordmark" aria-hidden="true">ORAC<span>++</span></div>
+        <h3><a href="/orac-leaderboards/">ORAC Leaderboards++<span class="stretched-hit" aria-hidden="true"></span></a></h3>
+        <p>A closer look at the climb. Current standings, changes since the last snapshot, and a history you can explore.</p>
+        <div class="project-bottom"><a class="project-open" href="/orac-leaderboards/">Open leaderboard <span aria-hidden="true">→</span></a><a class="project-history" href="{% url 'orac_history' %}">Daily history ↗</a></div>
+      </article>
+      <a class="project-small" href="/oracdata/">
+        <div class="project-topline"><span class="project-kicker">02 / UNDER THE NUMBERS</span><span class="small-project-icon" aria-hidden="true">↗</span></div>
+        <h3>ORAC Analytics</h3><p>Explore solved problems.<br>Compare users, spot the differences.</p>
+        <span class="small-project-link">Explore the data <span aria-hidden="true">→</span></span>
+      </a>
+      <a class="project-small project-blog" href="{% url 'blog' %}">
+        <div class="project-topline"><span class="project-kicker">03 / THE NOTEBOOK</span><span class="small-project-icon" aria-hidden="true">↗</span></div>
+        <h3>{% trans "Henry's Blog" %}</h3><p>Notes, write-ups, and thoughts<br>that escaped the editor.</p>
+        <span class="small-project-link">Read the latest <span aria-hidden="true">→</span></span>
+      </a>
     </div>
   </section>
-  <div class="row g-3">
-    <div class="col-md-4"><a class="card h-100 p-4 text-decoration-none" href="/orac-leaderboards/"><h2 class="h5">ORAC Leaderboards++</h2><p class="text-secondary mb-0">Live standings and daily snapshots, with public data on GitHub.</p></a></div>
-    <div class="col-md-4"><a class="card h-100 p-4 text-decoration-none" href="/oracdata/"><h2 class="h5">ORAC Analytics</h2><p class="text-secondary mb-0">Explore solved problems and compare users.</p></a></div>
-    <div class="col-md-4"><a class="card h-100 p-4 text-decoration-none" href="{% url 'blog' %}"><h2 class="h5">{% trans "Henry's Blog" %}</h2><p class="text-secondary mb-0">Notes, articles and assorted write-ups.</p></a></div>
-  </div>
-  <p class="mt-5 text-secondary small"><a href="{% url 'archive' %}">{% trans "Archive" %}</a> · Old experiments, games and VCE projects.</p>
-</div>
+
+  <a class="home-archive" href="{% url 'archive' %}">
+    <span class="archive-icon" aria-hidden="true"><i class="fa-solid fa-box-archive"></i></span>
+    <span><strong>A few things from the archive</strong><small>VCE question banks, retired projects, and earlier experiments.</small></span>
+    <span class="archive-arrow" aria-hidden="true">→</span>
+  </a>
+</main>
 {% endblock %}

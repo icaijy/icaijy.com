@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0b1220" />
+    <meta name="theme-color" content="#f6f7f2" />
     <title>{% block title %}Henry's Website{% endblock %}</title>
 
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
@@ -24,7 +24,8 @@
   </head>
 
   <body class="maincontent">
-    <nav class="navbar navbar-expand-xl navbar-dark site-navbar sticky-top" aria-label="Primary navigation">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <nav class="navbar navbar-expand-xl site-navbar sticky-top" aria-label="Primary navigation">
       <div class="container-xl">
         <a class="navbar-brand site-brand" href="{% url 'home' %}" aria-label="icaijy.com home">
           <img src="{% static 'compass.svg' %}" width="34" height="34" alt="" />
@@ -40,10 +41,10 @@
 
         <div class="collapse navbar-collapse" id="siteNavbar">
           <ul class="navbar-nav me-auto align-items-xl-center gap-xl-1">
-            <li class="nav-item"><a class="nav-link" href="{% url 'blog' %}">{% trans "Blog" %}</a></li>
-            <li class="nav-item"><a class="nav-link" href="/orac-leaderboards/">ORAC Leaderboards++</a></li>
-            <li class="nav-item"><a class="nav-link" href="/oracdata/">ORAC Analytics</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'archive' %}"><i class="fa-solid fa-box-archive me-1"></i>{% trans "Archive" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'blog' %}" {% if request.path|slice:':6' == '/blog/' %}aria-current="page"{% endif %}>{% trans "Blog" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="/orac-leaderboards/" {% if request.path|slice:':19' == '/orac-leaderboards/' %}aria-current="page"{% endif %}>ORAC Leaderboards++</a></li>
+            <li class="nav-item"><a class="nav-link" href="/oracdata/" {% if request.path|slice:':10' == '/oracdata/' %}aria-current="page"{% endif %}>ORAC Analytics</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'archive' %}" {% if request.path|slice:':9' == '/archive/' %}aria-current="page"{% endif %}><i class="fa-solid fa-box-archive me-1"></i>{% trans "Archive" %}</a></li>
           </ul>
 
           <ul class="navbar-nav ms-auto align-items-xl-center gap-xl-1">
@@ -79,7 +80,7 @@
       </div>
     </nav>
 
-    <div class="content">{% block content %}{% endblock %}</div>
+    <div class="content" id="main-content" tabindex="-1">{% block content %}{% endblock %}</div>
 
     {% if request.resolver_match.namespace == 'brainrot' and request.resolver_match.url_name != 'daily' %}
       <aside class="daily-mini-widget" id="daily-mini-widget" data-endpoint="{% url 'brainrot:daily_preview' %}">
@@ -94,7 +95,7 @@
       <div class="container-xl d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
         <span>&copy; {% now "Y" %} Henry · icaijy.com</span>
         <span class="site-footer-links">
-          <a href="{% url 'archive' %}">{% trans "Archive" %}</a>
+          <a href="{% url 'archive' %}" {% if request.path|slice:':9' == '/archive/' %}aria-current="page"{% endif %}>{% trans "Archive" %}</a>
           <a href="{% url 'blog' %}">{% trans "Blog" %}</a>
           <a href="https://github.com/icaijy" rel="me">GitHub</a>
         </span>
