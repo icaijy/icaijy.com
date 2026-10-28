@@ -1,13 +1,20 @@
-from django.test import TestCase
+from django.test import SimpleTestCase, override_settings
 
 
-class HomepageLayoutTests(TestCase):
-    def test_hall_of_fame_is_featured_above_oi_archive(self):
+@override_settings(STORAGES={
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+})
+class HomepageLayoutTests(SimpleTestCase):
+    def test_home_prioritises_orac_and_groups_old_projects(self):
         response = self.client.get('/')
-        self.assertEqual(response.status_code, 200)
-        content = response.content.decode()
-        self.assertIn('/67/hall-of-fame/', content)
-        self.assertIn('featured-hof', content)
-        self.assertIn('OI / competitive programming archive', content)
-        self.assertLess(content.index('featured-hof'), content.index('OI / competitive programming archive'))
-        self.assertLess(content.index('OI / competitive programming archive'), content.index('ORAC Leaderboards++'))
+        self.assertContains(response, 'ORAC Leaderboards++')
+        self.assertContains(response, '/archive/')
+        self.assertNotContains(response, '/67/')
+        self.assertNotContains(response, '/vce/')
+        self.assertNotContains(response, '/67vce/')
+
+    def test_archive_keeps_existing_project_links(self):
+        response = self.client.get('/archive/')
+        for path in ('/67/', '/67/hall-of-fame/', '/vce/', '/67vce/'):
+            self.assertContains(response, path)

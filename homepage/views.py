@@ -51,3 +51,7 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+
+def archive(request):
+    return render(request, 'homepage/archive.html')
