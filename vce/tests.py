@@ -93,7 +93,7 @@ class SpeedrunTests(TestCase):
         self.assertContains(page, 'Mathematical Methods')
         self.assertContains(page, 'Tech-free')
         self.assertContains(self.client.get(reverse('vce_chaos:index')), '67 × VCE')
-        self.assertContains(self.client.get('/'), '/vce/')
+        self.assertContains(self.client.get('/archive/'), '/vce/')
         started = self.client.post(reverse('vce:start'), {'bank_id': 'chemistry_u12'}).json()
         self.assertEqual(started['bank_id'], 'chemistry_u12')
         self.assertNotIn('answer', started['question'])

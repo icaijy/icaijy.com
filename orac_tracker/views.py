@@ -98,3 +98,31 @@ def index(request):
 
 
 
+
+
+def history(request):
+    from .history import available_dates, load_snapshot, comparison_rows, GITHUB_BASE
+    dates = available_dates()
+    selected = request.GET.get('date') or (dates[0] if dates else None)
+    context = {'dates': dates, 'selected': selected, 'github_url': GITHUB_BASE}
+    if selected and selected not in dates:
+        context['error'] = 'No snapshot is available for that date.'
+        return render(request, 'leaderboard/history.html', context, status=404)
+    if selected:
+        snapshot = load_snapshot(selected)
+        if snapshot is None:
+            context['error'] = 'This snapshot could not be loaded. Please try again later or browse GitHub.'
+        else:
+            position = dates.index(selected)
+            previous_date = dates[position + 1] if position + 1 < len(dates) else None
+            previous = load_snapshot(previous_date) if previous_date else None
+            previous_data = previous['data'] if previous else {'overall': {}, 'recent': {}}
+            boards = [('Overall', snapshot['data']['overall'], previous_data['overall'])]
+            for period in ('week', 'month', 'year'):
+                boards.append((period.title(), snapshot['data']['recent'][period], previous_data['recent'].get(period, {})))
+            context.update({
+                'snapshot': snapshot,
+                'previous_date': previous_date if previous else None,
+                'boards': [{'title': title, 'rows': comparison_rows(current, old)} for title, current, old in boards],
+            })
+    return render(request, 'leaderboard/history.html', context)

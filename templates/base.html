@@ -34,35 +34,16 @@
           </span>
         </a>
 
-        <a class="site-67-shortcut d-xl-none" href="{% url 'brainrot:counter' %}?mode=six_seven" aria-label="Play 67 Counter"><span>67</span></a>
-
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#siteNavbar" aria-controls="siteNavbar" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="siteNavbar">
           <ul class="navbar-nav me-auto align-items-xl-center gap-xl-1">
-            <li class="nav-item d-none d-xl-block">
-              <a class="site-67-shortcut" href="{% url 'brainrot:counter' %}?mode=six_seven"><span>67</span><small>{% trans "Play" %}</small></a>
-            </li>
-            <li class="nav-item"><a class="nav-link nav-link-featured nav-link-vce" href="{% url 'vce:index' %}"><i class="fa-solid fa-stopwatch me-1"></i> VCE Speedrun</a></li>
-            <li class="nav-item"><a class="nav-link nav-link-featured nav-link-chaos" href="{% url 'vce_chaos:index' %}"><i class="fa-solid fa-person-running me-1"></i> 67 × VCE</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:hall_of_fame' %}"><i class="fa-solid fa-ranking-star me-1"></i> HOF</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:daily' %}"><i class="fa-solid fa-calendar-day me-1"></i> Daily</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:latest_comments' %}"><i class="fa-regular fa-comments me-1"></i> Comments</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:shop' %}"><i class="fa-solid fa-bag-shopping me-1"></i> Shop</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:wealth' %}"><i class="fa-solid fa-sack-dollar me-1"></i> Rich</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'brainrot:index' %}"><i class="fa-solid fa-gamepad me-1"></i> {% trans "Games" %}</a></li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="projectsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-solid fa-folder-open me-1"></i> {% trans "Projects" %}</a>
-              <ul class="dropdown-menu site-dropdown" aria-labelledby="projectsDropdown">
-                <li><a class="dropdown-item" href="{% url 'blog' %}"><i class="fa-solid fa-blog me-2"></i>{% trans "Blog" %}</a></li>
-                <li><a class="dropdown-item" href="/orac-leaderboards"><i class="fa-solid fa-ranking-star me-2"></i>ORAC Leaderboards</a></li>
-                <li><a class="dropdown-item" href="/oracdata"><i class="fa-solid fa-chart-line me-2"></i>ORAC Analytics</a></li>
-                <li><hr class="dropdown-divider" /></li>
-                <li><a class="dropdown-item" href="/oj"><i class="fa-solid fa-box-archive me-2"></i>{% trans "OJ" %} <span class="text-secondary">(retired)</span></a></li>
-              </ul>
-            </li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'blog' %}">{% trans "Blog" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="/orac-leaderboards/">ORAC Leaderboards++</a></li>
+            <li class="nav-item"><a class="nav-link" href="/oracdata/">ORAC Analytics</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'archive' %}"><i class="fa-solid fa-box-archive me-1"></i>{% trans "Archive" %}</a></li>
           </ul>
 
           <ul class="navbar-nav ms-auto align-items-xl-center gap-xl-1">
@@ -86,9 +67,6 @@
               </a>
               <ul class="dropdown-menu dropdown-menu-end site-dropdown" aria-labelledby="userDropdown">
                 {% if request.user.is_authenticated %}
-                  <li><a class="dropdown-item" href="{% url 'brainrot:inventory' %}"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>My Cosmetics</a></li>
-                  <li><a class="dropdown-item" href="{% url 'brainrot:my_hall_of_fame' %}"><i class="fa-solid fa-medal me-2"></i>{% translate "My 67 Hall of Fame" %}</a></li>
-                  <li><hr class="dropdown-divider" /></li>
                   <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket me-2"></i>{% trans "Logout" %}</a></li>
                 {% else %}
                   <li><a class="dropdown-item" href="{% url 'login' %}"><i class="fa-solid fa-right-to-bracket me-2"></i>{% trans "Login" %}</a></li>
@@ -116,8 +94,7 @@
       <div class="container-xl d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
         <span>&copy; {% now "Y" %} Henry · icaijy.com</span>
         <span class="site-footer-links">
-          <a href="{% url 'brainrot:counter' %}?mode=six_seven">67</a>
-          <a href="{% url 'brainrot:hall_of_fame' %}">HOF</a>
+          <a href="{% url 'archive' %}">{% trans "Archive" %}</a>
           <a href="{% url 'blog' %}">{% trans "Blog" %}</a>
           <a href="https://github.com/icaijy" rel="me">GitHub</a>
         </span>

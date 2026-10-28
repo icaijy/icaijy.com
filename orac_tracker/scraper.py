@@ -7,10 +7,6 @@ import json
 import datetime
 import requests
 from bs4 import BeautifulSoup
-import urllib3
-
-# 禁止 InsecureRequestWarning 输出
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 AUTO_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'auto_data.json')
 MANUAL_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'manual_data.json')
@@ -20,10 +16,14 @@ def fetch_leaderboard():
     """Fetch and parse the ORAC Leaderboards page."""
     url = 'https://orac2.info/hub/leaderboards/'
     headers = {'User-Agent': 'Mozilla/5.0'}
-    resp = requests.get(url, headers=headers, verify=False)
+    resp = requests.get(url, headers=headers, timeout=(5, 25))
     if resp.status_code != 200:
         raise RuntimeError(f'Failed to fetch page (HTTP {resp.status_code})')
-    soup = BeautifulSoup(resp.text, 'html.parser')
+    return parse_leaderboard(resp.text)
+
+
+def parse_leaderboard(html):
+    soup = BeautifulSoup(html, 'html.parser')
 
     result = {}
 
@@ -67,7 +67,25 @@ def fetch_leaderboard():
         rec[key] = section
 
     result['recent'] = rec
+    validate_payload(result)
     return result
+
+
+def validate_payload(payload):
+    """Reject error pages / partial parses before they can enter the archive."""
+    if not isinstance(payload, dict) or not isinstance(payload.get('recent'), dict):
+        raise ValueError('Invalid leaderboard payload')
+    boards = [payload.get('overall')]
+    for period in ('week', 'month', 'year'):
+        if period not in payload['recent']:
+            raise ValueError(f'Missing {period} leaderboard')
+        boards.append(payload['recent'][period])
+    for index, board in enumerate(boards):
+        if not isinstance(board, dict) or (index == 0 and not board):
+            raise ValueError('Missing overall leaderboard or invalid board')
+        for username, count in board.items():
+            if not isinstance(username, str) or not username or type(count) is not int or count < 0:
+                raise ValueError('Invalid leaderboard entry')
 
 
 def save_auto(payload):
@@ -110,4 +128,4 @@ def main(mode):
 
 
 if __name__ == '__main__':
-    main('auto')
+    sys.exit(0 if main('auto') else 1)

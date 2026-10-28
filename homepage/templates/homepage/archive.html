@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}Archive - Henry's Website{% endblock %}
+{% block content %}
+<div class="container-xl py-5">
+  <p class="text-secondary small">PAST PROJECTS</p>
+  <h1>{% trans "Archive" %}</h1>
+  <p class="text-secondary mb-4">67, VCE and other old experiments live here now. Existing links and records are kept.</p>
+  <div class="row g-4">
+    <section class="col-md-6"><div class="card p-4 h-100">
+      <h2 class="h4">67 Research Division</h2>
+      <p class="text-secondary">Camera counters, typing games, videos and the economy experiment.</p>
+      <ul class="list-unstyled mb-0 d-grid gap-2">
+        <li><a href="{% url 'brainrot:index' %}">All 67 games</a></li>
+        <li><a href="{% url 'brainrot:hall_of_fame' %}">Hall of Fame</a> · <a href="{% url 'brainrot:daily' %}">Daily board</a> · <a href="{% url 'brainrot:latest_comments' %}">Comments</a></li>
+        <li><a href="{% url 'brainrot:shop' %}">Shop</a> · <a href="{% url 'brainrot:wealth' %}">Wealth leaderboard</a></li>
+        {% if request.user.is_authenticated %}<li><a href="{% url 'brainrot:inventory' %}">My cosmetics</a> · <a href="{% url 'brainrot:my_hall_of_fame' %}">My recordings</a></li>{% endif %}
+      </ul>
+    </div></section>
+    <section class="col-md-6"><div class="card p-4 h-100">
+      <h2 class="h4">VCE</h2>
+      <p class="text-secondary">Timed subject question banks and the 67 crossover.</p>
+      <ul class="list-unstyled mb-0 d-grid gap-2">
+        <li><a href="{% url 'vce:index' %}">VCE Speedrun</a></li>
+        <li><a href="{% url 'vce_chaos:index' %}">67 × VCE</a></li>
+      </ul>
+    </div></section>
+  </div>
+  <p class="mt-4"><a href="/oj/">Retired OJ</a></p>
+</div>
+{% endblock %}

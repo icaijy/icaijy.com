@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Daily history - ORAC Leaderboards++{% endblock %}
+{% block content %}
+<div class="container-xl py-5">
+  <p><a href="/orac-leaderboards/">← Live leaderboard</a></p>
+  <h1>ORAC daily history</h1>
+  <p class="text-secondary">Daily snapshots of ORAC's public overall, week, month and year leaderboards. Dates use Australia/Melbourne time.</p>
+  <p><a href="{{ github_url }}">Browse / download the open JSON data on GitHub</a></p>
+  {% if dates %}
+    <form class="d-flex flex-wrap gap-2 align-items-center my-4" method="get">
+      <label for="snapshot-date">Snapshot date</label>
+      <select class="form-select w-auto" id="snapshot-date" name="date">
+        {% for date in dates %}<option value="{{ date }}" {% if date == selected %}selected{% endif %}>{{ date }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-primary" type="submit">View snapshot</button>
+    </form>
+  {% else %}
+    <div class="alert alert-info">No snapshots are available here yet. Check GitHub for the collector's latest status. Recording starts when the collector is enabled; earlier days are not reconstructed.</div>
+  {% endif %}
+  {% if error %}<div class="alert alert-warning" role="alert">{{ error }}</div>{% endif %}
+  {% if snapshot %}
+    <p>Captured at <time>{{ snapshot.captured_at }}</time> (UTC). <a href="https://github.com/icaijy/icaijy.com/blob/main/data/orac/{{ selected }}.json">Download this snapshot</a></p>
+    <p class="small text-secondary">{% if previous_date %}Changes compare with the previous available snapshot, {{ previous_date }}.{% else %}No previous snapshot is available for comparison.{% endif %} “—” means the user was absent from the earlier board. Only published leaderboard entries are recorded. Recent-board changes are rolling-window differences, not newly solved problem counts. Missing days are gaps, not zero scores.</p>
+    {% for board in boards %}
+      <section class="mb-4">
+        <h2 class="h4">{{ board.title }}</h2>
+        <div class="table-responsive"><table class="table table-striped">
+          <thead><tr><th scope="col">Position</th><th scope="col">User</th><th scope="col">Solved</th><th scope="col">Change</th></tr></thead>
+          <tbody>{% for row in board.rows %}<tr><td>{{ forloop.counter }}</td><td>{{ row.user }}</td><td>{{ row.count }}</td><td>{% if row.diff == None %}—{% elif row.diff > 0 %}<span class="text-success">+{{ row.diff }}</span>{% else %}{{ row.diff }}{% endif %}</td></tr>{% empty %}<tr><td colspan="4">No published entries in this period.</td></tr>{% endfor %}</tbody>
+        </table></div>
+      </section>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}
