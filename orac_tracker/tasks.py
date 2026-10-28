@@ -1,16 +1,10 @@
-import pytz
-import datetime
-import sys
-from . import scraper
+"""Legacy scheduler compatibility; daily collection now runs in GitHub Actions."""
+import logging
+
 
 def autoupdate():
-    now = datetime.datetime.now(pytz.timezone('Australia/Melbourne')).isoformat()
-    print(f"[autoupdate] Running at {now}")
-    sys.stdout.flush()
-
-    try:
-        scraper.main("auto")
-        print("[autoupdate] Success")
-    except Exception as e:
-        print(f"[autoupdate] Failed: {e}", file=sys.stderr)
-    sys.stdout.flush()
+    logging.getLogger(__name__).warning(
+        'Legacy ORAC autoupdate is disabled. Remove its cron/scheduler entry; '
+        'daily snapshots are collected by GitHub Actions.'
+    )
+    return False

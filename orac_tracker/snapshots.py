@@ -3,6 +3,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import tempfile
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -15,9 +16,16 @@ SOURCE = 'https://orac2.info/hub/leaderboards/'
 
 def write_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix('.json.tmp')
-    temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    os.replace(temporary, path)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=path.parent,
+                                         prefix=path.name + '.', suffix='.tmp', delete=False) as stream:
+            temporary = Path(stream.name)
+            stream.write(json.dumps(value, ensure_ascii=False, indent=2) + '\n')
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 def record_snapshot(root=ROOT, *, now=None, fetch=None):
