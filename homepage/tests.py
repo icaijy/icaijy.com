@@ -10,7 +10,7 @@ class HomepageLayoutTests(SimpleTestCase):
         response = self.client.get('/')
         self.assertContains(response, 'ORAC Leaderboards++')
         self.assertContains(response, '/archive/')
-        self.assertNotContains(response, '/67/')
+        self.assertContains(response, 'href="/67/"')
         self.assertNotContains(response, '/vce/')
         self.assertNotContains(response, '/67vce/')
 

@@ -1,13 +1,15 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Daily history - ORAC Leaderboards++{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'orac.css' %}">{% endblock %}
 {% block content %}
-<div class="container-xl py-5">
+<div class="container-xl orac-page orac-history">
   <p><a href="/orac-leaderboards/">← Live leaderboard</a></p>
-  <h1>ORAC daily history</h1>
+  <p class="page-eyebrow">ORAC / THE ARCHIVE</p><h1>Daily history</h1>
   <p class="text-secondary">Daily snapshots of ORAC's public overall, week, month and year leaderboards. Dates use Australia/Melbourne time.</p>
-  <p><a href="{{ github_url }}">Browse / download the open JSON data on GitHub</a></p>
+  <p><a class="btn btn-outline-secondary" href="{{ github_url }}">Open data on GitHub ↗</a></p>
   {% if dates %}
-    <form class="d-flex flex-wrap gap-2 align-items-center my-4" method="get">
+    <form class="history-picker d-flex flex-wrap gap-3 align-items-center my-4" method="get">
       <label for="snapshot-date">Snapshot date</label>
       <select class="form-select w-auto" id="snapshot-date" name="date">
         {% for date in dates %}<option value="{{ date }}" {% if date == selected %}selected{% endif %}>{{ date }}</option>{% endfor %}
@@ -19,10 +21,10 @@
   {% endif %}
   {% if error %}<div class="alert alert-warning" role="alert">{{ error }}</div>{% endif %}
   {% if snapshot %}
-    <p>Captured at <time>{{ snapshot.captured_at }}</time> (UTC). <a href="https://github.com/icaijy/icaijy.com/blob/main/data/orac/{{ selected }}.json">Download this snapshot</a></p>
-    <p class="small text-secondary">{% if previous_date %}Changes compare with the previous available snapshot, {{ previous_date }}.{% else %}No previous snapshot is available for comparison.{% endif %} “—” means the user was absent from the earlier board. Only published leaderboard entries are recorded. Recent-board changes are rolling-window differences, not newly solved problem counts. Missing days are gaps, not zero scores.</p>
+    <p class="history-capture">Captured <time datetime="{{ snapshot.captured_at }}">{{ snapshot.captured_at|slice:":10" }} · {{ snapshot.captured_at|slice:"11:19" }} UTC</time>. <a href="https://github.com/icaijy/icaijy.com/blob/main/data/orac/{{ selected }}.json">Download this snapshot</a></p>
+    <details class="history-notes"><summary>How to read these snapshots</summary><p class="small text-secondary">{% if previous_date %}Changes compare with the previous available snapshot, {{ previous_date }}.{% else %}No previous snapshot is available for comparison.{% endif %} “—” means the user was absent from the earlier board. Only published leaderboard entries are recorded. Recent-board changes are rolling-window differences, not newly solved problem counts. Missing days are gaps, not zero scores.</p></details>
     {% for board in boards %}
-      <section class="mb-4">
+      <section class="history-board mb-4">
         <h2 class="h4">{{ board.title }}</h2>
         <div class="table-responsive"><table class="table table-striped">
           <thead><tr><th scope="col">Position</th><th scope="col">User</th><th scope="col">Solved</th><th scope="col">Change</th></tr></thead>
