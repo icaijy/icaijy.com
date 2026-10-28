@@ -29,18 +29,24 @@ python manage.py check --deploy
 
 - `/archive/` groups the older 67 / VCE projects. Existing routes, database
   records and recordings are retained; no database migration is required.
-- The existing **server midnight scrape remains unchanged**: `scraper.main('auto')`
-  / `tasks.autoupdate()` still write `orac_tracker/auto_data.json`, used by the
-  live page for its original daily baseline. Do not remove the server cron.
-- Independently, `.github/workflows/orac-daily.yml` collects the public ORAC
-  boards once per day and commits `data/orac/YYYY-MM-DD.json` plus `index.json`.
-  It uses the public repository's standard Ubuntu runner, no paid larger runner,
-  no Actions artifacts/cache, and no personal access token.
-- `/orac-leaderboards/history/` reads that public archive from GitHub with a
-  five-minute cache, falling back to the deployed checkout if GitHub is down.
-  It does not require a daily website deployment to show newly recorded days.
-- See [data format and limitations](data/orac/README.md). The archive and live
-  baseline have different capture times and are deliberately independent.
+- `.github/workflows/orac-daily.yml` is the only daily collector. It commits
+  validated public ORAC snapshots under `data/orac/`, using the public repository's
+  standard Ubuntu runner, without paid runners, Actions artifacts/cache or a PAT.
+- The live board refreshes current standings on visits and compares them with
+  the latest GitHub snapshot. It never reads `auto_data.json` and requires no
+  server cron. Missing baseline users have unknown changes, not a zero baseline.
+- Snapshots are refreshed from GitHub with a five-minute cache. A validated copy
+  persists in ignored `orac_tracker/github_baseline.json`; an outage falls back
+  to that copy or the deployed checkout. The page labels stale baselines over
+  36 hours old, their capture time, and live-fetch failures.
+- `/orac-leaderboards/history/` provides dated snapshots and GitHub downloads.
+  No daily website deployment is required. See [data format](data/orac/README.md).
+- **Before disabling the old cron**, deploy/reload the new code and run
+  `python manage.py verify_orac_actions`. It requires fresh data directly from
+  GitHub and checks both the deployed status endpoint and actual leaderboard
+  page against the latest snapshot's SHA-256 fingerprint. Failure exits nonzero;
+  it cannot silently pass using only the local checkout.
+- Follow the [verification and cron removal guide](docs/orac-actions-migration.md).
 - For a manual collection use **Actions → ORAC daily snapshots → Run workflow**.
   If repository rules disallow the workflow's commit, the job fails visibly;
   a maintainer must allow the bot to write `data/orac/`. Account-wide Actions

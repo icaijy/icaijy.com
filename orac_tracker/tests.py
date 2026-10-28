@@ -88,15 +88,129 @@ class HistoryTests(SimpleTestCase):
         self.assertContains(self.client.get('/orac-leaderboards/history/'), 'No snapshots')
         self.assertIsNone(load_snapshot('2026-10-28'))
 
-    @patch('orac_tracker.history.requests.get')
-    def test_live_page_keeps_server_daily_baseline_and_history_link(self, get):
+    @patch('orac_tracker.views.get_baseline')
+    def test_live_page_uses_actions_baseline_without_auto_data(self, baseline):
         from . import views
+        from .baseline import describe
+        snapshot = full_snapshot(count=9)
+        baseline.return_value = describe(snapshot, 'github')
         with tempfile.TemporaryDirectory() as directory:
-            manual, auto = Path(directory, 'manual.json'), Path(directory, 'auto.json')
+            manual = Path(directory, 'manual.json')
             manual.write_text(json.dumps({'last_updated': 'now', 'data': PAYLOAD}))
-            auto.write_text(json.dumps({'overall': {'alice': 9}, 'recent': PAYLOAD['recent']}))
-            with patch.object(views, 'manual_update'), patch.object(views, 'MANUAL_DATA', manual), patch.object(views, 'AUTO_DATA', auto):
+            with patch.object(views, 'manual_update', return_value=True), patch.object(views, 'MANUAL_DATA', manual):
                 response = self.client.get('/orac-leaderboards/')
             self.assertContains(response, '/orac-leaderboards/history/')
+            self.assertContains(response, 'data-orac-provider="github-actions"')
             self.assertEqual(response.context['people']['overall']['alice']['diff'], 1)
-        get.assert_not_called()
+            self.assertIsNone(response.context['people']['recent']['week']['alice']['diff'])
+
+    @patch('orac_tracker.views.get_baseline')
+    def test_missing_baseline_never_invents_zero(self, baseline):
+        from . import views
+        baseline.return_value = {'snapshot': None, 'origin': 'unavailable', 'stale': True, 'fingerprint': ''}
+        with tempfile.TemporaryDirectory() as directory:
+            manual = Path(directory, 'manual.json')
+            manual.write_text(json.dumps({'last_updated': 'now', 'data': PAYLOAD}))
+            with patch.object(views, 'manual_update', return_value=True), patch.object(views, 'MANUAL_DATA', manual):
+                response = self.client.get('/orac-leaderboards/')
+            self.assertContains(response, 'Changes are unknown')
+            self.assertIsNone(response.context['people']['overall']['alice']['diff'])
+
+    @patch('orac_tracker.views.get_baseline')
+    def test_live_failure_displays_snapshot_and_status_uses_same_fingerprint(self, baseline):
+        from . import views
+        from .baseline import describe
+        baseline.return_value = describe(full_snapshot(), 'github')
+        with patch.object(views, 'manual_update', return_value=False), patch.object(views, 'MANUAL_DATA', '/nonexistent/orac.json'):
+            response = self.client.get('/orac-leaderboards/')
+        self.assertContains(response, 'Live refresh is unavailable')
+        self.assertEqual(response.context['people']['overall']['alice']['manual'], 9)
+        status = self.client.get('/orac-leaderboards/actions-status/').json()
+        self.assertFalse(status['legacy_cron_required'])
+        self.assertEqual(status['fingerprint'], baseline.return_value['fingerprint'])
+
+
+def full_snapshot(count=9, now=None):
+    from zoneinfo import ZoneInfo
+    now = now or dt.datetime.now(dt.timezone.utc)
+    return {'schema_version': 1, 'date': now.astimezone(ZoneInfo('Australia/Melbourne')).date().isoformat(),
+            'captured_at': now.isoformat(), 'timezone': 'Australia/Melbourne',
+            'source': 'https://orac2.info/hub/leaderboards/',
+            'data': {'overall': {'alice': count}, 'recent': {'week': {}, 'month': {}, 'year': {}}}}
+
+
+class BaselineTests(SimpleTestCase):
+    def setUp(self):
+        cache.clear()
+
+    @patch('orac_tracker.baseline.fetch_github_snapshot')
+    def test_github_baseline_is_cached_and_survives_restart(self, fetch):
+        from .baseline import get_baseline
+        snapshot = full_snapshot()
+        fetch.return_value = snapshot
+        with tempfile.TemporaryDirectory() as directory:
+            saved = Path(directory, 'github.json')
+            with self.settings(ORAC_BASELINE_CACHE_FILE=saved):
+                self.assertEqual(get_baseline()['snapshot'], snapshot)
+                self.assertEqual(get_baseline()['snapshot'], snapshot)
+                fetch.assert_called_once()
+                cache.clear()
+                fetch.side_effect = requests.Timeout
+                with patch('orac_tracker.baseline.ROOT', Path(directory, 'missing')):
+                    result = get_baseline()
+                self.assertEqual(result['snapshot'], snapshot)
+                self.assertEqual(result['origin'], 'saved-cache')
+
+    @patch('orac_tracker.baseline.fetch_github_snapshot', side_effect=requests.Timeout)
+    def test_stale_checkout_is_labelled_and_legacy_auto_file_is_ignored(self, fetch):
+        from .baseline import get_baseline
+        with tempfile.TemporaryDirectory() as directory:
+            old = full_snapshot(now=dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=3))
+            Path(directory, old['date'] + '.json').write_text(json.dumps(old))
+            with self.settings(ORAC_BASELINE_CACHE_FILE=Path(directory, 'missing.json')), patch('orac_tracker.baseline.ROOT', Path(directory)):
+                result = get_baseline()
+            self.assertTrue(result['stale'])
+            self.assertEqual(result['origin'], 'checkout')
+
+    def test_invalid_or_naive_timestamp_is_rejected(self):
+        from .baseline import validate_snapshot
+        value = full_snapshot()
+        value['captured_at'] = '2026-10-28T12:00:00'
+        with self.assertRaises(ValueError):
+            validate_snapshot(value)
+
+    @patch('orac_tracker.baseline.requests.get')
+    def test_strict_fetch_checks_index_and_snapshot(self, get):
+        from .baseline import fetch_github_snapshot
+        snapshot = full_snapshot()
+        get.side_effect = [Mock(json=lambda: {'dates': [snapshot['date']]}), Mock(json=lambda: snapshot)]
+        self.assertEqual(fetch_github_snapshot(), snapshot)
+        self.assertEqual(get.call_count, 2)
+
+
+class MigrationVerificationTests(SimpleTestCase):
+    def run_check(self, snapshot, responses):
+        from io import StringIO
+        from django.core.management import call_command
+        out = StringIO()
+        with patch('orac_tracker.management.commands.verify_orac_actions.fetch_github_snapshot', return_value=snapshot), patch('orac_tracker.management.commands.verify_orac_actions.requests.get', side_effect=responses):
+            call_command('verify_orac_actions', stdout=out)
+        return out.getvalue()
+
+    def test_checks_deployed_page_before_green_light(self):
+        from .baseline import fingerprint
+        snapshot = full_snapshot()
+        key = fingerprint(snapshot)
+        status = Mock(json=lambda: {'provider': 'github-actions', 'legacy_cron_required': False, 'ready': True, 'fingerprint': key})
+        page = Mock(text=f'<div id="orac-leaderboard" data-orac-provider="github-actions" data-baseline-sha256="{key}" data-legacy-cron-required="false"></div>')
+        self.assertIn('READY TO DISABLE', self.run_check(snapshot, [status, page]))
+
+    def test_stale_data_old_deployment_and_wrong_page_never_pass(self):
+        from django.core.management.base import CommandError
+        from .baseline import fingerprint
+        snapshot = full_snapshot()
+        ready = Mock(json=lambda: {'provider': 'github-actions', 'legacy_cron_required': False, 'ready': True, 'fingerprint': fingerprint(snapshot)})
+        old = full_snapshot(now=dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=3))
+        for value, responses in ((old, []), (snapshot, [Mock(json=lambda: {})]), (snapshot, [ready, Mock(text='<html>old deployment</html>')])):
+            with self.subTest(value=value['date'], responses=len(responses)), self.assertRaises(CommandError):
+                self.run_check(value, responses)

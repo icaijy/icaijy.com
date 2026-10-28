@@ -1,103 +1,73 @@
-import os
 import json
-import sys
-import subprocess
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.conf import settings
-from django.shortcuts import render
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.http import HttpResponse
-import platform
-from django.utils.translation import gettext as _
+import os
 
+from django.conf import settings
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+
+from .baseline import get_baseline
+from .scraper import validate_payload
 
 MANUAL_DATA = os.path.join(settings.BASE_DIR, 'orac_tracker', 'manual_data.json')
-AUTO_DATA = os.path.join(settings.BASE_DIR, 'orac_tracker', 'auto_data.json')
-def manual_update():
+
+
+def manual_update(request=None):
+    # The current board still refreshes on visits; only scheduled collection moved.
     from . import scraper
-    try:
-        scraper.main("manual")
-        return
-    except subprocess.CalledProcessError:
-        return
-def index(request):
-    manual_update()
-    try:
-        with open(MANUAL_DATA, 'r') as f:
-            manual_data = json.load(f)
-    except:
-        manual_data = {
-            "last_updated": None,
-            "data": {
-                "overall": {},
-                "recent": {
-                    "week": {},
-                    "month": {},
-                    "year": {}
-                }
-            }
-        }
+    updated = scraper.main('manual')
+    return redirect('index') if request is not None else updated
 
-    try:
-        with open(AUTO_DATA, 'r') as f:
-            auto_data = json.load(f)
-    except:
-        auto_data = {
-            "overall": {},
-            "recent": {
-                "week": {},
-                "month": {},
-                "year": {}
-            }
-        }
 
-    # 合并 overall 数据并计算差值
-    overall_data = {}
-    for user, manual_solved in manual_data['data']['overall'].items():
-        auto_solved = auto_data['overall'].get(user, 0)  # 如果自动数据中没有该用户，默认 0
-        diff = manual_solved - auto_solved
-        overall_data[_(user)] = {
-            'manual': manual_solved,
-            'auto': auto_solved,
-            'diff': diff
-        }
-
-    # 合并 recent 数据并计算差值
-    def merge_recent_data(manual_recent, auto_recent):
-        merged_recent = {}
-        for period in ['week', 'month', 'year']:
-            manual_period = manual_recent.get(period, {})
-            auto_period = auto_recent.get(period, {})
-            merged_recent[period] = {}
-            for user, manual_solved in manual_period.items():
-                auto_solved = auto_period.get(user, 0)
-                diff = manual_solved - auto_solved
-                merged_recent[period][_(user)] = {
-                    'manual': manual_solved,
-                    'auto': auto_solved,
-                    'diff': diff
-                }
-        return merged_recent
-
-    # 合并 manual 和 auto 数据中的 recent 部分
-    merged_recent = merge_recent_data(manual_data['data']['recent'], auto_data['recent'])
-
-    # 最终合并 people 数据，包含 overall 和 recent
-    people = {
-        'overall': overall_data,
-        'recent': merged_recent
+def merge_board(current, baseline):
+    return {
+        user: {'manual': count, 'auto': baseline.get(user),
+               'diff': count - baseline[user] if user in baseline else None}
+        for user, count in current.items()
     }
 
+
+def index(request):
+    updated = manual_update()
+    current = None
+    try:
+        with open(MANUAL_DATA, encoding='utf-8') as stream:
+            current = json.load(stream)
+        validate_payload(current['data'])
+    except (OSError, ValueError, KeyError, TypeError):
+        current = None
+    baseline = get_baseline()
+    snapshot = baseline['snapshot']
+    live_unavailable = not updated or current is None
+    # A live fetch outage can display the dated snapshot, with an explicit label.
+    if current is None:
+        current = {'last_updated': snapshot['captured_at'] if snapshot else None,
+                   'data': snapshot['data'] if snapshot else {'overall': {}, 'recent': {}}}
+    previous = snapshot['data'] if snapshot else {'overall': {}, 'recent': {}}
+    people = {
+        'overall': merge_board(current['data']['overall'], previous['overall']),
+        'recent': {period: merge_board(current['data']['recent'].get(period, {}),
+                                      previous['recent'].get(period, {}))
+                   for period in ('week', 'month', 'year')},
+    }
     return render(request, 'leaderboard/index.html', {
-        'people': people,  # 将合并后的数据传递给模板
-        'last_updated' : manual_data['last_updated']
+        'people': people, 'last_updated': current.get('last_updated'),
+        'baseline': baseline, 'live_unavailable': live_unavailable,
     })
 
 
-
-
+def actions_status(request):
+    baseline = get_baseline()
+    snapshot = baseline['snapshot']
+    response = JsonResponse({
+        'provider': 'github-actions', 'legacy_cron_required': False,
+        'ready': snapshot is not None and not baseline['stale'],
+        'origin': baseline['origin'], 'stale': baseline['stale'],
+        'date': snapshot['date'] if snapshot else None,
+        'captured_at': snapshot['captured_at'] if snapshot else None,
+        'fingerprint': baseline['fingerprint'],
+    })
+    response['Cache-Control'] = 'no-store'
+    return response
 
 
 def history(request):
