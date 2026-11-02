@@ -13,3 +13,4 @@ testcases/
 private_media/
 test/
 logs/
+holy-collector.lock

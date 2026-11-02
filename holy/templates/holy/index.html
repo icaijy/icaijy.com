@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}🥶 holy competetive — icaijy.com{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'holy/holy.css' %}">{% endblock %}
+{% block content %}
+<main class="hc-shell">
+  <header class="hc-hero">
+    <div><p class="hc-eyebrow">AUSTRALIA / THE LAST 30 DAYS</p><h1><span aria-hidden="true">🥶🥶🥶</span><br>holy competetive<span class="hc-period">.</span></h1>
+    <p class="hc-lead">他们又在偷偷做什么题？<br>看看澳洲选手最近的提交，找出你还没 AC 的那几道。</p></div>
+    <div class="hc-stamp"><span>THE GRIND IS REAL</span><strong>AU</strong><span>CF ≥ 1200 · AT ≥ 1200</span><small>以个人资料中的国家 / 地区为准</small></div>
+  </header>
+  <section class="hc-query" aria-labelledby="hc-query-title">
+    <h2 id="hc-query-title">输入你的 handle，查漏补题。</h2>
+    <p>两个平台可以分别填写。不填时浏览公共题池；填入后，排除你历史上所有已 AC 的题。</p>
+    <form method="post" action="{% url 'holy:compare' %}" class="hc-form">
+      {% csrf_token %}<input type="hidden" name="platform" value="{{ platform }}">
+      <label>Codeforces<input name="cf" value="{{ handles.cf }}" placeholder="e.g. icaijy" maxlength="24" autocomplete="off" spellcheck="false"></label>
+      <label>AtCoder<input name="ac" value="{{ handles.ac }}" placeholder="e.g. icaijy" maxlength="32" autocomplete="off" spellcheck="false"></label>
+      <button type="submit">看看我漏了啥 ↗</button>
+    </form>
+    {% if query_error %}<p class="hc-alert" role="alert">{{ query_error }}</p>{% endif %}
+  </section>
+  <nav class="hc-tabs" aria-label="Platform">
+    <a href="?{{ cf_tab_query }}" {% if platform == 'cf' %}aria-current="page"{% endif %}>Codeforces <small>problem rating</small></a>
+    <a href="?{{ ac_tab_query }}" {% if platform == 'ac' %}aria-current="page"{% endif %}>AtCoder <small>estimated difficulty</small></a>
+  </nav>
+  <section class="hc-results" aria-labelledby="hc-results-title">
+    <div class="hc-results-heading"><div><p class="hc-eyebrow">{{ synced_count }} / {{ peer_count }} USERS SYNCED · {{ fresh_count }} FRESH WITHIN 36H</p>
+      <h2 id="hc-results-title">{% if account %}{{ account.handle }} 的未 AC 题单{% else %}大家最近在做{% endif %}</h2></div><span class="hc-count">{{ page.paginator.count }} problems</span></div>
+    <form method="get" class="hc-filters">
+      <input type="hidden" name="platform" value="{{ platform }}"><input type="hidden" name="cf" value="{{ handles.cf }}"><input type="hidden" name="ac" value="{{ handles.ac }}">
+      <label>活动类型<select name="mode"><option value="all" {% if mode == 'all' %}selected{% endif %}>全部近期提交</option><option value="solved" {% if mode == 'solved' %}selected{% endif %}>有人近期 AC</option><option value="trying" {% if mode == 'trying' %}selected{% endif %}>有人未见 AC</option></select></label>
+      <label>最低难度<input type="number" name="min" value="{{ minimum }}" min="0" max="10000" step="100"></label>
+      <label>至少几人<input type="number" name="users" value="{{ min_users }}" min="1" max="10000"></label>
+      <label class="hc-search">搜索题目<input name="q" value="{{ search }}" placeholder="题名 / 题号" maxlength="100"></label>
+      <button type="submit">筛选</button>
+    </form>
+    {% if collector_stale %}<div class="hc-alert">采集器尚未运行，或已超过 15 分钟没有心跳。当前只展示已有缓存；新查询需要后台采集器运行后才能更新。</div>{% endif %}
+    {% for error in errors %}<div class="hc-alert">{{ error.kind }} 更新失败，保留上次成功数据：{{ error.error }}</div>{% endfor %}
+    {% if account.error %}<div class="hc-alert" role="alert">该 handle 同步遇到问题：{{ account.error }}。请检查拼写；采集器会退避重试。</div>{% endif %}
+    {% if pending %}
+      <div class="hc-empty" id="hc-sync" data-platform="{{ platform }}" data-status-url="{% url 'holy:status' %}" data-cf="{{ handles.cf }}" data-ac="{{ handles.ac }}" data-requested="{% if account.comparison_requested %}yes{% endif %}">
+        <span class="hc-empty-icon" aria-hidden="true">◷</span><h3>先把历史 AC 对齐。</h3>
+        <p>{% if account.comparison_requested %}已加入缓存队列。首次查询会分页补全历史提交；完成后自动刷新。{% else %}这个 handle 还没有完整的历史缓存，请点击上方「看看我漏了啥」登记同步。{% endif %}</p>
+        <p>历史记录未齐之前，暂不把任何题标成「你没做过」。</p><small id="hc-sync-status" aria-live="polite">当前 {{ backlog }} 个请求待处理 · 全站每 3 分钟最多一次上游请求</small>
+      </div>
+    {% else %}
+      {% if account.synced_at %}<p class="hc-sync-note">你的历史 AC 已补全 · 最近同步 {{ account.synced_at|date:"Y-m-d H:i T" }}。此时间之后的新 AC 可能尚未排除。</p>{% endif %}
+      {% if page %}
+      <div class="hc-table-wrap"><table class="hc-table"><thead><tr><th scope="col">难度 ↓</th><th scope="col">题目</th><th scope="col">最近 30 天</th><th scope="col">谁在做</th></tr></thead><tbody>
+        {% for row in page %}<tr>
+          <td><span class="hc-rating">{% if row.problem.difficulty is not None %}{{ row.problem.difficulty }}{% else %}—{% endif %}</span></td>
+          <td class="hc-problem"><small>{{ row.problem.key }}</small><a href="{{ row.problem.url }}" target="_blank" rel="noopener noreferrer">{{ row.problem.title }} ↗</a>{% if row.problem.tags %}<span class="hc-tags">{{ row.problem.tags|join:" · " }}</span>{% endif %}</td>
+          <td class="hc-numbers"><strong>{{ row.count }} 人提交</strong><span>{{ row.solved_count }} 人 AC · {{ row.trying_count }} 人未见 AC</span><time>{{ row.latest|date:"m-d H:i" }}</time></td>
+          <td class="hc-people"><details><summary>{{ row.count }} 个 handle <span>展开 ↗</span></summary><div class="hc-person-list">{% for user in row.users %}<a href="{{ user.account.url }}" target="_blank" rel="noopener noreferrer" class="{% if user.recent_ac %}hc-solved{% elif user.past_ac %}hc-past{% else %}hc-trying{% endif %}"><span>{{ user.account.handle }}</span><small>{{ user.account.rating }} · {% if user.recent_ac %}近期 AC{% elif user.past_ac %}此前已 AC{% else %}未见 AC{% endif %}</small></a>{% endfor %}</div></details></td>
+        </tr>{% endfor %}
+      </tbody></table></div>
+      <nav class="hc-pagination" aria-label="Problem pages">{% if page.has_previous %}<a href="?{{ pagination_query }}&amp;page={{ page.previous_page_number }}">← 上一页</a>{% endif %}<span>{{ page.number }} / {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a href="?{{ pagination_query }}&amp;page={{ page.next_page_number }}">下一页 →</a>{% endif %}</nav>
+      {% else %}<div class="hc-empty"><span class="hc-empty-icon" aria-hidden="true">❄</span><h3>{% if synced_count %}当前筛选下，没有漏网之题。{% else %}题池正在等第一轮同步。{% endif %}</h3><p>{% if synced_count %}可以放宽筛选，或者换个平台看看。{% else %}队列逐个抓取选手最近 30 天的提交，已有缓存后会在这里显示。{% endif %}</p></div>{% endif %}
+    {% endif %}
+  </section>
+  <aside class="hc-method"><h2>这份题单怎么算？</h2><div>
+    <p><strong>选手范围</strong>CF 当前 rating ≥ 1200（绿名起），AtCoder 算法 rating ≥ 1200。只采集公开资料标为 Australia 的账号；两站 handle 独立，不推断同一个人。</p>
+    <p><strong>最近 30 天</strong>包含比赛与练习的公开提交；“在尝试”仅指观察到提交且缓存中未见 AC，不代表此人此刻在线。人数按本站账号去重；“此前已 AC”不计入近期 AC 或未见 AC 人数。</p>
+    <p><strong>难度与缓存</strong>各平台分别按题目难度从高到低排，未知难度放最后。AtCoder 使用 AtCoder Problems 的估计值，并非官方 rating。更新失败保留缓存，不能保证覆盖未公开的提交或账号。</p>
+    <p><strong>更新进度</strong>{{ fresh_count }} / {{ peer_count }} 名选手在 36 小时内同步过。{% if oldest_sync %}最旧的已完成缓存：{{ oldest_sync|date:"Y-m-d H:i T" }}。{% endif %}选手越多，一轮同步越久，首次建库可能超过一天。</p>
+    </div><a href="https://github.com/icaijy/icaijy.com/tree/main/holy" target="_blank" rel="noopener noreferrer">源码与采集逻辑 ↗</a></aside>
+</main>
+{% endblock %}
+{% block extra_scripts %}<script src="{% static 'holy/holy.js' %}" defer></script>{% endblock %}

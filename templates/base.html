@@ -43,6 +43,7 @@
           <ul class="navbar-nav me-auto align-items-xl-center gap-xl-1">
             <li class="nav-item"><a class="nav-link" href="{% url 'blog' %}" {% if request.path|slice:':6' == '/blog/' %}aria-current="page"{% endif %}>{% trans "Blog" %}</a></li>
             <li class="nav-item"><a class="nav-link" href="/orac-leaderboards/" {% if request.path|slice:':19' == '/orac-leaderboards/' %}aria-current="page"{% endif %}>ORAC Leaderboards++</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'holy:index' %}" {% if request.resolver_match.namespace == 'holy' %}aria-current="page"{% endif %}>🥶 holy competetive</a></li>
             <li class="nav-item"><a class="nav-link" href="/oracdata/" {% if request.path|slice:':10' == '/oracdata/' %}aria-current="page"{% endif %}>ORAC Analytics</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'archive' %}" {% if request.path|slice:':9' == '/archive/' %}aria-current="page"{% endif %}><i class="fa-solid fa-box-archive me-1"></i>{% trans "Archive" %}</a></li>
           </ul>

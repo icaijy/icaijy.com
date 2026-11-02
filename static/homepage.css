@@ -84,3 +84,5 @@
     .project-bottom a { font-size: .72rem; }
     .home-archive { margin-top: 1.7rem; gap: .8rem; }
 }
+
+.home-holy{display:flex;align-items:center;gap:1.3rem;margin-top:1.3rem;padding:1.4rem 1.6rem;border:1px solid #c0d6e3;border-radius:1rem;background:#e9f2f7;color:#244b62;text-decoration:none;transition:transform .18s}.home-holy:hover{color:#173e57;transform:translateY(-2px)}.home-holy>span:first-child{font-size:1.5rem;white-space:nowrap}.home-holy strong{display:block;font-size:1.2rem;letter-spacing:-.035em}.home-holy small{display:block;margin-top:.35rem;font-size:.78rem;color:#5f7d8f;line-height:1.7}.home-holy>span:last-child{margin-left:auto}@media(max-width:640px){.home-holy{gap:.8rem;padding:1.2rem}.home-holy>span:first-child{font-size:1rem}.home-holy strong{font-size:1.05rem}.home-holy small{font-size:.7rem}}

@@ -56,3 +56,13 @@ For an existing server deployment, pull the updated code, run `collectstatic`
 using the commands above, and reload the existing application service. This
 repository does not contain server SSH credentials or an automatic deployment
 workflow; a GitHub update alone does not confirm the server was reloaded.
+
+## 🥶 holy competetive
+
+`/holy-competitive/` compares handles against Australian CF (1200+) and AtCoder
+algorithm (1200+) users' public submissions over the last 30 days. It excludes
+the queried user's all-time ACs, separates attempts/ACs, and sorts by problem
+difficulty within each platform. Database-backed jobs share one upstream request
+every 180 seconds. **Deployment needs migrations, collectstatic, and the separate
+`python manage.py holy_worker` process**; visiting the page does not start a crawler.
+See [deployment, queue semantics and limits](docs/holy-competitive.md).
