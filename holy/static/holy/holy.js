@@ -17,7 +17,7 @@
       if (account?.complete) { clearInterval(timer); location.reload(); return; }
       line.textContent = account?.error
         ? `同步遇到问题：${account.error}。后台将退避重试。`
-        : `历史提交同步中 · ${data.backlog} 个请求待处理 · 全站每 3 分钟最多一次上游请求`;
+        : `历史提交同步中 · ${data.backlog} 个请求待处理 · ${panel.dataset.rateSummary}`;
       failures = 0;
     } catch {
       if (++failures >= 3) {

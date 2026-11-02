@@ -31,7 +31,7 @@ python manage.py holy_status
 ```
 
 `--once` tries **one** request and exits. Running it again immediately prints
-that the shared 180-second budget has not recovered. For continuous collection:
+that the corresponding upstream request budget has not recovered (unless another host is ready). For continuous collection:
 
 ```sh
 python manage.py holy_worker
@@ -127,11 +127,24 @@ automatic server deployment: pushing Git alone does not confirm a live reload.
 
 ## Queue and upstream request policy
 
-- Each job/page does **one** HTTP request. All three upstreams share a database
-  budget of **one request per 180 seconds after the previous job finishes**.
-  HTTP redirects and automatic retries are disabled. HTTP errors, parsing failures,
-  and unknown handles all consume their slot. Both forms of `Retry-After`
-  (seconds/HTTP date) are respected; backoff blocks all upstreams when required.
+- Each job/page does **one** HTTP request. Independent persistent budgets start
+  after each job finishes: **CF API 2.1 seconds**, **AtCoder Problems 1.1 seconds**,
+  and **AtCoder ranking/profile HTML 3 seconds**. CF documents one request per
+  two seconds; AtCoder Problems asks for more than one second between accesses.
+  AtCoder HTML has no verified published request quota, so it keeps a separate
+  conservative interval. These intervals leave a small margin over API limits.
+- HTTP redirects and automatic retries are disabled. Errors consume their slot.
+  Failed hosts pause for 30 seconds, doubling on consecutive failures (up to
+  7680 seconds); both `Retry-After` formats can extend that pause. The failed job
+  also backs off. Other hosts continue: a cooling high-priority CF job cannot
+  block ready AtCoder work. Successful requests reset that host's failure count.
+- The worker remains serial, with short polling while work is pending and a
+  five-second idle sleep. It does not continuously hit upstreams when caches are
+  fresh. Daily refresh schedules are unchanged. Run the continuous worker to
+  reach API-paced throughput; cron every minute is still safe but much slower.
+- On upgrade, a migration carries any outstanding old shared cooldown into the
+  new host budgets, so an existing `Retry-After` is not silently discarded.
+  Stop the old worker, migrate, then restart it; do not mix worker versions.
 - A database lease plus a nonblocking Unix `flock` prevents concurrent workers;
   a crash preserves pages and leaves a conservative 15-minute lease before retry.
 - Jobs and account/problem aggregates survive restarts in SQLite. Unique job keys
@@ -147,9 +160,11 @@ automatic server deployment: pushing Git alone does not confirm a live reload.
   filters it so the global user list is never loaded into RAM; bandwidth still
   costs roughly that much per day. No submission source code is downloaded.
 - Observed during implementation: 253 qualifying CF users and 86 AtCoder users.
-  One page/user alone needs approximately **17 hours** at this conservative rate;
-  actual backfills, pagination, catalog requests, retries, and queries add time.
-  No promise of instant or minute-level global freshness. The page labels coverage.
+  The previous artificial 17-hour spacing is removed. With one page/user, the
+  sum of the new per-request waits is about 10.5 minutes before interleaving;
+  network/processing time, the large roster transfer, history pagination, and
+  retries add time. This is not an end-to-end completion estimate. The page
+  labels coverage and actual completion times.
 - AtCoder Problems returns at most 500 submissions per call. Its inclusive-second
   cursor is overlapped on page boundaries; a fully saturated single second that
   cannot advance fails explicitly rather than dropping data/claiming completion.
@@ -177,4 +192,4 @@ Tests cover lifetime exclusion, provisional history, platform separation,
 peer counts/deduplication, sorting/filtering, both pagination orders, inclusive
 AtCoder seconds, saturated boundaries, country/current-rating filtering,
 partial rosters, persistent request admission, query deduplication, cache-only
-GET/polling, shared retry budget, restart lease, and upstream redirects.
+GET/polling, independent host budgets, host-local backoff, restart lease, and upstream redirects.

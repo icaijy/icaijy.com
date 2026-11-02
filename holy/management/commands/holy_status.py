@@ -23,7 +23,8 @@ class Command(BaseCommand):
         self.stdout.write(f'Worker heartbeat: {state.last_heartbeat if state else None}')
         self.stdout.write(f'Last completed request: {state.last_finished if state else None}')
         self.stdout.write(f'Last successful request: {state.last_success if state else None}')
-        self.stdout.write(f'Next request allowed: {state.next_request_at if state else None}')
+        for origin, gate in (state.upstream_state if state else {}).items():
+            self.stdout.write(f'{origin} next request allowed: {gate["ready_at"]}; consecutive failures {gate.get("failures", 0)}')
         for job in Job.objects.exclude(error='').order_by('ready_at')[:10]:
             self.stdout.write(f'{job.key}: {job.error}; next try {job.ready_at}')
         if options['check'] and (not state or not state.last_heartbeat or state.last_heartbeat < now - timedelta(minutes=15)):

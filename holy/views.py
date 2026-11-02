@@ -12,7 +12,7 @@ from django.utils.crypto import salted_hmac
 from django.views.decorators.http import require_GET, require_POST
 from urllib.parse import urlencode
 
-from .collector import enqueue
+from .collector import RATE_SUMMARY, enqueue
 from .models import Account, Activity, CollectorState, Job, QueryBudget
 
 PATTERNS = {'cf': r'[A-Za-z0-9_.-]{1,24}', 'ac': r'[A-Za-z0-9_]{1,32}'}
@@ -80,7 +80,7 @@ def build_context(request):
     peers = Account.objects.filter(platform=platform, is_peer=True)
     state = CollectorState.objects.filter(pk=1).first()
     backlog = Job.objects.filter(ready_at__lte=now).count()
-    return {'platform': platform, 'handles': handles, 'account': account, 'pending': pending,
+    return {'rate_summary': RATE_SUMMARY, 'platform': platform, 'handles': handles, 'account': account, 'pending': pending,
             'mode': mode, 'minimum': minimum, 'min_users': min_users, 'search': search,
             'page': page, 'peer_count': peers.count(), 'synced_count': peers.filter(synced_at__isnull=False).count(),
             'fresh_count': peers.filter(synced_at__gte=now - timedelta(hours=36)).count(),

@@ -62,7 +62,7 @@ workflow; a GitHub update alone does not confirm the server was reloaded.
 `/holy-competitive/` compares handles against Australian CF (1200+) and AtCoder
 algorithm (1200+) users' public submissions over the last 30 days. It excludes
 the queried user's all-time ACs, separates attempts/ACs, and sorts by problem
-difficulty within each platform. Database-backed jobs share one upstream request
-every 180 seconds. **Deployment needs migrations, collectstatic, and the separate
+difficulty within each platform. Database-backed jobs use independent request budgets: CF 2.1s,
+AtCoder Problems 1.1s, and AtCoder HTML 3s, with persistent backoff. **Deployment needs migrations, collectstatic, and the separate
 `python manage.py holy_worker` process**; visiting the page does not start a crawler.
 See [deployment, queue semantics and limits](docs/holy-competitive.md).

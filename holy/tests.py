@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from io import BytesIO
 from tempfile import TemporaryDirectory
 from unittest.mock import Mock, patch
@@ -197,27 +197,67 @@ class WorkerTests(TestCase):
         self.settings = override_settings(BASE_DIR=self.directory.name)
         self.settings.enable()
         self.addCleanup(self.settings.disable)
-        self.state = CollectorState.objects.create(next_request_at=self.now, lease_until=self.now, maintenance_at=self.now)
+        self.state = CollectorState.objects.create(next_request_at=self.now, lease_until=self.now, maintenance_at=self.now + timedelta(hours=1))
         self.job = enqueue('cf_roster', 'cf_roster', now=self.now)
 
     @patch('holy.collector.execute', return_value=None)
-    def test_gate_persists_across_calls_and_covers_all_platforms(self, execute):
+    def test_cf_gate_persists_and_blocks_only_its_own_origin(self, execute):
         self.assertIn('updated', run_one(self.now))
-        enqueue('ac_roster', 'ac_roster', now=self.now)
-        self.assertIn('Waiting', run_one(self.now + timedelta(seconds=179)))
-        execute.assert_called_once()
+        enqueue('cf_problems', 'cf_problems', now=self.now)
         self.state.refresh_from_db()
-        self.assertGreaterEqual(self.state.next_request_at, self.now + timedelta(seconds=180))
+        ready = datetime.fromisoformat(self.state.upstream_state['cf']['ready_at'])
+        self.assertGreaterEqual(ready, self.now + timedelta(seconds=2.1))
+        self.assertIn('Waiting', run_one(ready - timedelta(microseconds=1)))
+        execute.assert_called_once()
+        self.assertIn('updated', run_one(ready))
+        self.assertEqual(execute.call_count, 2)
+
+    @patch('holy.collector.execute', return_value=None)
+    def test_blocked_high_priority_cf_does_not_block_atcoder_html(self, execute):
+        self.assertIn('updated', run_one(self.now))
+        enqueue('cf_problems', 'cf_problems', now=self.now, priority=5)
+        enqueue('ac_roster', 'ac_roster', now=self.now)
+        self.assertIn('ac_roster: updated', run_one(self.now + timedelta(seconds=0.1)))
+        self.state.refresh_from_db()
+        self.assertEqual(set(self.state.upstream_state), {'cf', 'ac_html'})
+        self.assertGreaterEqual(datetime.fromisoformat(self.state.upstream_state['ac_html']['ready_at']), self.now + timedelta(seconds=3))
+
+    @patch('holy.collector.execute', return_value=None)
+    def test_atcoder_api_has_its_own_1_point_1_second_budget(self, execute):
+        self.job.delete()
+        enqueue('ac_problems', 'ac_problems', now=self.now)
+        self.assertIn('updated', run_one(self.now))
+        self.state.refresh_from_db()
+        ready = datetime.fromisoformat(self.state.upstream_state['ac_api']['ready_at'])
+        self.assertGreaterEqual(ready, self.now + timedelta(seconds=1.1))
+        enqueue('ac_models', 'ac_models', now=self.now)
+        self.assertIn('Waiting', run_one(ready - timedelta(microseconds=1)))
+        self.assertIn('updated', run_one(ready))
+        self.assertEqual(execute.call_count, 2)
 
     @patch('holy.collector.execute', side_effect=UpstreamError('Rate limited', retry_after=900))
-    def test_failure_keeps_cache_and_respects_global_retry_after(self, execute):
+    def test_retry_after_pauses_failed_origin_while_other_hosts_continue(self, execute):
         self.assertIn('retry later', run_one(self.now))
         self.job.refresh_from_db()
         self.state.refresh_from_db()
         self.assertEqual(self.job.failures, 1)
         self.assertGreaterEqual(self.job.ready_at, self.now + timedelta(seconds=900))
+        self.assertGreaterEqual(datetime.fromisoformat(self.state.upstream_state['cf']['ready_at']), self.now + timedelta(seconds=900))
+        enqueue('cf_problems', 'cf_problems', now=self.now)
         enqueue('ac_roster', 'ac_roster', now=self.now)
+        execute.side_effect = None
+        execute.return_value = None
+        self.assertIn('ac_roster: updated', run_one(self.now + timedelta(seconds=0.1)))
         self.assertIn('Waiting', run_one(self.now + timedelta(seconds=899)))
+        self.assertEqual(execute.call_count, 2)
+
+    @patch('holy.collector.execute', side_effect=requests.Timeout('Timed out'))
+    def test_timeout_consumes_origin_budget_and_backs_off(self, execute):
+        self.assertIn('retry later', run_one(self.now))
+        self.state.refresh_from_db()
+        self.assertGreaterEqual(datetime.fromisoformat(self.state.upstream_state['cf']['ready_at']), self.now + timedelta(seconds=30))
+        enqueue('cf_problems', 'cf_problems', now=self.now)
+        self.assertIn('Waiting', run_one(self.now + timedelta(seconds=29)))
         execute.assert_called_once()
 
     @patch('holy.collector.execute')

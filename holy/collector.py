@@ -12,7 +12,26 @@ from django.utils import timezone
 from . import upstream
 from .models import Account, Activity, CollectorState, Job, Problem, QueryBudget
 
-INTERVAL = 180  # Shared across CF, AtCoder, and AtCoder Problems, including failures.
+# Separate budgets for independent hosts. Leave margin above published limits.
+INTERVALS = {'cf': 2.1, 'ac_api': 1.1, 'ac_html': 3.0}
+RATE_SUMMARY = 'CF ≥2.1秒 · AtCoder Problems ≥1.1秒 · AtCoder 网页 ≥3秒'
+
+
+def upstream_for(job):
+    if job.kind.startswith('cf_') or (job.account_id and job.account.platform == 'cf'):
+        return 'cf'
+    if job.kind == 'ac_roster' or (job.account_id and not job.account.verified):
+        return 'ac_html'
+    return 'ac_api'
+
+
+def upstream_jobs(origin):
+    if origin == 'cf':
+        return Q(kind__startswith='cf_') | Q(kind='submissions', account__platform='cf')
+    if origin == 'ac_html':
+        return Q(kind='ac_roster') | Q(kind='submissions', account__platform='ac', account__verified=False)
+    return Q(kind__in=['ac_problems', 'ac_models']) | Q(kind='submissions', account__platform='ac', account__verified=True)
+
 DAY = timedelta(days=1)
 
 
@@ -207,26 +226,41 @@ def _run_locked(now=None):
     schedule(now)
     CollectorState.objects.filter(pk=1).filter(
         Q(last_heartbeat__isnull=True) | Q(last_heartbeat__lt=now - timedelta(seconds=30))).update(last_heartbeat=now)
-    job = Job.objects.filter(ready_at__lte=now).select_related('account').order_by('-priority', 'ready_at', 'pk').first()
+    state = CollectorState.objects.get(pk=1)
+    if state.lease_until > now:
+        return 'Waiting for collector lease'
+    gates = state.upstream_state.copy()
+    jobs = Job.objects.filter(ready_at__lte=now)
+    eligible = jobs
+    for origin, gate in gates.items():
+        if origin in INTERVALS and datetime.fromisoformat(gate['ready_at']) > now:
+            eligible = eligible.exclude(upstream_jobs(origin))
+    job = eligible.select_related('account').order_by('-priority', 'ready_at', 'pk').first()
     if job is None:
-        return 'Queue idle'
-    claimed = CollectorState.objects.filter(pk=1, next_request_at__lte=now, lease_until__lte=now).update(
-        next_request_at=now + timedelta(seconds=INTERVAL), lease_until=now + timedelta(minutes=15), last_started=now)
+        return 'Waiting for upstream request budget' if jobs.exists() else 'Queue idle'
+    origin = upstream_for(job)
+    interval = INTERVALS[origin]
+    claimed = CollectorState.objects.filter(pk=1, lease_until__lte=now).update(
+        lease_until=now + timedelta(minutes=15), last_started=now)
     if not claimed:
-        return 'Waiting for shared 180-second request budget'
+        return 'Waiting for collector lease'
     try:
         result = execute(job, now)
     except Exception as exc:
-        # Failed requests consume their slot; retain the last successful cache.
+        # All failures consume their origin's slot and back off that host; other
+        # hosts keep draining. Retry-After may extend the pause, never shorten it.
         message = str(exc)[:240] or type(exc).__name__
-        delay = max(INTERVAL * 2 ** min(job.failures + 1, 8), getattr(exc, 'retry_after', 0))
+        failures = gates.get(origin, {}).get('failures', 0) + 1
+        pause = max(30 * 2 ** min(failures - 1, 8), getattr(exc, 'retry_after', 0))
+        delay = max(30 * 2 ** min(job.failures, 8), pause)
         finished = timezone.now()
+        gates[origin] = {'ready_at': (finished + timedelta(seconds=pause)).isoformat(), 'failures': failures}
         Job.objects.filter(pk=job.pk).update(failures=F('failures') + 1, error=message,
             ready_at=finished + timedelta(seconds=delay))
         if job.account_id:
             Account.objects.filter(pk=job.account_id).update(error=message)
         CollectorState.objects.filter(pk=1).update(lease_until=finished, last_finished=finished,
-            next_request_at=finished + timedelta(seconds=max(INTERVAL, getattr(exc, 'retry_after', 0))), error=message)
+            upstream_state=gates, next_request_at=finished + timedelta(seconds=pause), error=message)
         return f'{job.key}: retry later ({message})'
     finished = timezone.now()
     if job.account_id and result is None:
@@ -234,7 +268,8 @@ def _run_locked(now=None):
     else:
         # Requeue pages at the tail of their priority class, so backfills rotate.
         Job.objects.filter(pk=job.pk).update(payload=result or {}, error='', failures=0,
-            ready_at=finished + (timedelta(seconds=1) if result is not None else DAY))
+            ready_at=finished + (timedelta(seconds=0.01) if result is not None else DAY))
+    gates[origin] = {'ready_at': (finished + timedelta(seconds=interval)).isoformat(), 'failures': 0}
     CollectorState.objects.filter(pk=1).update(lease_until=finished, last_finished=finished,
-        last_success=finished, next_request_at=finished + timedelta(seconds=INTERVAL), error='')
+        last_success=finished, upstream_state=gates, next_request_at=finished + timedelta(seconds=interval), error='')
     return f'{job.key}: ' + ('next page queued' if result is not None else 'updated')

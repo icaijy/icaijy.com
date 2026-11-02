@@ -70,7 +70,8 @@ class Job(models.Model):
 class CollectorState(models.Model):
     # Singleton + compare-and-swap lease: covers multiple workers/processes.
     id = models.PositiveSmallIntegerField(primary_key=True, default=1)
-    next_request_at = models.DateTimeField()
+    next_request_at = models.DateTimeField()  # Legacy diagnostic; per-origin gates live below.
+    upstream_state = models.JSONField(default=dict)
     lease_until = models.DateTimeField()
     last_heartbeat = models.DateTimeField(null=True)
     last_started = models.DateTimeField(null=True)

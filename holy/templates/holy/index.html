@@ -39,10 +39,10 @@
     {% for error in errors %}<div class="hc-alert">{{ error.kind }} 更新失败，保留上次成功数据：{{ error.error }}</div>{% endfor %}
     {% if account.error %}<div class="hc-alert" role="alert">该 handle 同步遇到问题：{{ account.error }}。请检查拼写；采集器会退避重试。</div>{% endif %}
     {% if pending %}
-      <div class="hc-empty" id="hc-sync" data-platform="{{ platform }}" data-status-url="{% url 'holy:status' %}" data-cf="{{ handles.cf }}" data-ac="{{ handles.ac }}" data-requested="{% if account.comparison_requested %}yes{% endif %}">
+      <div class="hc-empty" id="hc-sync" data-rate-summary="{{ rate_summary }}" data-platform="{{ platform }}" data-status-url="{% url 'holy:status' %}" data-cf="{{ handles.cf }}" data-ac="{{ handles.ac }}" data-requested="{% if account.comparison_requested %}yes{% endif %}">
         <span class="hc-empty-icon" aria-hidden="true">◷</span><h3>先把历史 AC 对齐。</h3>
         <p>{% if account.comparison_requested %}已加入缓存队列。首次查询会分页补全历史提交；完成后自动刷新。{% else %}这个 handle 还没有完整的历史缓存，请点击上方「看看我漏了啥」登记同步。{% endif %}</p>
-        <p>历史记录未齐之前，暂不把任何题标成「你没做过」。</p><small id="hc-sync-status" aria-live="polite">当前 {{ backlog }} 个请求待处理 · 全站每 3 分钟最多一次上游请求</small>
+        <p>历史记录未齐之前，暂不把任何题标成「你没做过」。</p><small id="hc-sync-status" aria-live="polite">当前 {{ backlog }} 个请求待处理 · {{ rate_summary }}</small>
       </div>
     {% else %}
       {% if account.synced_at %}<p class="hc-sync-note">你的历史 AC 已补全 · 最近同步 {{ account.synced_at|date:"Y-m-d H:i T" }}。此时间之后的新 AC 可能尚未排除。</p>{% endif %}
@@ -63,7 +63,7 @@
     <p><strong>选手范围</strong>CF 当前 rating ≥ 1200（绿名起），AtCoder 算法 rating ≥ 1200。只采集公开资料标为 Australia 的账号；两站 handle 独立，不推断同一个人。</p>
     <p><strong>最近 30 天</strong>包含比赛与练习的公开提交；“在尝试”仅指观察到提交且缓存中未见 AC，不代表此人此刻在线。人数按本站账号去重；“此前已 AC”不计入近期 AC 或未见 AC 人数。</p>
     <p><strong>难度与缓存</strong>各平台分别按题目难度从高到低排，未知难度放最后。AtCoder 使用 AtCoder Problems 的估计值，并非官方 rating。更新失败保留缓存，不能保证覆盖未公开的提交或账号。</p>
-    <p><strong>更新进度</strong>{{ fresh_count }} / {{ peer_count }} 名选手在 36 小时内同步过。{% if oldest_sync %}最旧的已完成缓存：{{ oldest_sync|date:"Y-m-d H:i T" }}。{% endif %}选手越多，一轮同步越久，首次建库可能超过一天。</p>
+    <p><strong>更新进度</strong>{{ fresh_count }} / {{ peer_count }} 名选手在 36 小时内同步过。{% if oldest_sync %}最旧的已完成缓存：{{ oldest_sync|date:"Y-m-d H:i T" }}。{% endif %}选手越多，一轮同步越久；首次耗时还取决于历史分页、网络速度和失败重试。</p>
     </div><a href="https://github.com/icaijy/icaijy.com/tree/main/holy" target="_blank" rel="noopener noreferrer">源码与采集逻辑 ↗</a></aside>
 </main>
 {% endblock %}
