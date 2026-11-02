@@ -329,7 +329,7 @@ class PageTests(TestCase):
         response = self.client.get('/holy-competitive/?cf=Me')
         self.assertTrue(response.context['pending'])
         self.assertEqual(response.context['page'].paginator.count, 0)
-        self.assertContains(response, '暂不把任何题标成')
+        self.assertContains(response, 'Comparison results will appear once')
 
     def test_earlier_ac_with_recent_resubmission_is_not_a_recent_ac_or_trying(self):
         Activity.objects.filter(account=self.alice, problem=self.low).update(last_ac=self.now - timedelta(days=100))

@@ -57,7 +57,7 @@ using the commands above, and reload the existing application service. This
 repository does not contain server SSH credentials or an automatic deployment
 workflow; a GitHub update alone does not confirm the server was reloaded.
 
-## 🥶 holy competetive
+## 🥶 holy competitive
 
 `/holy-competitive/` compares handles against Australian CF (1200+) and AtCoder
 algorithm (1200+) users' public submissions over the last 30 days. It excludes

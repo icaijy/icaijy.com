@@ -14,7 +14,7 @@ from .models import Account, Activity, CollectorState, Job, Problem, QueryBudget
 
 # Separate budgets for independent hosts. Leave margin above published limits.
 INTERVALS = {'cf': 2.1, 'ac_api': 1.1, 'ac_html': 3.0}
-RATE_SUMMARY = 'CF ≥2.1秒 · AtCoder Problems ≥1.1秒 · AtCoder 网页 ≥3秒'
+RATE_SUMMARY = 'CF ≥2.1s · AtCoder Problems ≥1.1s · AtCoder pages ≥3s'
 
 
 def upstream_for(job):

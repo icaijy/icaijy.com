@@ -1,4 +1,4 @@
-# 🥶 holy competetive
+# 🥶 holy competitive
 
 URL: `/holy-competitive/`. The homepage and navigation link to it.
 This is the existing Django application, deployed from this Git repository;
