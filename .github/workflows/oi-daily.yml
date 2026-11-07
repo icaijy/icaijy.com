@@ -2,9 +2,10 @@ name: OI daily solved-count snapshots
 
 on:
   schedule:
-    # 12:42 UTC = 22:42 AEST / 23:42 AEDT.
-    # After the existing ORAC job at 12:17 UTC.
-    - cron: '42 12 * * *'
+    # 08:42 UTC = 18:42 AEST / 19:42 AEDT.
+    # Collect well before the 22:00 Melbourne training review.
+    # ORAC may still be sourced from its latest available daily snapshot.
+    - cron: '42 8 * * *'
   workflow_dispatch:
   push:
     branches: [main]
