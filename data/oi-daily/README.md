@@ -4,7 +4,7 @@ This independent collector monitors the public account `icaijy` across **Codefor
 
 ## Data and cadence
 
-The GitHub Action runs at **12:42 UTC each day** (22:42 AEST / 23:42 AEDT). GitHub may delay scheduled workflows. Files are labelled with the **actual Australia/Melbourne date at collection time**, not the scheduled date:
+The GitHub Action runs at **08:42 UTC each day** (18:42 AEST / 19:42 AEDT), ahead of the daily **22:00 Australia/Melbourne** training review. GitHub may delay scheduled workflows, so the review must handle missing or stale snapshots. Files are labelled with the **actual Australia/Melbourne date at collection time**, not the scheduled date:
 
 - `data/oi-daily/index.json`: available snapshot dates.
 - `data/oi-daily/YYYY-MM-DD.json`: each platform's cumulative distinct solved count, exact sampling time, data source, and availability status.
