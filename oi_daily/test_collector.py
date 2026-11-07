@@ -46,8 +46,10 @@ class CountsTest(unittest.TestCase):
 
     def test_luogu_profile_count(self):
         with patch.object(c, "get_json", return_value={
-            "currentData": {"user": {"uid": 378195, "passedProblemCount": 931}}}):
+            "currentData": {"user": {"uid": 378195, "passedProblemCount": 931}}}) as fetch:
             self.assertEqual(c.luogu_count(FakeSession()), 931)
+            self.assertEqual(fetch.call_args.kwargs["extra_headers"]["x-luogu-type"],
+                             "content-only")
         with patch.object(c, "get_json", return_value={"currentData": {"user": {"uid": 378195}}}):
             with self.assertRaises(ValueError):
                 c.luogu_count(FakeSession())

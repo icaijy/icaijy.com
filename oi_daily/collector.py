@@ -30,11 +30,13 @@ SOURCE = {
 }
 
 
-def get_json(session, url, *, params=None):
+def get_json(session, url, *, params=None, extra_headers=None):
     """Retry transient HTTP failures, never substitute an empty JSON response."""
     for attempt in range(3):
         try:
-            response = session.get(url, params=params, headers=HEADERS, timeout=(10, 40))
+            response = session.get(url, params=params,
+                                   headers={**HEADERS, **(extra_headers or {})},
+                                   timeout=(10, 40))
             if response.status_code in (429, 500, 502, 503, 504) and attempt < 2:
                 response.close()
                 time.sleep(3 * (attempt + 1))
@@ -128,7 +130,9 @@ def luogu_count(session):
     payload = get_json(
         session,
         "https://www.luogu.com.cn/user/378195",
-        params={"_contentOnly": ""},
+        params={"_contentOnly": "1"},
+        extra_headers={"x-luogu-type": "content-only",
+                       "Referer": "https://www.luogu.com.cn/"},
     )
     if not isinstance(payload, dict):
         raise ValueError("Luogu did not return a JSON object")
