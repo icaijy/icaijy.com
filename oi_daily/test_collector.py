@@ -54,6 +54,18 @@ class CountsTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 c.luogu_count(FakeSession())
 
+    def test_luogu_modern_response_and_legacy_fallback(self):
+        self.assertEqual(c.parse_luogu_count(
+            {"data": {"user": {"uid": 378195, "passedProblemCount": 931}}}), 931)
+        self.assertEqual(c.parse_luogu_count(
+            {"user": {"uid": 378195, "passedProblemCount": 931}}), 931)
+        with patch.object(c, "get_json", side_effect=[
+            ValueError("HTML challenge"),
+            {"data": {"user": {"uid": 378195, "passedProblemCount": 931}}},
+        ]) as fetch:
+            self.assertEqual(c.luogu_count(FakeSession()), 931)
+            self.assertEqual(fetch.call_count, 2)
+
     def test_orac_reads_exact_date(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
