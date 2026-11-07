@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}{{ season.title }} · Match {{ match.index }}{% endblock %}
+{% block content %}
+<main class="container py-4" style="max-width:1200px">
+  <p><a href="{% url 'battlecode_archive:detail' season.slug %}">← {{ season.title }}</a></p>
+  <h1 class="h3">Match #{{ match.index }} · {{ match.blue }} vs {{ match.red }}</h1>
+  <p class="text-secondary">Score {{ match.score_blue|floatformat:"-2" }} : {{ match.score_red|floatformat:"-2" }} · Seed {{ match.seed }}</p>
+  <div class="ratio ratio-16x9 border rounded" style="min-height:500px">
+    <iframe id="replay-viewer" title="Season replay viewer"
+      src="{% url 'battlecode_archive:viewer' season.slug %}" sandbox="allow-scripts" loading="eager"></iframe>
+  </div>
+  <p class="mt-3"><a href="{% url 'battlecode_archive:replay' season.slug match.index %}" download>Download replay JSON</a></p>
+</main>
+{{ match.replay|json_script:"battle-replay" }}
+<script>
+(() => {
+  const frame = document.getElementById('replay-viewer');
+  const replay = JSON.parse(document.getElementById('battle-replay').textContent);
+  const send = () => frame.contentWindow?.postMessage({type:'mini-battlecode-replay', replay}, '*');
+  frame.addEventListener('load', send);
+  setTimeout(send, 400);
+})();
+</script>
+{% endblock %}

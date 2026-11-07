@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Mini Battlecode · Seasons{% endblock %}
+{% block content %}
+<main class="container py-5" style="max-width:1100px">
+  <p class="text-secondary mb-2">HUMAN VS AI</p>
+  <h1>Mini Battlecode</h1>
+  <p class="text-secondary">Independent games · Official paired round-robin results · Every match archived.</p>
+  <div class="row g-3 mt-3">
+  {% for s in seasons %}
+    <div class="col-md-6"><article class="p-4 rounded-4 border h-100">
+      <h2 class="h4"><a href="{% url 'battlecode_archive:detail' s.slug %}">{{ s.title }}</a></h2>
+      <p class="text-secondary">Version {{ s.version }} · {{ s.metadata.matches_total }} matches</p>
+      <p>Champion: <strong>{% for p in s.leaderboard %}{% if p.rank == 1 %}{{ p.label }}{% if not forloop.last %} {% endif %}{% endif %}{% endfor %}</strong></p>
+    </article></div>
+  {% empty %}
+    <p>No completed seasons published yet. 尚未发布赛季。</p>
+  {% endfor %}
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}{{ season.title }} · Mini Battlecode{% endblock %}
+{% block content %}
+<main class="container py-5" style="max-width:1100px">
+  <p><a href="{% url 'battlecode_archive:index' %}">← All seasons</a></p>
+  <h1>{{ season.title }}</h1>
+  <p class="text-secondary">{{ season.metadata.matches_total }} matches · Version {{ season.version }} · Paired round robin</p>
+  <h2 class="h4 mt-4">Official leaderboard</h2>
+  <div class="table-responsive"><table class="table table-striped align-middle">
+    <thead><tr><th>Rank</th><th>Bot</th><th>Points</th><th>W / D / L</th><th>Score diff</th></tr></thead>
+    <tbody>{% for p in season.leaderboard %}<tr><td>{{ p.rank }}</td><td>{{ p.label }}</td>
+      <td>{{ p.match_points }}</td><td>{{ p.wins }} / {{ p.draws }} / {{ p.losses }}</td>
+      <td>{{ p.score_diff }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <h2 class="h4 mt-4">Every match · 全部对局</h2>
+  <div class="table-responsive"><table class="table table-sm table-hover">
+    <thead><tr><th>#</th><th>Blue</th><th>Red</th><th>Score</th><th>Seed</th><th>Replay</th></tr></thead>
+    <tbody>{% for m in page %}<tr>
+      <td>{{ m.index }}</td><td>{{ m.blue }}</td><td>{{ m.red }}</td>
+      <td>{{ m.score_blue|floatformat:"-2" }} : {{ m.score_red|floatformat:"-2" }}</td><td>{{ m.seed }}</td>
+      <td><a href="{% url 'battlecode_archive:match' season.slug m.index %}">Watch</a></td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  <nav class="d-flex gap-3 my-3" aria-label="Match pages">
+    {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">Previous</a>{% endif %}
+    <span>Page {{ page.number }} / {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a href="?page={{ page.next_page_number }}">Next</a>{% endif %}
+  </nav>
+  <details class="mt-4"><summary>Game rules · 游戏规则</summary>
+    <pre class="border rounded-3 p-3 mt-2" style="white-space:pre-wrap;overflow:auto">{{ season.rules_markdown }}</pre>
+  </details>
+</main>
+{% endblock %}
