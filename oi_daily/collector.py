@@ -42,7 +42,11 @@ def get_json(session, url, *, params=None, extra_headers=None):
                 time.sleep(3 * (attempt + 1))
                 continue
             response.raise_for_status()
-            return response.json()
+            try:
+                return response.json()
+            except ValueError as exc:
+                kind = response.headers.get("Content-Type", "unknown")
+                raise ValueError("Non-JSON response (Content-Type: " + kind[:70] + ")") from exc
         except (requests.Timeout, requests.ConnectionError):
             if attempt == 2:
                 raise
@@ -125,24 +129,47 @@ def atcoder_count(session):
     raise ValueError("AtCoder pagination limit reached; refusing a partial count")
 
 
-def luogu_count(session):
-    """Public Luogu profile count. A private/blocked profile is unavailable."""
-    payload = get_json(
-        session,
-        "https://www.luogu.com.cn/user/378195",
-        params={"_contentOnly": "1"},
-        extra_headers={"x-luogu-type": "content-only",
-                       "Referer": "https://www.luogu.com.cn/"},
-    )
+def parse_luogu_count(payload):
+    """Accept documented old and new public Luogu response envelopes."""
     if not isinstance(payload, dict):
         raise ValueError("Luogu did not return a JSON object")
-    user = (payload.get("currentData") or {}).get("user") or {}
-    if str(user.get("uid")) != "378195":
-        raise ValueError("Luogu profile UID mismatch or inaccessible")
-    value = user.get("passedProblemCount")
-    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-        raise ValueError("Luogu passedProblemCount missing or invalid")
-    return value
+    containers = [payload.get("currentData"), payload.get("data"), payload]
+    for parent in containers:
+        if not isinstance(parent, dict):
+            continue
+        user = parent.get("user")
+        if not isinstance(user, dict):
+            continue
+        if str(user.get("uid")) != "378195":
+            raise ValueError("Luogu profile UID mismatch")
+        value = user.get("passedProblemCount")
+        if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+            return value
+    raise ValueError("Luogu passedProblemCount missing from public response")
+
+
+def luogu_count(session):
+    """Try the documented public profile variants, without cookies or login."""
+    base = "https://www.luogu.com.cn"
+    attempts = [
+        (base + "/user/378195", {"_contentOnly": "1"},
+         {"x-luogu-type": "content-only"}),
+        (base + "/user/378195", None,
+         {"x-lentille-request": "content-only"}),
+        (base + "/api/user/info/378195", None, {}),
+    ]
+    failures = []
+    for url, params, headers in attempts:
+        try:
+            payload = get_json(
+                session, url, params=params,
+                extra_headers={**headers, "Referer": base + "/"},
+            )
+            return parse_luogu_count(payload)
+        except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
+            failures.append(type(exc).__name__ + ": " + str(exc)[:65])
+    raise ValueError("Luogu public endpoints unavailable: " + " | ".join(failures))
+
 
 
 def orac_count(root, local_date):
