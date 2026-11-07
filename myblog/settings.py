@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'blog',
     'homepage',
     'holy',
+    'battlecode_archive',
     'orac_tracker',
     'django_apscheduler',
     'oj',

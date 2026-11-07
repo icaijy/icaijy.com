@@ -26,6 +26,7 @@ urlpatterns = [
     path('', include('homepage.urls')),
     path('admin/', admin.site.urls),
     path('holy-competitive/', include('holy.urls')),
+    path('battlecode/', include('battlecode_archive.urls')),
     path('blog/', include('blog.urls')),
     path('set_language/', views.set_language, name='set_language'),
     path('i18n/',include("django.conf.urls.i18n")),
