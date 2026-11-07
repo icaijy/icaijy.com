@@ -24,10 +24,10 @@
     "luogu": {
       "status": "unavailable",
       "count": null,
-      "sampled_at": "2026-11-07T01:28:58.085950Z",
+      "sampled_at": "2026-11-07T01:30:57.142279Z",
       "source": "https://www.luogu.com.cn/user/378195?_contentOnly",
       "error": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
     }
   },
-  "recorded_at": "2026-11-07T01:28:58.085950Z"
+  "recorded_at": "2026-11-07T01:30:57.142279Z"
 }
