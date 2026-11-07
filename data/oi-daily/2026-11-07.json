@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-07",
+  "timezone": "Australia/Melbourne",
+  "platforms": {
+    "orac": {
+      "status": "ok",
+      "count": 573,
+      "sampled_at": "2026-11-06T19:21:15.923385+00:00",
+      "source": "https://orac2.info/hub/leaderboards/"
+    },
+    "codeforces": {
+      "status": "ok",
+      "count": 112,
+      "sampled_at": "2026-11-07T01:28:58.085950Z",
+      "source": "https://codeforces.com/api/user.status?handle=icaijy"
+    },
+    "atcoder": {
+      "status": "ok",
+      "count": 377,
+      "sampled_at": "2026-11-07T01:28:58.085950Z",
+      "source": "https://kenkoooo.com/atcoder/atcoder-api/v3/user/submissions?user=icaijy"
+    },
+    "luogu": {
+      "status": "unavailable",
+      "count": null,
+      "sampled_at": "2026-11-07T01:28:58.085950Z",
+      "source": "https://www.luogu.com.cn/user/378195?_contentOnly",
+      "error": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+    }
+  },
+  "recorded_at": "2026-11-07T01:28:58.085950Z"
+}
