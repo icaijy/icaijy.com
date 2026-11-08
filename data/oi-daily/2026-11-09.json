@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-09",
+  "timezone": "Australia/Melbourne",
+  "platforms": {
+    "orac": {
+      "status": "unavailable",
+      "count": null,
+      "sampled_at": "2026-11-08T15:34:42.169034Z",
+      "source": "https://orac2.info/hub/leaderboards/",
+      "error": "FileNotFoundError: [Errno 2] No such file or directory: '/home/runner/work/icaijy.com/icaijy.com/data/orac/2026-11-09.json'"
+    },
+    "codeforces": {
+      "status": "ok",
+      "count": 113,
+      "sampled_at": "2026-11-08T15:34:42.169034Z",
+      "source": "https://codeforces.com/api/user.status?handle=icaijy"
+    },
+    "atcoder": {
+      "status": "ok",
+      "count": 377,
+      "sampled_at": "2026-11-08T15:34:42.169034Z",
+      "source": "https://kenkoooo.com/atcoder/atcoder-api/v3/user/submissions?user=icaijy"
+    },
+    "luogu": {
+      "status": "ok",
+      "count": 934,
+      "sampled_at": "2026-11-08T15:34:42.169034Z",
+      "source": "https://www.luogu.com.cn/user/378195?_contentOnly"
+    }
+  },
+  "recorded_at": "2026-11-08T15:34:42.169034Z"
+}
