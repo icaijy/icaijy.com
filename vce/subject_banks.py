@@ -26,6 +26,15 @@ class Bank:
         return f'{self.subject} · Units {self.units}{tail}'
 
 
+LEGACY_QUESTION_ALIASES = {}
+OUT_OF_SCOPE_QUESTION_IDS = {
+    'methods_u12_techfree-15-0', 'methods_u34_techfree-15-0',
+    'specialist_u12_techactive-04-0',
+    *{f'methods_u12_techactive-{number:02d}-0' for number in (5, 6, 10, 11, 12)},
+    *{f'methods_u34_techactive-{number:02d}-0' for number in (5, 6, 10, 11, 12)},
+}
+
+
 def build_bank(bank_id, records):
     # A few TeX commands begin with characters Python also treats as string
     # escapes (for example \times and \frac). Restore those control characters
@@ -49,7 +58,7 @@ def build_bank(bank_id, records):
         for version, lead in enumerate(leads):
             pairs = [(correct, note)] + [(item, 'This does not satisfy the stated relationship.') for item in wrong]
             Random(f'{bank_id}-{number}-{version}').shuffle(pairs)
-            questions.append(Question(
+            question = Question(
                 id=f'{bank_id}-{number:02d}-{version}',
                 prompt=tex(lead.format(prompt)),
                 options=tuple(tex(item) for item, _ in pairs),
@@ -57,7 +66,14 @@ def build_bank(bank_id, records):
                 explanations=tuple(tex(explanation) for _, explanation in pairs),
                 source=f'Written for icaijy.com · {topic}',
                 topic=topic,
-            ))
+            )
+            if version == 0 and question.id not in OUT_OF_SCOPE_QUESTION_IDS:
+                questions.append(question)
+            else:
+                # Versions 1–3 were generic-prefix clones in the original bank.
+                # Keep them addressable so deployed run histories still render,
+                # but never offer them in a new run.
+                LEGACY_QUESTION_ALIASES[question.id] = question
     return tuple(questions)
 
 
@@ -327,6 +343,45 @@ SPEC_34_ACTIVE = SPEC_12_ACTIVE + [
 ]
 
 
+# Expand only with content explicitly present in the currently accredited
+# study designs. Out-of-scope inherited Methods items remain resolvable above
+# for old run history, but are excluded from every newly offered bank.
+from .bank_expansions import (  # noqa: E402
+    chemistry_u12, chemistry_u34, methods_u12_active, methods_u12_free,
+    methods_u34_active, methods_u34_free, physics_u12, physics_u34,
+    specialist_u12_active, specialist_u12_free, specialist_u34_active,
+    specialist_u34_free,
+)
+
+_chem_12_base, _chem_34_base = list(CHEM_12), list(CHEM_34)
+_physics_12_base, _physics_34_base = list(PHYS_12), list(PHYS_34)
+_methods_12_free_base, _methods_34_free_base = list(METHODS_12_FREE), list(METHODS_34_FREE)
+_methods_12_active_base, _methods_34_active_base = list(METHODS_12_ACTIVE), list(METHODS_34_ACTIVE)
+_spec_12_free_base, _spec_34_free_base = list(SPEC_12_FREE), list(SPEC_34_FREE)
+_spec_12_active_base, _spec_34_active_base = list(SPEC_12_ACTIVE), list(SPEC_34_ACTIVE)
+
+_chem_12_extra, _chem_34_extra = chemistry_u12(), chemistry_u34()
+CHEM_12 = _chem_12_base + _chem_12_extra
+CHEM_34 = _chem_12_base + _chem_34_base + _chem_12_extra + _chem_34_extra
+_physics_12_extra, _physics_34_extra = physics_u12(), physics_u34()
+PHYS_12 = _physics_12_base + _physics_12_extra
+PHYS_34 = _physics_12_base + _physics_34_base + _physics_12_extra + _physics_34_extra
+
+_methods_12_free_extra = methods_u12_free()
+_methods_12_active_extra = methods_u12_active()
+METHODS_12_FREE = _methods_12_free_base + _methods_12_free_extra
+METHODS_12_ACTIVE = _methods_12_active_base + _methods_12_active_extra
+METHODS_34_FREE = _methods_34_free_base + _methods_12_free_extra + methods_u34_free()
+METHODS_34_ACTIVE = _methods_34_active_base + _methods_12_active_extra + methods_u34_active()
+
+_spec_12_free_extra = specialist_u12_free()
+_spec_12_active_extra = specialist_u12_active()
+SPEC_12_FREE = _spec_12_free_base + _spec_12_free_extra
+SPEC_12_ACTIVE = _spec_12_active_base + _spec_12_active_extra
+SPEC_34_FREE = _spec_34_free_base + _spec_12_free_extra + specialist_u34_free()
+SPEC_34_ACTIVE = _spec_34_active_base + _spec_12_active_extra + specialist_u34_active()
+
+
 def make_subject_banks():
     chem_data = 'https://www.vcaa.vic.edu.au/sites/default/files/2026-02/2026-ChemistryDataBook_0.pdf'
     physics_sheet = 'https://www.vcaa.vic.edu.au/sites/default/files/2026-02/Physics-FormulaSheet.pdf'
@@ -336,9 +391,9 @@ def make_subject_banks():
     spec_2 = 'https://www.vcaa.vic.edu.au/sites/default/files/Documents/exams/mathematics/specmaths2-formula-w.pdf'
     configs = (
         ('chemistry_u12', 'Chemistry', '1 & 2', '', CHEM_12, '2026 VCAA Chemistry Data Book', chem_data, '#ef4444'),
-        ('chemistry_u34', 'Chemistry', '3 & 4', '', CHEM_12 + CHEM_34, '2026 VCAA Chemistry Data Book', chem_data, '#ef4444'),
+        ('chemistry_u34', 'Chemistry', '3 & 4', '', CHEM_34, '2026 VCAA Chemistry Data Book', chem_data, '#ef4444'),
         ('physics_u12', 'Physics', '1 & 2', '', PHYS_12, '2026 VCAA Physics Formula Sheet', physics_sheet, '#8b5cf6'),
-        ('physics_u34', 'Physics', '3 & 4', '', PHYS_12 + PHYS_34, '2026 VCAA Physics Formula Sheet', physics_sheet, '#8b5cf6'),
+        ('physics_u34', 'Physics', '3 & 4', '', PHYS_34, '2026 VCAA Physics Formula Sheet', physics_sheet, '#8b5cf6'),
         ('methods_u12_techfree', 'Mathematical Methods', '1 & 2', 'Tech-free', METHODS_12_FREE, 'VCAA Mathematical Methods Exam 1 Formula Sheet', methods_1, '#0ea5e9'),
         ('methods_u12_techactive', 'Mathematical Methods', '1 & 2', 'Tech-active', METHODS_12_ACTIVE, 'VCAA Mathematical Methods Exam 2 Formula Sheet', methods_2, '#0ea5e9'),
         ('methods_u34_techfree', 'Mathematical Methods', '3 & 4', 'Tech-free', METHODS_34_FREE, 'VCAA Mathematical Methods Exam 1 Formula Sheet', methods_1, '#0ea5e9'),
