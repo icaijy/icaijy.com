@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-28",
+  "timezone": "Australia/Melbourne",
+  "captured_at": "2026-11-27T21:11:53.152497+00:00",
+  "source": "https://orac2.info/hub/leaderboards/",
+  "data": {
+    "overall": {
+      "Double_Slash": 891,
+      "Matthewwww": 858,
+      "dusky": 690,
+      "icaijy": 577,
+      "Ghetto": 567,
+      "WenDidIAsk": 550,
+      "user": 512,
+      "quollcucumber": 493,
+      "liangjeremy": 453,
+      "Chez": 450,
+      "reechee": 414,
+      "jenny": 404,
+      "finehaveanormalusername": 401,
+      "henryho2": 386,
+      "HelperTcell": 340,
+      "Sirhc_47": 315,
+      "DamoCode": 305,
+      "aPerson": 278,
+      "anson": 269,
+      "sumtec": 268,
+      "Math-Dragon": 264,
+      "BigD": 263,
+      "meisean2009": 260,
+      "BoBBBB364": 252,
+      "teamcuddlepie": 246,
+      "5ilky": 246,
+      "Nick_Cpp": 236,
+      "Andy": 227,
+      "no_talk_me_i_angy": 225,
+      "OoogaDooga": 221
+    },
+    "recent": {
+      "week": {
+        "BoBBBB364": 10,
+        "aPerson": 10,
+        "GoldMichaelJR6955": 8,
+        "python_coconut": 8,
+        "angad": 7,
+        "sleepingjirachi": 7,
+        "Turtite": 6,
+        "samuelrea": 6,
+        "adono1fan": 6
+      },
+      "month": {
+        "eicosanoid67": 188,
+        "BoBBBB364": 41,
+        "sleepingjirachi": 35,
+        "aPerson": 32,
+        "python_coconut": 31,
+        "Ryan_Zheng": 20,
+        "hiizel": 17,
+        "AndyXu": 13,
+        "SirMango": 13
+      },
+      "year": {
+        "Chez": 349,
+        "wenbang": 330,
+        "DamoCode": 305,
+        "liangjeremy": 300,
+        "sumtec": 268,
+        "Math-Dragon": 249,
+        "5ilky": 237,
+        "aPerson": 208,
+        "yesokaybro": 201
+      }
+    }
+  }
+}
